@@ -5,12 +5,12 @@ import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import li.gkd.app.ui.component.GkAppRuleRestrictionCard
@@ -24,7 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,7 +41,7 @@ import li.gkd.app.feature.subscription.UpsertRuleGroupRoute
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.share.ListPlaceholder
 import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.style.scaffoldPadding
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.util.RuleSortOption
 import li.gkd.app.util.ToastUtils.copyText
 import li.gkd.app.util.ToastUtils.toast
@@ -191,8 +190,24 @@ fun AppConfigPage(route: AppConfigRoute) {
         enabled = !focus.pending,
     )
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    GkPageScaffold(
+        externalScrollBehavior = scrollBehavior,
+        floatingActionButton = {
+            GkAnimatedFloatingActionButton(
+                visible = !isSelectedMode,
+                onClick = {
+                    mainVm.navigatePage(
+                        UpsertRuleGroupRoute(
+                            subsId = LOCAL_SUBS_ID,
+                            groupKey = null,
+                            appId = appId
+                        )
+                    )
+                },
+                imageVector = GkIcons.Add,
+                contentDescription = UiStrings.rule_add
+            )
+        },
         topBar = {
             GkMultiSelectionTopAppBar(
                 selectedMode = isSelectedMode,
@@ -201,6 +216,7 @@ fun AppConfigPage(route: AppConfigRoute) {
                 scrollBehavior = scrollBehavior,
                 onNavigateBack = { mainVm.popPage() },
                 onTitleClick = pageScrollState::resetScroll,
+                barColor = barColor,
                 title = {
                     GkAppNameText(appId = appId)
                 },
@@ -273,29 +289,22 @@ fun AppConfigPage(route: AppConfigRoute) {
                 },
             )
         },
-        floatingActionButton = {
-            GkAnimatedFloatingActionButton(
-                visible = !isSelectedMode,
-                onClick = {
-                    mainVm.navigatePage(
-                        UpsertRuleGroupRoute(
-                            subsId = LOCAL_SUBS_ID,
-                            groupKey = null,
-                            appId = appId
-                        )
-                    )
-                },
-                imageVector = GkIcons.Add,
-                contentDescription = UiStrings.rule_add
-            )
-        },
     ) { contentPadding ->
-        Column(Modifier.scaffoldPadding(contentPadding)) {
-            if (focus.missing) GkRuleFocusNotice()
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                state = listState,
-            ) {
+        // 列表铺满全屏，用 contentPadding 让出顶栏与底部系统栏；
+        // 内容延伸到屏幕底部，避免底部死白，且 backdrop 采样完整
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding(),
+            ),
+        ) {
+                if (focus.missing) {
+                    item("focus-notice") {
+                        GkRuleFocusNotice()
+                    }
+                }
                 if (showAppRestriction) {
                     item("app-restrictions") {
                         GkAppRuleRestrictionCard(
@@ -409,7 +418,6 @@ fun AppConfigPage(route: AppConfigRoute) {
                         GkPageBottomSpace()
                     }
                 }
-            }
         }
     }
 }

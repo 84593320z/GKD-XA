@@ -79,11 +79,15 @@ fun GkPageScaffold(
 /**
  * 自定义顶栏的二级页壳。在 [topBar] / [floatingActionButton] 中通过 [GkPageBarScope]
  * 使用统一的 [GkPageBarScope.scrollBehavior] 与 [GkPageBarScope.barColor]。
+ *
+ * @param externalScrollBehavior 页面自带列表滚动状态（如 rememberListScrollState）时传入其
+ *   scrollBehavior 复用，使顶栏收起由页面列表驱动；缺省时壳内自建。
  */
 @Composable
 fun GkPageScaffold(
     modifier: Modifier = Modifier,
     enableContentBlur: Boolean = true,
+    externalScrollBehavior: ScrollBehavior? = null,
     floatingActionButton: @Composable GkPageBarScope.() -> Unit = {},
     topBar: @Composable GkPageBarScope.() -> Unit,
     content: @Composable (PaddingValues) -> Unit,
@@ -92,7 +96,7 @@ fun GkPageScaffold(
     val blurActive = enableContentBlur && store.enableMiuixBlur && isRuntimeShaderSupported()
     val surfaceColor = MiuixTheme.colorScheme.surface
     val barColor = if (blurActive) Color.Transparent else surfaceColor
-    val scrollBehavior = MiuixScrollBehavior()
+    val scrollBehavior = externalScrollBehavior ?: MiuixScrollBehavior()
     val barScope = remember(scrollBehavior, barColor) {
         GkPageBarScope(scrollBehavior = scrollBehavior, barColor = barColor)
     }

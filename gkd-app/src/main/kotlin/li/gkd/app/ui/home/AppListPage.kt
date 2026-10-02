@@ -206,14 +206,17 @@ fun useAppListPage(): ScaffoldExt {
         }
     ) { contentPadding ->
         PullToRefreshBox(
-            modifier = Modifier.padding(contentPadding),
+            // 不在此处 padding：会压缩整个容器高度，导致列表提前结束、底部出现死白且吃不到底栏模糊。
+            // 改由 LazyColumn 的 contentPadding 承担，容器继续铺满全屏，内容延伸到底栏下方。
+            modifier = Modifier.fillMaxSize(),
             state = pullToRefreshState,
             isRefreshing = refreshing,
             onRefresh = vm::refresh,
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                state = listState
+                state = listState,
+                contentPadding = contentPadding,
             ) {
                 if (!state.canQueryPackages) {
                     item(key = 1, contentType = 1) {
@@ -244,9 +247,9 @@ fun useAppListPage(): ScaffoldExt {
                 item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
                     if (appInfos.isEmpty() && searchStr.isNotEmpty()) {
                         GkEmptyState(text = if (state.showAllApps) UiStrings.search_no_results else UiStrings.search_no_results_filter_hint)
+                        // 底部空间已由 contentPadding.bottom（HomePage 的 listBottomSpace）统一提供，
+                        // 这里只补一点紧凑间距，避免小屏上「空状态」离底栏太远
                         GkPageBottomSpace(height = GkPageBottomSpaceDefaults.CompactHeight)
-                    } else {
-                        GkPageBottomSpace()
                     }
                 }
             }

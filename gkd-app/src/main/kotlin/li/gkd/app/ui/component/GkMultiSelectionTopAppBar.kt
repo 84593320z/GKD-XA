@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -59,6 +60,7 @@ fun GkMultiSelectionTopAppBar(
     onTitleClick: (() -> Unit)? = null,
     scrollBehavior: ScrollBehavior? = null,
     canScroll: Boolean = true,
+    barColor: Color? = null,
     actions: @Composable RowScope.(selectedMode: Boolean) -> Unit = {},
 ) {
     val transition = updateTransition(selectedMode, label = "multiSelectionTopBar")
@@ -152,6 +154,7 @@ fun GkMultiSelectionTopAppBar(
             modifier = modifier,
             scrollBehavior = scrollBehavior,
             canScroll = canScroll,
+            color = barColor ?: MiuixTheme.colorScheme.surface,
             navigationIcon = {
                 IconButton(
                     onClick = {
@@ -166,7 +169,7 @@ fun GkMultiSelectionTopAppBar(
             actions = animatedActions,
         )
     } else {
-        PinnedSelectionTopAppBar(modifier, scrollBehavior, canScroll) {
+        PinnedSelectionTopAppBar(modifier, scrollBehavior, canScroll, barColor) {
             CompositionLocalProvider(LocalContentColor provides titleContentColor) {
                 Box(Modifier.weight(1f)) { animatedTitle() }
             }
@@ -192,6 +195,7 @@ private fun PinnedSelectionTopAppBar(
     modifier: Modifier,
     scrollBehavior: ScrollBehavior?,
     canScroll: Boolean,
+    barColor: Color?,
     content: @Composable RowScope.() -> Unit,
 ) {
     // The subscription tab is pinned. MIUIX owns its background, insets and scroll color;
@@ -200,7 +204,7 @@ private fun PinnedSelectionTopAppBar(
     Layout(
         modifier = modifier.semantics { isTraversalGroup = true },
         contents = listOf(
-            { GkTopAppBar(titleText = "", scrollBehavior = scrollBehavior, canScroll = canScroll) },
+            { GkTopAppBar(titleText = "", scrollBehavior = scrollBehavior, canScroll = canScroll, color = barColor ?: MiuixTheme.colorScheme.surface) },
             {
                 Box(Modifier.clipToBounds()) {
                     Row(

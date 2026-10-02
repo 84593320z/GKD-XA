@@ -15,8 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -124,7 +127,19 @@ fun HomePage() {
     val homePager = rememberHomePagerState(pagerState)
     val settled = pagerState.settledPage
     // 转场中只画当前 Tab，邻页先不参与布局/绘制（不卸载已创建的 page 状态，避免来回重组风暴）
-    val lightPager = !contentReady || navTransitionRunning
+    // 返回转场落定后先让毛玻璃在「轻树」上恢复采样，隔两帧再放开邻页重组：
+    // 否则邻页重组风暴与模糊恢复抢同一帧，底栏模糊会视觉断档 1-2s
+    var pagerRecovery by remember { mutableStateOf(true) }
+    LaunchedEffect(navTransitionRunning) {
+        if (navTransitionRunning || !contentReady) {
+            pagerRecovery = true
+        } else {
+            withFrameNanos { }
+            withFrameNanos { }
+            pagerRecovery = false
+        }
+    }
+    val lightPager = !contentReady || navTransitionRunning || pagerRecovery
 
     val dashboardPage = if (contentReady || settled == 0) useControlPage() else null
     val subsPage = if (contentReady || settled == 1) useSubsManagePage() else null
