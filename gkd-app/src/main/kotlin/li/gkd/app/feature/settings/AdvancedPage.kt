@@ -52,6 +52,8 @@ import li.gkd.app.service.TrackService
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.service.HttpService
 import li.gkd.app.store.AppStore.storeFlow
+import li.gkd.app.feature.settings.ai.AiProvidersPageRoute
+import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.ui.style.TABULAR_NUMBERS_FONT_FEATURE
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.itemVerticalPadding
@@ -83,7 +85,6 @@ private fun AdvancedContent() {
     val scope = vm.scope
     var showEditPortDialog by rememberSaveable { mutableStateOf(false) }
     var showHttpSettingsDialog by rememberSaveable { mutableStateOf(false) }
-    var showAiConfigDialog by rememberSaveable { mutableStateOf(false) }
     val store by storeFlow.collectAsStateWithLifecycle()
     val httpServer by HttpService.httpServerFlow.collectAsStateWithLifecycle()
     val localNetworkIps by HttpService.localNetworkIpsFlow.collectAsStateWithLifecycle()
@@ -124,13 +125,6 @@ private fun AdvancedContent() {
                     showEditPortDialog = false
                 }
             },
-        )
-    }
-
-    if (showAiConfigDialog) {
-        AiSettingsDialog(
-            aiConfig = store.aiConfig,
-            onDismissRequest = { showAiConfigDialog = false },
         )
     }
 
@@ -186,15 +180,22 @@ private fun AdvancedContent() {
             AdvancedSectionTitle("AI 自动规则")
             GkTextSwitch(
                 title = "启用 AI 规则",
-                subtitle = "捕获快照后自动调用大模型生成订阅规则",
+                subtitle = "保存快照后按当前服务商自动生成规则",
                 checked = store.aiEnable,
-                onCheckedChange = vm::setAiEnable,
+                onCheckedChange = { enabled ->
+                    if (enabled && store.activeAiProvider()?.usable != true) {
+                        toast("请先配置并启用一个 AI 服务商")
+                        mainVm.navigatePage(AiProvidersPageRoute)
+                        return@GkTextSwitch
+                    }
+                    vm.setAiEnable(enabled)
+                },
             )
             GkSettingItem(
-                title = "AI 规则设置",
-                subtitle = "配置大模型协议、API 地址、模型等参数",
+                title = "AI 服务商",
+                subtitle = "管理多个服务商，配置模型、请求头与生成参数",
                 imageVector = GkIcons.Edit,
-                onClick = { showAiConfigDialog = true },
+                onClick = { mainVm.navigatePage(AiProvidersPageRoute) },
             )
 
             AdvancedSectionTitle(UiStrings.advanced_live_debug)

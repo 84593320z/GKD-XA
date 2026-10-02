@@ -73,8 +73,7 @@ fun GkIcon(
     tint: Color = LocalContentColor.current,
     contentDescription: String? = getIconDefaultDesc(imageVector),
     animateMorph: Boolean = false,
-) {
-    if (animateMorph) {
+) {    if (animateMorph) {
         AnimatedMorphIcon(
             imageVector = imageVector,
             modifier = modifier,
@@ -201,4 +200,15 @@ object GkIcons {
     val TextFields get() = Icons.Outlined.TextFields
     val ArrowDownward get() = Icons.Outlined.ArrowDownward
     val Check get() = Icons.Outlined.Check
+}
+
+/** 跟随明暗主题的默认图标色：优先 LocalContentColor，否则 MIUIX onSurface */
+@Composable
+fun defaultIconTint(): Color {
+    val local = LocalContentColor.current
+    return if (local == Color.Unspecified) {
+        top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme.onSurface
+    } else {
+        local
+    }
 }

@@ -31,6 +31,12 @@ import li.gkd.app.feature.log.ActivityLogPage
 import li.gkd.app.feature.log.ActivityLogRoute
 import li.gkd.app.feature.settings.AdvancedPage
 import li.gkd.app.feature.settings.AdvancedPageRoute
+import li.gkd.app.feature.settings.ai.AiHelpPage
+import li.gkd.app.feature.settings.ai.AiHelpPageRoute
+import li.gkd.app.feature.settings.ai.AiProviderDetailPage
+import li.gkd.app.feature.settings.ai.AiProviderDetailRoute
+import li.gkd.app.feature.settings.ai.AiProvidersPage
+import li.gkd.app.feature.settings.ai.AiProvidersPageRoute
 import li.gkd.app.ui.AppConfigPage
 import li.gkd.app.ui.AppConfigRoute
 import li.gkd.app.ui.BlockA11yAppListPage
@@ -93,6 +99,9 @@ private val mainRouteEntryProvider = entryProvider {
     entry<BlockA11ySetupRoute>(metadata = editorTransitions) { BlockA11ySetupPage() }
     entry<BlockA11yAppListRoute> { BlockA11yAppListPage() }
     entry<AdvancedPageRoute> { AdvancedPage() }
+    entry<AiProvidersPageRoute> { AiProvidersPage() }
+    entry<AiProviderDetailRoute> { AiProviderDetailPage(it) }
+    entry<AiHelpPageRoute> { AiHelpPage() }
     entry<PrivilegeServiceRoute> { PrivilegeServicePage() }
     entry<SnapshotPageRoute> { SnapshotPage() }
     entry<SnapshotPreviewRoute> { SnapshotPreviewPage(it) }

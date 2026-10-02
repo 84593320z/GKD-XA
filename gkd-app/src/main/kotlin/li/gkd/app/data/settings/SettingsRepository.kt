@@ -158,8 +158,10 @@ class SettingsRepository(
         filename = "store.json",
         file = storeFolder.resolve("store.json"),
         decode = { text ->
-            text?.let { runCatching { json.decodeFromString<SettingsStore>(it) }.getOrNull() }
-                ?: defaultSettings()
+            text?.let {
+                runCatching { json.decodeFromString<SettingsStore>(it) }.getOrNull()
+                    ?.migrateAiProviders()
+            } ?: defaultSettings()
         },
         encode = { json.encodeToString(it) },
         scope = scope,
