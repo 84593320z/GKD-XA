@@ -28,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,10 +45,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import li.gkd.app.MainActivity
 import li.gkd.app.MainViewModel
-import li.gkd.app.META
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.priv.privilegeContextFlow
 import li.gkd.app.service.StatusService
@@ -57,6 +54,9 @@ import li.gkd.app.service.TrackService
 import li.gkd.app.service.fixRestartAutomatorService
 import li.gkd.app.store.AppStore
 import li.gkd.app.store.AppStore.storeFlow
+import li.gkd.app.store.AppStore.actionCountFlow
+import li.gkd.app.data.subscription.SubscriptionState
+import li.gkd.app.notif.replaceNotificationTemplate
 import li.gkd.app.feature.settings.AboutRoute
 import li.gkd.app.feature.settings.AdvancedPageRoute
 import li.gkd.app.ui.BlockA11yAppListRoute
@@ -75,12 +75,12 @@ import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.ui.component.useScrollBehaviorState
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.share.launchUiAction
+import li.gkd.app.ui.share.statusText
 import li.gkd.app.ui.style.EmptyHeight
 import li.gkd.app.ui.style.iconTextSize
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.lineHeightDp
 import li.gkd.app.text.UiStrings
-import li.gkd.app.util.ActionTipLiveDurationOption
 import li.gkd.app.util.ActionTipStyleOption
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.DarkThemeOption
@@ -188,59 +188,6 @@ fun useSettingsPage(): ScaffoldExt {
         )
     }
 
-    // ---------------- 实时通知存在时间 ----------------
-    var showLiveDurationDlg by remember { mutableStateOf(false) }
-    if (showLiveDurationDlg) {
-        var value by remember { mutableStateOf("8") }
-        val parsedSec = value.toIntOrNull()
-        val validSec = parsedSec != null && parsedSec in 1..300
-        PerfAlertDialog(
-            properties = DialogProperties(dismissOnClickOutside = false),
-            title = { Text(text = "实时通知存在时间") },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    TextField(
-                        value = value,
-                        onValueChange = { newValue ->
-                            value = newValue.filter(Char::isDigit).take(3)
-                        },
-                        label = "秒数（1-300）",
-                        useLabelAsPlaceholder = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .autoFocus(),
-                    )
-                    Text(
-                        text = "到期后自动取消通知；常用 3 / 5 / 8 / 15 / 30 / 60",
-                        modifier = Modifier.padding(top = 8.dp),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                }
-            },
-            onDismissRequest = { showLiveDurationDlg = false },
-            confirmButton = {
-                TextButton(
-                    text = "确认",
-                    enabled = validSec,
-                    onClick = {
-                        if (parsedSec != null) toast("已设置为 ${parsedSec} 秒")
-                        showLiveDurationDlg = false
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                )
-            },
-            dismissButton = {
-                TextButton(
-                    text = "取消",
-                    onClick = { showLiveDurationDlg = false },
-                    modifier = Modifier.weight(1f),
-                )
-            },
-        )
-    }
-
     // ---------------- 通知文案 ----------------
     var showNotifTextInputDlg by remember { mutableStateOf(false) }
     if (showNotifTextInputDlg) {
@@ -319,7 +266,8 @@ fun useSettingsPage(): ScaffoldExt {
                 TextButton(
                     text = "确认",
                     onClick = {
-                        if (vm.saveNotificationText(true, titleValue, textValue)) {
+                        // 只更新文案，不改变「通知文案」开关状态（与旧版一致）
+                        if (vm.saveNotificationText(store.useCustomNotifText, titleValue, textValue)) {
                             toast("更新成功")
                         }
                         showNotifTextInputDlg = false
@@ -450,21 +398,6 @@ fun useSettingsPage(): ScaffoldExt {
                                 }
                             },
                         )
-                        if (!store.useSystemToast) {
-                            TextMenu(
-                                title = "存在时间",
-                                option = ActionTipLiveDurationOption.resolve(8),
-                                onOptionChange = { option ->
-                                    val sec = (option as ActionTipLiveDurationOption).value
-                                    showLiveDurationDlg = true
-                                },
-                            )
-                            SettingItem(
-                                title = "自定义存在时间",
-                                subtitle = "可输入 1-300 秒",
-                                onClick = { showLiveDurationDlg = true },
-                            )
-                        }
                         SettingItem(
                             title = "样式说明",
                             subtitle = "悬浮窗 / 系统 Toast；悬浮窗兼容性更好",
@@ -517,11 +450,11 @@ fun useSettingsPage(): ScaffoldExt {
 
                 TextSwitch(
                     title = "通知文案",
-                    subtitle = if (store.useCustomNotifText) {
-                        store.customNotifTitle + " / " + store.customNotifText
-                    } else {
-                        META.appName
-                    },
+                    subtitle = notificationTextSubtitle(
+                        useCustomText = store.useCustomNotifText,
+                        customTitle = store.customNotifTitle,
+                        customText = store.customNotifText,
+                    ),
                     checked = store.useCustomNotifText,
                     onClickLabel = "打开修改通知文案弹窗",
                     onClick = { showNotifTextInputDlg = true },
@@ -642,9 +575,26 @@ fun useSettingsPage(): ScaffoldExt {
 }
 
 @Composable
+private fun notificationTextSubtitle(
+    useCustomText: Boolean,
+    customTitle: String,
+    customText: String,
+): String {
+    // 必须在条件分支前无条件收集，避免 useCustomText 切换时改变 composable 调用点数量（违反 Compose 钩子规则）
+    val ruleSummary by SubscriptionState.ruleSummaryFlow.collectAsState()
+    val actionCount by actionCountFlow.collectAsState()
+    if (!useCustomText) return ruleSummary.statusText(actionCount)
+    val title = customTitle.replaceNotificationTemplate(ruleSummary, actionCount)
+    val text = customText.replaceNotificationTemplate(ruleSummary, actionCount)
+    return listOf(title, text)
+        .map { it.lineSequence().joinToString(" ").trim() }
+        .filter { it.isNotEmpty() }
+        .joinToString(" · ")
+}
+
+@Composable
 private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(onDismissRequest) {
     val mainVm = MainViewModel.requireCurrent()
-    val dialogScope = rememberCoroutineScope()
     val statusRunning by StatusService.isRunning.collectAsState()
     val privilegeContext by privilegeContextFlow.collectAsState()
     val ignoreBatteryOptimizations by PermissionStates.ignoreBatteryOptimizations.stateFlow.collectAsState()
@@ -676,7 +626,8 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
                     enabled = privilegeContext != null && statusRunning && ignoreBatteryOptimizations,
                     onClick = {
                         onDismissRequest()
-                        dialogScope.launch {
+                        // 用 mainVm 的 scope（不随弹窗销毁而取消），保证延迟写入真正执行
+                        mainVm.scope.launchUi {
                             delay(200)
                             AppStore.updateSettings { it.copy(enableBlockA11yAppList = true) }
                         }
@@ -722,7 +673,7 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
                         enabled = !statusRunning,
                         imageVector = if (statusRunning) PerfIcon.Check else PerfIcon.ArrowForward,
                         onClick = {
-                            dialogScope.launch {
+                            mainVm.scope.launchUi {
                                 mainVm.enableStatusService()
                             }
                         },
@@ -733,7 +684,7 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
                         imageVector = if (ignoreBatteryOptimizations) PerfIcon.Check else PerfIcon.ArrowForward,
                         onClickLabel = "打开忽略电池优化设置页面",
                         onClick = {
-                            dialogScope.launch {
+                            mainVm.scope.launchUi {
                                 mainVm.permissionRequests.ensurePermissions(
                                     PermissionStates.ignoreBatteryOptimizations
                                 )

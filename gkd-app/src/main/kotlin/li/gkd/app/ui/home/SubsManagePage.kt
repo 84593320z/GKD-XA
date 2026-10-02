@@ -21,11 +21,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -68,11 +64,8 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
-import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkMultiSelectionActions
-import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
 import li.gkd.app.ui.component.GkSettingsDialog
 import li.gkd.app.ui.component.SubsItemCard
 import li.gkd.app.ui.component.PerfTopAppBar
@@ -80,8 +73,8 @@ import li.gkd.app.ui.component.PerfIconButton
 import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfDropdownMenu
 import li.gkd.app.ui.component.PerfDropdownMenuItem
-import li.gkd.app.ui.component.GkTextMenu
-import li.gkd.app.ui.component.GkTextSwitch
+import li.gkd.app.ui.component.TextMenu
+import li.gkd.app.ui.component.TextSwitch
 import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.component.rememberPinnedListScrollState
 import li.gkd.app.ui.component.rememberReorderSession
@@ -157,12 +150,12 @@ private fun useLoadedSubsManagePage(
             onDismissRequest = { vm.setSettingsDialogVisible(false) },
             title = UiStrings.subscription_settings,
         ) {
-            GkTextMenu(
+            TextMenu(
                 title = UiStrings.subscriptions_update,
                 option = UpdateTimeOption.objects.findOption(store.updateSubsInterval),
                 onOptionChange = { vm.setUpdateInterval(it.value) },
             )
-            GkTextSwitch(
+            TextSwitch(
                 title = UiStrings.subscription_battery_warning,
                 subtitle = UiStrings.subscription_battery_warning_setting,
                 checked = store.subsPowerWarn,
@@ -232,6 +225,7 @@ private fun useLoadedSubsManagePage(
                     }
                 },
                 actions = {
+                    var expanded by remember { mutableStateOf(false) }
                     if (isSelectedMode) {
                         val canDeleteIds = selectedIds - LOCAL_SUBS_ID
                         if (canDeleteIds.isNotEmpty()) {
@@ -261,7 +255,6 @@ private fun useLoadedSubsManagePage(
                             )
                         }
                     } else {
-                        var expanded by remember { mutableStateOf(false) }
                         PerfIconButton(
                             imageVector = PerfIcon.Autorenew,
                             contentDescription = if (refreshing) "正在刷新订阅" else "刷新订阅",
@@ -288,23 +281,40 @@ private fun useLoadedSubsManagePage(
                             onClickLabel = UiStrings.settings_dialog_open,
                             onClick = { vm.setSettingsDialogVisible(true) },
                         )
-                        PerfDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            anchor = {
-                                PerfIconButton(
-                                    imageVector = PerfIcon.MoreVert,
-                                    contentDescription = UiStrings.more_actions,
-                                    onClick = {
-                                        if (refreshing) {
-                                            toast(UiStrings.subscription_refresh_wait)
-                                        } else {
-                                            expanded = true
-                                        }
-                                    },
-                                )
-                            },
-                        ) {
+                    }
+                    PerfDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        anchor = {
+                            PerfIconButton(
+                                imageVector = PerfIcon.MoreVert,
+                                contentDescription = UiStrings.more_actions,
+                                onClick = {
+                                    if (refreshing && !isSelectedMode) {
+                                        toast(UiStrings.subscription_refresh_wait)
+                                    } else {
+                                        expanded = true
+                                    }
+                                },
+                            )
+                        },
+                    ) {
+                        if (isSelectedMode) {
+                            PerfDropdownMenuItem(
+                                text = UiStrings.selection_all,
+                                onClick = {
+                                    expanded = false
+                                    selectionState.selectAll(allIds)
+                                },
+                            )
+                            PerfDropdownMenuItem(
+                                text = UiStrings.selection_invert,
+                                onClick = {
+                                    expanded = false
+                                    selectionState.invert(allIds)
+                                },
+                            )
+                        } else {
                             PerfDropdownMenuItem(
                                 text = UiStrings.app_rule_add,
                                 onClick = throttle {
@@ -457,11 +467,19 @@ private fun useLoadedSubsManagePage(
                                 index = index + 1,
                                 isSelectedMode = isSelectedMode,
                                 isSelected = selectedIds.contains(subItem.id),
+                                matchingEnabled = store.enableMatch,
+                                selectionEnabled = !batchBusy && !refreshing && !reorderSession.dragging,
+                                handlesLongPress = !canDrag,
                                 loadError = state.loadErrors[subItem.id],
                                 refreshError = state.refreshErrors[subItem.id],
                                 refreshing = refreshing,
                                 onCheckedChange = { checked ->
                                     vm.requestSubscriptionEnabled(subItem, checked)
+                                },
+                                onSelect = {
+                                    if (!batchBusy && !refreshing && !reorderSession.dragging) {
+                                        selectionState.select(subItem.id)
+                                    }
                                 },
                                 onSelectedChange = { selectionState.toggle(subItem.id) },
                             )

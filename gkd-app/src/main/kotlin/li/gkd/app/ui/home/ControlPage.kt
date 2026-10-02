@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -37,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.Dispatchers
 import li.gkd.app.META
 import li.gkd.app.MainActivity
 import li.gkd.app.MainViewModel
@@ -70,12 +68,10 @@ import li.gkd.app.ui.component.TextSwitch
 import li.gkd.app.ui.component.textSize
 import li.gkd.app.ui.component.useScrollBehaviorState
 import li.gkd.app.ui.share.statusText
-import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.ui.style.EmptyHeight
 import li.gkd.app.ui.style.StatusColors
 import li.gkd.app.util.HOME_PAGE_URL
-import li.gkd.app.util.ShortUrlSet
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.db.RuleGroupType
 import top.yukonga.miuix.kmp.basic.Card

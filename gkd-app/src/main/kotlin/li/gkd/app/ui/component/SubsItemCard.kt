@@ -2,6 +2,8 @@ package li.gkd.app.ui.component
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -13,11 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -26,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.MainViewModel
 import li.gkd.app.data.RawSubscription
@@ -48,10 +53,14 @@ fun SubsItemCard(
     index: Int,
     isSelectedMode: Boolean,
     isSelected: Boolean,
+    matchingEnabled: Boolean = true,
+    selectionEnabled: Boolean = true,
+    handlesLongPress: Boolean = true,
     refreshing: Boolean = false,
     loadError: Exception? = null,
     refreshError: Exception? = null,
     onCheckedChange: ((Boolean) -> Unit),
+    onSelect: (() -> Unit)? = null,
     onSelectedChange: (() -> Unit)? = null,
 ) {
     val mainVm = MainViewModel.requireCurrent()
@@ -59,8 +68,8 @@ fun SubsItemCard(
     val onClick = {
         if (!dragged) {
             if (isSelectedMode) {
-                onSelectedChange?.invoke()
-            } else {
+                if (selectionEnabled) onSelectedChange?.invoke()
+            } else if (!refreshing) {
                 mainVm.subsSheet.show(subsItem.id)
             }
         }
@@ -74,17 +83,49 @@ fun SubsItemCard(
         tween()
     )
     Card(
-        onClick = onClick,
         modifier = modifier
             .padding(horizontal = 12.dp, vertical = 4.dp)
-            .semantics {
-                stateDescription = if (isSelectedMode) {
-                    if (isSelected) "已选中" else "未选中"
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                enabled = !isSelectedMode || selectionEnabled,
+                onClick = onClick,
+                onLongClick = if (handlesLongPress && selectionEnabled) {
+                    { (onSelect ?: onSelectedChange)?.invoke() }
                 } else {
-                    if (subsItem.enable) "已启用" else "已禁用"
+                    null
+                },
+            )
+            .semantics {
+                stateDescription = when {
+                    isSelectedMode -> if (isSelected) UiStrings.selected else UiStrings.not_selected
+                    !matchingEnabled -> UiStrings.subscription_switch_paused_description
+                    else -> if (subsItem.enable) UiStrings.enabled else UiStrings.disabled
                 }
-                this.onClick(label = "查看订阅详情", action = null)
-                this.onLongClick(label = "进入多选模式", action = null)
+                if (isSelectedMode) {
+                    selected = isSelected
+                    role = Role.Checkbox
+                }
+                this.onClick(
+                    label = if (isSelectedMode) {
+                        if (isSelected) UiStrings.selection_deselect else UiStrings.selection_select
+                    } else {
+                        UiStrings.subscription_details_view
+                    },
+                    action = null,
+                )
+                if (selectionEnabled) {
+                    this.onLongClick(
+                        label = if (isSelectedMode) {
+                            UiStrings.selection_select
+                        } else {
+                            UiStrings.selection_mode_enter
+                        },
+                    ) {
+                        (onSelect ?: onSelectedChange)?.invoke()
+                        true
+                    }
+                }
             },
         colors = CardDefaults.defaultColors(
             color = containerColor.value
@@ -127,7 +168,7 @@ fun SubsItemCard(
                                     modifier = Modifier.semantics {
                                         contentDescription = "作者 ${subscription.author}"
                                     },
-                                    text = subscription.author.toString(),
+                                    text = subscription.author,
                                     style = MiuixTheme.textStyles.footnote2,
                                 )
                             }
@@ -198,6 +239,7 @@ fun SubsItemCard(
                 key = subsItem.id,
                 modifier = switchModifier,
                 checked = subsItem.enable,
+                enabled = !isSelectedMode || selectionEnabled,
                 onCheckedChange = if (isSelectedMode) null else throttle(fn = onCheckedChange),
             )
         }
