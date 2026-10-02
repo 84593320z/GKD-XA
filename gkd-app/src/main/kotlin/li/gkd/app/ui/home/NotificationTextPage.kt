@@ -75,7 +75,7 @@ fun NotificationTextPage() {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                color = MiuixTheme.colorScheme.surfaceContainer,
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -139,7 +139,7 @@ private fun NotificationTextPreview(title: String, text: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MiuixTheme.colorScheme.surfaceContainer,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title.replaceNotificationTemplate(ruleSummary, actionCount),
@@ -155,7 +155,7 @@ private fun NotificationTemplateVariables() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MiuixTheme.colorScheme.surfaceContainer,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(UiStrings.notification_template_variables, style = MiuixTheme.textStyles.subtitle)

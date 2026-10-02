@@ -82,7 +82,7 @@ fun ActionToastPage() {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                color = MiuixTheme.colorScheme.surfaceContainer,
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth()
@@ -152,7 +152,7 @@ private fun ActionToastCard(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MiuixTheme.colorScheme.surfaceContainer,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
     }

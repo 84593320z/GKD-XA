@@ -29,7 +29,7 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
@@ -39,7 +39,6 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.material3.rememberTooltipState
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -509,7 +508,7 @@ private fun SnapshotCard(
     onMore: () -> Unit,
 ) {
     val context = LocalContext.current
-    val colorScheme = MaterialTheme.colorScheme
+    val colorScheme = MiuixTheme.colorScheme
     val cardShape = RoundedCornerShape(12.dp)
     val screenshotFile = snapshot.screenshotFile
     val modifiedAt = screenshotFile.lastModified()
@@ -655,7 +654,7 @@ private fun SnapshotCard(
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
                 style = MiuixTheme.textStyles.footnote2,
-                color = if (activityLabel == null) colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                color = if (activityLabel == null) colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f)
                     else colorScheme.onSurface,
             )
         }

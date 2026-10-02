@@ -18,8 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.contentColorFor
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -81,7 +82,7 @@ class EventService : OverlayWindowService(positionKey = "event") {
                 contentDescription = UiStrings.event_log_window_restore,
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = alpha))
+                    .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = alpha))
                     .semantics {
                         onClick(label = UiStrings.event_log_window_restore) {
                             minimized = false
@@ -90,10 +91,10 @@ class EventService : OverlayWindowService(positionKey = "event") {
                     }
                     .size(40.dp)
                     .padding(8.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+                tint = MiuixTheme.colorScheme.primary.copy(alpha = alpha),
             )
         } else {
-            val bgColor = MaterialTheme.colorScheme.surface
+            val bgColor = MiuixTheme.colorScheme.surface
             CompositionLocalProvider(
                 LocalContentColor provides contentColorFor(bgColor),
             ) {
@@ -114,7 +115,7 @@ class EventService : OverlayWindowService(positionKey = "event") {
                         onMinimizeRequest = { minimized = true },
                         minimizeContentDescription = UiStrings.event_log_window_minimize,
                     )
-                    val textStyle = MaterialTheme.typography.labelSmall
+                    val textStyle = MiuixTheme.textStyles.footnote2
                     CompositionLocalProvider(
                         LocalTextStyle provides textStyle,
                     ) {

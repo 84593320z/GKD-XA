@@ -11,8 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.contentColorFor
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,7 +58,7 @@ class ActivityService : OverlayWindowService(
 
     @Composable
     override fun ComposeContent() {
-        val bgColor = MaterialTheme.colorScheme.surface
+        val bgColor = MiuixTheme.colorScheme.surface
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.small)
@@ -79,14 +80,14 @@ class ActivityService : OverlayWindowService(
                             RowText(text = topActivity.appId)
                             RowText(
                                 text = topActivity.shortActivityId,
-                                color = MaterialTheme.colorScheme.secondary
+                                color = MiuixTheme.colorScheme.secondary
                             )
                         }
                         if (topActivity.number > 0) {
                             Text(
                                 text = topActivity.number.toString(),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary,
+                                style = MiuixTheme.textStyles.footnote2,
+                                color = MiuixTheme.colorScheme.secondary,
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .zIndex(1f)

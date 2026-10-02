@@ -3,6 +3,7 @@ package li.gkd.app.service
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,9 +61,9 @@ class ButtonService : OverlayWindowService(
             imageVector = GkIcons.CenterFocusWeak,
             modifier = Modifier
                 .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = alpha))
+                .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = alpha))
                 .size(40.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+            tint = MiuixTheme.colorScheme.primary.copy(alpha = alpha),
         )
     }
 

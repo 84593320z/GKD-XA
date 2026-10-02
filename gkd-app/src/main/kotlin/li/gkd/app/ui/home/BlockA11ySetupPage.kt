@@ -246,7 +246,7 @@ private fun BlockA11ySectionTitle(text: String, optional: Boolean = false) {
 private fun BlockA11ySettingsCard(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MiuixTheme.colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(content = content)

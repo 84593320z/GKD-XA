@@ -19,8 +19,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -169,8 +170,8 @@ class PermissionRequestContent(
                     liveRegion = LiveRegionMode.Polite
                 },
             shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.inverseSurface,
-            contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+            color = MiuixTheme.colorScheme.surfaceContainerHighest,
+            contentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
             tonalElevation = 6.dp,
             shadowElevation = 6.dp,
         ) {
@@ -180,12 +181,12 @@ class PermissionRequestContent(
             ) {
                 Text(
                     text = prompt.title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MiuixTheme.textStyles.title3,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = prompt.message,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MiuixTheme.textStyles.body2,
                 )
             }
         }
