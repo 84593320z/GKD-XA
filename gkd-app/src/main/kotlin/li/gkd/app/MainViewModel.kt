@@ -274,6 +274,13 @@ class MainViewModel : BaseViewModel() {
         pageScrollResetRequestFlow.compareAndSet(request, null)
     }
 
+    /** 由首页 Pager 滑动落定时回写当前 Tab（不触发滚动重置逻辑）。 */
+    fun setTab(key: Int) {
+        if (tabFlow.value != key) {
+            tabFlow.value = key
+        }
+    }
+
     fun handleGkdUri(uri: Uri) {
         val notFoundToast = { toast(UiStrings.uri_unknown(uri)) }
         when (uri.host) {

@@ -46,6 +46,7 @@ import li.gkd.app.ui.component.GkTextMenu
 import li.gkd.app.ui.component.GkTextSwitch
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.rememberColumnScrollState
+import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 
 private const val ZIP_MIME_TYPE = "application/zip"
 
@@ -221,6 +222,32 @@ fun useSettingsPage(): ScaffoldExt {
                     }
                 )
             }
+
+            val shaderOk = isRuntimeShaderSupported()
+            GkTextSwitch(
+                title = "模糊",
+                subtitle = if (shaderOk) {
+                    "启用顶栏和底栏的模糊效果"
+                } else {
+                    "当前设备不支持 RuntimeShader，无法启用模糊"
+                },
+                checked = store.enableMiuixBlur && shaderOk,
+                enabled = shaderOk,
+                onCheckedChange = { vm.setMiuixBlur(it) },
+            )
+            GkTextSwitch(
+                title = "悬浮底栏",
+                subtitle = "使用类 Apple 风格的悬浮底栏",
+                checked = store.useFloatingNavBar,
+                onCheckedChange = { vm.setFloatingNavBar(it) },
+            )
+            GkTextSwitch(
+                title = "液态玻璃",
+                subtitle = "悬浮底栏与右下角加号按钮使用液态玻璃效果",
+                checked = store.enableLiquidGlass && store.enableMiuixBlur && shaderOk,
+                enabled = store.enableMiuixBlur && shaderOk,
+                onCheckedChange = { vm.setLiquidGlass(it) },
+            )
 
             Text(
                 text = UiStrings.settings_other,

@@ -54,6 +54,18 @@ class SettingsVm : BaseViewModel() {
         AppStore.updateSettings { it.copy(enableDynamicColor = enabled) }
     }
 
+    fun setMiuixBlur(enabled: Boolean) {
+        AppStore.updateSettings { it.copy(enableMiuixBlur = enabled) }
+    }
+
+    fun setFloatingNavBar(enabled: Boolean) {
+        AppStore.updateSettings { it.copy(useFloatingNavBar = enabled) }
+    }
+
+    fun setLiquidGlass(enabled: Boolean) {
+        AppStore.updateSettings { it.copy(enableLiquidGlass = enabled) }
+    }
+
     suspend fun importBackup(uri: Uri) {
         toast(UiStrings.backup_import_progress)
         val skipped = BackupManager.importData(uri)
