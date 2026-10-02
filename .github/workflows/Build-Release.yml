@@ -39,17 +39,17 @@ jobs:
 
       - run: chmod 777 ./gradlew
       # 只出 APK：bundlePlayRelease 要多跑一遍 R8，发版时间翻倍，而 AAB 仅上架 Google Play 才用得到
-      - run: ./gradlew app:assembleGkdRelease
+      - run: ./gradlew gkd-app:assembleGkdRelease
 
       - uses: actions/upload-artifact@v7
         with:
           name: release
-          path: app/build/outputs/apk/gkd/release
+          path: gkd-app/build/outputs/apk/gkd/release
 
       - uses: actions/upload-artifact@v7
         with:
           name: outputs
-          path: app/build/outputs
+          path: gkd-app/build/outputs
 
       - uses: actions/upload-artifact@v7
         with:
@@ -64,7 +64,7 @@ jobs:
       # 回填 version/*.json 需要仓库工作树；取默认分支而不是标签提交，因为 App 读的是分支 HEAD
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.repository.default_branch || 'miuix-ai' }}
+          ref: ${{ github.event.repository.default_branch || 'main' }}
 
       - uses: actions/download-artifact@v8
         with:
@@ -107,7 +107,7 @@ jobs:
         continue-on-error: true
         env:
           TAG: ${{ github.ref_name }}
-          TARGET_BRANCH: ${{ github.event.repository.default_branch || 'miuix-ai' }}
+          TARGET_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
         run: |
           set -u
           SIZE=$(wc -c < release/app-gkd-release.apk | tr -d ' ')

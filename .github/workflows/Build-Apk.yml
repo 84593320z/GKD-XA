@@ -47,14 +47,14 @@ jobs:
       - run: echo GKD_RENAME_APK_FLAG=1 >> gradle.properties
 
       - run: chmod 777 ./gradlew
-      - run: ./gradlew app:assembleGkdRelease
+      - run: ./gradlew gkd-app:assembleGkdRelease
 
       - uses: actions/upload-artifact@v7
         with:
           archive: false
-          path: app/build/outputs/apk/gkd/release/*.apk
+          path: gkd-app/build/outputs/apk/gkd/release/*.apk
 
       - uses: actions/upload-artifact@v7
         with:
           name: outputs
-          path: app/build/outputs
+          path: gkd-app/build/outputs
