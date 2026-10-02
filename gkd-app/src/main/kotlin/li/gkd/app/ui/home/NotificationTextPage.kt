@@ -57,7 +57,7 @@ fun NotificationTextPage() {
     var text by rememberSaveable { mutableStateOf(initialText) }
 
     GkEditorScaffold(
-        title = { Text(UiStrings.notification_text) },
+        title = UiStrings.notification_text,
         hasChanges = { enabled != initialEnabled || title != initialTitle || text != initialText },
         onSave = {
             if (vm.saveNotificationText(enabled, title, text)) toast(UiStrings.update_success)

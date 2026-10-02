@@ -5,10 +5,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.TopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
@@ -35,6 +31,9 @@ import kotlinx.coroutines.launch
 import li.gkd.app.data.RawSubscription
 import li.gkd.app.util.mapState
 import li.gkd.app.data.subscription.SubscriptionState
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.basic.TopAppBarState
 
 @Composable
 fun useSubs(subsId: Long?): RawSubscription? {
@@ -75,7 +74,7 @@ fun Modifier.autoFocus(immediateFocus: Boolean = false): Modifier {
     return focusRequester(focusRequester)
 }
 
-private fun TopAppBarScrollBehavior.resetScroll() {
+private fun ScrollBehavior.resetScroll() {
     state.heightOffset = 0f
     state.contentOffset = 0f
 }
@@ -107,7 +106,7 @@ fun <T> GkResetOnItemKeysChange(
 
 @Stable
 class ListScrollState(
-    val scrollBehavior: TopAppBarScrollBehavior,
+    val scrollBehavior: ScrollBehavior,
     val listState: LazyListState,
     private val coroutineScope: CoroutineScope,
 ) {
@@ -169,7 +168,7 @@ class ListScrollState(
 
 @Stable
 class ColumnScrollState(
-    val scrollBehavior: TopAppBarScrollBehavior,
+    val scrollBehavior: ScrollBehavior,
     val scrollState: ScrollState,
     private val coroutineScope: CoroutineScope,
 ) {
@@ -200,7 +199,7 @@ fun rememberListScrollState(
     val coroutineScope = rememberCoroutineScope()
     val currentCanScroll = rememberUpdatedState(canScroll)
     val stableCanScroll = remember { { currentCanScroll.value() } }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+    val scrollBehavior = MiuixScrollBehavior(
         state = rememberSaveable(saver = TopAppBarState.Saver) {
             TopAppBarState(-Float.MAX_VALUE, 0f, 0f)
         },
@@ -215,10 +214,11 @@ fun rememberListScrollState(
 @Composable
 fun rememberPinnedListScrollState(): ListScrollState {
     val coroutineScope = rememberCoroutineScope()
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(
+    val scrollBehavior = MiuixScrollBehavior(
         state = rememberSaveable(saver = TopAppBarState.Saver) {
             TopAppBarState(-Float.MAX_VALUE, 0f, 0f)
         },
+        canScroll = { false },
     )
     val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState(0, 0) }
     return remember(scrollBehavior, listState, coroutineScope) {
@@ -229,7 +229,7 @@ fun rememberPinnedListScrollState(): ListScrollState {
 @Composable
 fun rememberColumnScrollState(): ColumnScrollState {
     val coroutineScope = rememberCoroutineScope()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+    val scrollBehavior = MiuixScrollBehavior(
         state = rememberSaveable(saver = TopAppBarState.Saver) {
             TopAppBarState(-Float.MAX_VALUE, 0f, 0f)
         },
@@ -240,7 +240,7 @@ fun rememberColumnScrollState(): ColumnScrollState {
     }
 }
 
-val TopAppBarScrollBehavior.isFullVisible: Boolean
+val ScrollBehavior.isFullVisible: Boolean
     @Composable
     @ReadOnlyComposable
     get() = state.collapsedFraction == 0f
@@ -248,7 +248,7 @@ val TopAppBarScrollBehavior.isFullVisible: Boolean
 @Composable
 @ReadOnlyComposable
 fun Modifier.textSize(
-    style: TextStyle = LocalTextStyle.current,
+    style: TextStyle = TextStyle.Default,
     density: Density = LocalDensity.current,
 ): Modifier {
     val fontSizeDp = density.run { style.fontSize.toDp() }

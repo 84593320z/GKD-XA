@@ -1,6 +1,5 @@
 package li.gkd.app.ui.component
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.updateTransition
@@ -15,14 +14,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.basic.TopAppBarDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -45,7 +41,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import li.gkd.app.text.UiStrings
-import li.gkd.app.MainActivity
 import li.gkd.app.ui.icon.GkBackCloseIcon
 import li.gkd.app.ui.share.noRippleClickable
 
@@ -62,7 +57,7 @@ fun GkMultiSelectionTopAppBar(
     modifier: Modifier = Modifier,
     onNavigateBack: (() -> Unit)? = null,
     onTitleClick: (() -> Unit)? = null,
-    scrollBehavior: TopAppBarScrollBehavior? = null,
+    scrollBehavior: ScrollBehavior? = null,
     canScroll: Boolean = true,
     actions: @Composable RowScope.(selectedMode: Boolean) -> Unit = {},
 ) {
@@ -76,7 +71,9 @@ fun GkMultiSelectionTopAppBar(
     val density = LocalDensity.current
     val travel = with(density) { ActionRowHeight.roundToPx() }
     var normalTitleHeight by remember(density) { mutableIntStateOf(0) }
-    val colors = TopAppBarDefaults.topAppBarColors()
+    val titleContentColor = MiuixTheme.colorScheme.onSurface
+    val navigationIconContentColor = MiuixTheme.colorScheme.onSurface
+    val actionIconContentColor = MiuixTheme.colorScheme.onSurface
 
     val animatedTitle: @Composable () -> Unit = {
         transition.AnimatedContent(
@@ -95,7 +92,7 @@ fun GkMultiSelectionTopAppBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (onNavigateBack == null && contentSelectedMode) {
-                    CompositionLocalProvider(LocalContentColor provides colors.navigationIconContentColor) {
+                    CompositionLocalProvider(LocalContentColor provides navigationIconContentColor) {
                         GkIconButton(
                             imageVector = GkIcons.Close,
                             contentDescription = UiStrings.selection_cancel,
@@ -164,17 +161,16 @@ fun GkMultiSelectionTopAppBar(
                     GkBackCloseIcon(backOrClose = !selectedMode)
                 }
             },
-            title = animatedTitle,
+            titleColor = titleContentColor,
+            bottomContent = { animatedTitle() },
             actions = animatedActions,
         )
     } else {
         PinnedSelectionTopAppBar(modifier, scrollBehavior, canScroll) {
-            CompositionLocalProvider(LocalContentColor provides colors.titleContentColor) {
-                ProvideTextStyle(MiuixTheme.textStyles.title2) {
-                    Box(Modifier.weight(1f)) { animatedTitle() }
-                }
+            CompositionLocalProvider(LocalContentColor provides titleContentColor) {
+                Box(Modifier.weight(1f)) { animatedTitle() }
             }
-            CompositionLocalProvider(LocalContentColor provides colors.actionIconContentColor) {
+            CompositionLocalProvider(LocalContentColor provides actionIconContentColor) {
                 animatedActions()
             }
         }
@@ -194,23 +190,22 @@ private fun AnimatedContentTransitionScope<Boolean>.selectionTransform(travel: I
 @Composable
 private fun PinnedSelectionTopAppBar(
     modifier: Modifier,
-    scrollBehavior: TopAppBarScrollBehavior?,
+    scrollBehavior: ScrollBehavior?,
     canScroll: Boolean,
     content: @Composable RowScope.() -> Unit,
 ) {
-    // The subscription tab is pinned. Material3 still owns its background, insets and
-    // scroll color; a single overlaid row lets its leading button and title share a slot.
+    // The subscription tab is pinned. MIUIX owns its background, insets and scroll color;
+    // a single overlaid row lets its leading button and title share a slot.
     // Measure that row first, including large text, without a size -> state -> layout loop.
-    val insets = (LocalActivity.current as MainActivity).topBarWindowInsets
     Layout(
         modifier = modifier.semantics { isTraversalGroup = true },
         contents = listOf(
-            { GkTopAppBar(title = {}, scrollBehavior = scrollBehavior, canScroll = canScroll) },
+            { GkTopAppBar(titleText = "", scrollBehavior = scrollBehavior, canScroll = canScroll) },
             {
-                Box(Modifier.windowInsetsPadding(insets).clipToBounds()) {
+                Box(Modifier.clipToBounds()) {
                     Row(
                         modifier = Modifier.fillMaxWidth()
-                            .heightIn(min = TopAppBarDefaults.TopAppBarExpandedHeight)
+                            .heightIn(min = TopAppBarDefaults.CollapsedHeight)
                             .padding(horizontal = BarEdgePadding),
                         verticalAlignment = Alignment.CenterVertically,
                         content = content,

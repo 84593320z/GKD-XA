@@ -209,7 +209,8 @@ private fun RuleSourceDialog(group: RawSubscription.RawGroupProps, onDismissRequ
     GkFullscreenDialog(onDismissRequest = onDismissRequest) {
         Scaffold(topBar = {
             GkTopAppBar(
-                title = { GkTwoLineText(title = UiStrings.rule_source, subtitle = group.name) },
+                titleText = UiStrings.rule_source,
+                subtitle = group.name,
                 actions = {
                     GkIconButton(GkIcons.Close, onClick = onDismissRequest,
                         contentDescription = UiStrings.dialog_close)

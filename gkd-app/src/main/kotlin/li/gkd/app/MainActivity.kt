@@ -8,13 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalDensity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
@@ -30,10 +24,8 @@ import li.gkd.app.service.updateTopTaskAppId
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.share.ActivityImeController
 import li.gkd.app.ui.share.ActivityResultRequests
-import li.gkd.app.ui.share.FixedWindowInsets
 import li.gkd.app.ui.app.AppRoot
 import li.gkd.app.util.AndroidTarget
-import li.gkd.app.util.BarUtils
 import li.gkd.app.util.SystemDownloads
 import li.gkd.app.util.mapState
 import li.gkd.app.util.ToastUtils.toast
@@ -45,8 +37,6 @@ class MainActivity : ComponentActivity() {
     val imeController = ActivityImeController(this)
     private val activityResultHost = ActivityResultRequests.Host(this)
     private val permissionRequestHost = PermissionRequests.Host(this)
-
-    var topBarWindowInsets by mutableStateOf(WindowInsets(top = BarUtils.getStatusBarHeight()))
 
     init {
         useMainActivityLifecycle()
@@ -102,11 +92,6 @@ class MainActivity : ComponentActivity() {
             updateTopTaskAppId(META.appId)
         }
         setContent {
-            val latestInsets = TopAppBarDefaults.windowInsets
-            val density = LocalDensity.current
-            if (latestInsets.getTop(density) > topBarWindowInsets.getTop(density)) {
-                topBarWindowInsets = FixedWindowInsets(latestInsets)
-            }
             AppRoot()
             LaunchedEffect(null) {
                 intent?.let {

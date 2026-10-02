@@ -63,7 +63,7 @@ fun ActionToastPage() {
         UiStrings.action_toast_example_group, 3L)
 
     GkEditorScaffold(
-        title = { Text(UiStrings.action_toast) },
+        title = UiStrings.action_toast,
         hasChanges = { enabled != initialEnabled || systemStyle != initialSystemStyle || text != initialText },
         saveEnabled = text.isNotEmpty() && text.length <= 64,
         onSave = {

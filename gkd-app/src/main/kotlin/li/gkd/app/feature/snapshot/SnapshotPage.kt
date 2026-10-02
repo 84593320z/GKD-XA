@@ -36,7 +36,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
@@ -187,7 +187,7 @@ fun SnapshotPage() {
         }
     }
     val gridState = rememberLazyGridState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = MiuixScrollBehavior()
     val uiScope = rememberCoroutineScope()
     val resetScroll = {
         uiScope.launch {

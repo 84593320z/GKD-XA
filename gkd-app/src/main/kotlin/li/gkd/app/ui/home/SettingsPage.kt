@@ -114,11 +114,7 @@ fun useSettingsPage(): ScaffoldExt {
         topBar = {
             GkTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = {
-                    Text(
-                        text = BottomNavItem.Settings.label,
-                    )
-                },
+                titleText = BottomNavItem.Settings.label,
             )
         },
     ) { contentPadding ->

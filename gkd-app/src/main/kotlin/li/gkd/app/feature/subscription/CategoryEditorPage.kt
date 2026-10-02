@@ -100,7 +100,7 @@ private fun CategoryEditorContent(
     val nameError = error?.takeIf { !conflict && name.isNotBlank() }
     val descriptionFocusRequester = remember { FocusRequester() }
     GkEditorScaffold(
-        title = { Text(if (categoryKey == null) UiStrings.category_add else UiStrings.category_edit) },
+        title = if (categoryKey == null) UiStrings.category_add else UiStrings.category_edit,
         hasChanges = { name.trim() != originalName.trim() || description.trim() != originalDescription.trim() },
         saveEnabled = error == null,
         onSave = { onSave(name.trim(), description.trim()) },

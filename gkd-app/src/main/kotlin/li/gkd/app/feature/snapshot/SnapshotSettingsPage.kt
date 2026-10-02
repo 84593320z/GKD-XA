@@ -18,7 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -103,7 +103,7 @@ fun SnapshotSettingsPage() {
         )
     }
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = MiuixScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -115,7 +115,7 @@ fun SnapshotSettingsPage() {
                         onClick = mainVm::popPage,
                     )
                 },
-                title = { Text(text = UiStrings.snapshot_settings) },
+                titleText = UiStrings.snapshot_settings,
             )
         },
     ) { contentPadding ->

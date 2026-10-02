@@ -93,31 +93,17 @@ fun ActionLogPage(route: ActionLogRoute) {
                     },
                 )
             },
-            title = {
-                val title = UiStrings.action_log_title
-                val titleModifier = Modifier.noRippleClickable {
-                    pageScrollState.resetScroll()
-                }
-                if (subsId != null) {
-                    GkTwoLineText(
-                        title = useSubs(subsId)?.name ?: subsId.toString(),
-                        subtitle = title,
-                        modifier = titleModifier,
-                    )
-                } else if (appId != null) {
-                    GkTwoLineText(
-                        title = title,
-                        subtitle = appId,
-                        showApp = true,
-                        modifier = titleModifier,
-                    )
-                } else {
-                    Text(
-                        text = title,
-                        modifier = titleModifier,
-                    )
-                }
-            })
+            titleText = when {
+                subsId != null -> useSubs(subsId)?.name ?: subsId.toString()
+                appId != null -> UiStrings.action_log_title
+                else -> UiStrings.action_log_title
+            },
+            subtitle = when {
+                subsId != null -> UiStrings.action_log_title
+                appId != null -> appId
+                else -> ""
+            },
+        )
     }, content = { contentPadding ->
         GkLogTimeline(
             items = list,

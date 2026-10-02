@@ -106,11 +106,7 @@ fun useDashboardPage(): ScaffoldExt {
         navItem = BottomNavItem.Dashboard,
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            GkTopAppBar(scrollBehavior = scrollBehavior, title = {
-                Text(
-                    text = stringResource(R.string.app_name)
-                )
-            }, actions = {
+            GkTopAppBar(scrollBehavior = scrollBehavior, titleText = stringResource(R.string.app_name), actions = {
                 val (contentDescription, contentColor) = when (privilegeServiceStatus) {
                     PrivilegeServiceStatus.Connected -> UiStrings.privilege_service_state_connected to MiuixTheme.colorScheme.onSurfaceVariantSummary
                     PrivilegeServiceStatus.Disconnected -> UiStrings.privilege_service_state_disconnected to MiuixTheme.colorScheme.onSurfaceVariantSummary

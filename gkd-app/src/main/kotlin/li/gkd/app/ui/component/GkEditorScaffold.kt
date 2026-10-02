@@ -14,7 +14,8 @@ import li.gkd.app.ui.share.launchUiAction
 
 @Composable
 fun GkEditorScaffold(
-    title: @Composable () -> Unit,
+    title: String,
+    subtitle: String = "",
     hasChanges: suspend () -> Boolean,
     onSave: suspend () -> Unit,
     saveEnabled: Boolean = true,
@@ -36,7 +37,8 @@ fun GkEditorScaffold(
     Scaffold(
         topBar = {
             GkTopAppBar(
-                title = title,
+                titleText = title,
+                subtitle = subtitle,
                 navigationIcon = {
                     GkIconButton(
                         imageVector = GkIcons.Close,

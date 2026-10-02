@@ -61,7 +61,7 @@ private fun SubscriptionStatePage(message: String? = null) {
                         onClick = mainVm::popPage,
                     )
                 },
-                title = { Text(UiStrings.subscription_title) },
+                titleText = UiStrings.subscription_title,
             )
         },
     ) { contentPadding ->

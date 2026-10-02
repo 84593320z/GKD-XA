@@ -84,9 +84,7 @@ fun BlockA11ySetupPage() {
                         onClick = mainVm::popPage,
                     )
                 },
-                title = {
-                    Text(text = UiStrings.service_partial_disable)
-                },
+                titleText = UiStrings.service_partial_disable,
             )
         },
         bottomBar = {

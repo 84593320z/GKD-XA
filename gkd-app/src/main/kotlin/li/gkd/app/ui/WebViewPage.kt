@@ -70,21 +70,11 @@ fun WebViewPage(route: WebViewRoute) {
                     onClick = { mainVm.popPage() },
                 )
             },
-            title = {
-                val loadingState = webViewState.loadingState
-                if (loadingState is LoadingState.Loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.iconTextSize(),
-                    )
-                } else {
-                    Text(
-                        // webViewState.pageTitle 在调用 reload 后会变成 null
-                        text = webViewState.pageTitle ?: webView?.title ?: "",
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+            titleText = if (webViewState.loadingState is LoadingState.Loading) {
+                UiStrings.loading_progress
+            } else {
+                // webViewState.pageTitle 在调用 reload 后会变成 null
+                webViewState.pageTitle ?: webView?.title ?: ""
             },
             actions = {
                 if (chromeVersion in 1..<MINI_CHROME_VERSION) {

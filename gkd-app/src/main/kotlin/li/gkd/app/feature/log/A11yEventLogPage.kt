@@ -84,12 +84,7 @@ fun A11yEventLogPage() {
                     mainVm.popPage()
                 })
             },
-            title = {
-                Text(
-                    text = UiStrings.event_log_title,
-                    modifier = Modifier.noRippleClickable(onClick = pageScrollState::resetScroll),
-                )
-            },
+            titleText = UiStrings.event_log_title,
         )
     }) { contentPadding ->
         GkLogTimeline(

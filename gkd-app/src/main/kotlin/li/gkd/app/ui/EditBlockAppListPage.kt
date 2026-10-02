@@ -22,7 +22,7 @@ fun EditBlockAppListPage() {
     val vm = viewModel<EditBlockAppListVm>()
     val text by vm.textFlow.collectAsStateWithLifecycle()
     GkEditorScaffold(
-        title = { Text(UiStrings.app_whitelist) },
+        title = UiStrings.app_whitelist,
         hasChanges = { vm.getChangedSet() != null },
         onSave = {
             toast(if (vm.saveChanges()) UiStrings.update_success else UiStrings.unchanged)

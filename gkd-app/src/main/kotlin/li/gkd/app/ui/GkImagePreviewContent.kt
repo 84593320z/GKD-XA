@@ -288,56 +288,31 @@ fun GkImagePreviewContent(
                             colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
                         )
                     },
-                    title = {
-                        if (titleContent != null) {
-                            titleContent(currentPage)
-                        } else {
-                            val baseTitle = route.title?.takeIf { it.isNotBlank() }
-                            val itemTitle = currentPreviewItem?.let(::buildPreviewSubtitle)
-                                ?.takeIf { it.isNotBlank() && it != baseTitle }
-                            when {
-                                baseTitle != null && itemTitle != null -> {
-                                    Column {
-                                        PreviewBaseTitle(baseTitle)
-                                        Text(
-                                            text = itemTitle,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.MiddleEllipsis,
-                                            style = MiuixTheme.textStyles.subtitle.copy(
-                                                color = Color.White.copy(alpha = 0.8f),
-                                                fontWeight = FontWeight.Normal
-                                            )
-                                        )
-                                    }
-                                }
-
-                                baseTitle != null -> {
-                                    PreviewBaseTitle(baseTitle)
-                                }
-
-                                itemTitle != null -> {
-                                    Text(
-                                        text = itemTitle,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.MiddleEllipsis,
-                                        style = MiuixTheme.textStyles.title2.copy(
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    )
-                                }
-                            }
+                    titleText = run {
+                        val baseTitle = route.title?.takeIf { it.isNotBlank() }
+                        val itemTitle = currentPreviewItem?.let(::buildPreviewSubtitle)
+                            ?.takeIf { it.isNotBlank() && it != baseTitle }
+                        when {
+                            baseTitle != null -> baseTitle
+                            itemTitle != null -> itemTitle
+                            else -> ""
                         }
                     },
+                    subtitle = run {
+                        val baseTitle = route.title?.takeIf { it.isNotBlank() }
+                        currentPreviewItem?.let(::buildPreviewSubtitle)
+                            ?.takeIf { it.isNotBlank() && it != baseTitle } ?: ""
+                    },
+                    bottomContent = {
+                        if (titleContent != null) {
+                            titleContent(currentPage)
+                        }
+                    },
+                    titleColor = Color.White,
+                    largeTitleColor = Color.White,
+                    subtitleColor = Color.White.copy(alpha = 0.8f),
                     actions = { actionContent(currentUri, currentPage) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        navigationIconContentColor = Color.White,
-                        titleContentColor = Color.White,
-                        actionIconContentColor = Color.White
-                    )
+                    color = Color.Transparent,
                 )
             }
         }

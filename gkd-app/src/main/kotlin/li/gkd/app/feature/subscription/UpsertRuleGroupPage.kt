@@ -62,7 +62,7 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
 
         var addedAppId by remember { mutableStateOf<String?>(null) }
         GkEditorScaffold(
-            title = { Text(if (vm.isEdit) UiStrings.rule_edit else UiStrings.rule_add) },
+            title = if (vm.isEdit) UiStrings.rule_edit else UiStrings.rule_add,
             hasChanges = vm::hasTextChanged,
             saveEnabled = text.isNotBlank(),
             onSave = { addedAppId = vm.saveRule() },

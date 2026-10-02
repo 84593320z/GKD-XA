@@ -116,48 +116,25 @@ fun useAppListPage(): ScaffoldExt {
                     vm.onLeaveScreen()
                 }
             }
-            GkTopAppBar(scrollBehavior = scrollBehavior, title = {
-                val firstShowSearchBar = remember { showSearchBar }
-                if (showSearchBar) {
-                    BackHandler {
-                        if (!context.imeController.requestHide()) {
-                            vm.closeSearch()
-                        }
-                    }
-                    GkAppBarTextField(
-                        value = searchStr,
-                        onValueChange = vm::setSearchText,
-                        hint = UiStrings.app_name_id_input_hint,
-                        modifier = if (firstShowSearchBar) Modifier else Modifier.autoFocus(),
-                    )
-                } else {
-                    val titleModifier = Modifier
-                        .noRippleClickable(
-                            onClick = throttle {
-                                pageScrollState.resetScroll()
+            GkTopAppBar(
+                scrollBehavior = scrollBehavior,
+                titleText = if (editWhiteListMode) UiStrings.app_whitelist else BottomNavItem.AppList.label,
+                bottomContent = {
+                    if (showSearchBar) {
+                        BackHandler {
+                            if (!context.imeController.requestHide()) {
+                                vm.closeSearch()
                             }
-                        )
-                    if (editWhiteListMode) {
-                        BackHandler(onBack = vm::closeEditWhiteListMode)
-                    }
-                    AnimatedContent(
-                        targetState = editWhiteListMode,
-                        transitionSpec = { getUpDownTransform() },
-                    ) { localEditWhiteListMode ->
-                        if (localEditWhiteListMode) {
-                            Text(
-                                modifier = titleModifier,
-                                text = UiStrings.app_whitelist,
-                            )
-                        } else {
-                            Text(
-                                modifier = titleModifier,
-                                text = BottomNavItem.AppList.label,
-                            )
                         }
+                        GkAppBarTextField(
+                            value = searchStr,
+                            onValueChange = vm::setSearchText,
+                            hint = UiStrings.app_name_id_input_hint,
+                            modifier = Modifier,
+                        )
                     }
-                }
-            }, actions = {
+                },
+                actions = {
                 if (state.queryPackagesAbnormal) {
                     CompositionLocalProvider(LocalContentColor provides MiuixTheme.colorScheme.error) {
                         GkIconButton(

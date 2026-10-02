@@ -18,7 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -75,7 +75,7 @@ fun AboutPage() {
     val store by storeFlow.collectAsStateWithLifecycle()
     val updateChannel = UpdateChannelOption.objects.findOption(store.updateChannel)
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = MiuixScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -89,7 +89,7 @@ fun AboutPage() {
                         },
                     )
                 },
-                title = { Text(text = UiStrings.about_title) },
+                titleText = UiStrings.about_title,
                 actions = {
                     GkIconButton(
                         imageVector = GkIcons.Share,

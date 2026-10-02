@@ -115,7 +115,7 @@ fun GkRuleControlDialog(
             topBar = {
                 Column {
                     GkTopAppBar(
-                        title = { Text(UiStrings.rule_control_title, maxLines = 1) },
+                        titleText = UiStrings.rule_control_title,
                         actions = {
                             GkIconButton(GkIcons.Close, onClick = onDismissRequest,
                                 contentDescription = UiStrings.dialog_close)

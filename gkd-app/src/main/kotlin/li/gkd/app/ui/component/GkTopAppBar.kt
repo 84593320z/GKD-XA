@@ -1,54 +1,52 @@
 package li.gkd.app.ui.component
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import li.gkd.app.MainActivity
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.basic.TopAppBarDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 顶栏：统一使用 MIUIX [TopAppBar]。
+ *
+ * 与旧 M3 版本相比：
+ * - [titleText] 为字符串标题；副标题 [subtitle]；[bottomContent] 放搜索等自定义内容。
+ * - [scrollBehavior] 为 MIUIX [ScrollBehavior]，配合 `rememberListScrollState` 等使用。
+ * - 不再需要 windowInsets 参数，MIUIX 通过 [defaultWindowInsetsPadding] 处理状态栏内边距。
+ */
 @Composable
 fun GkTopAppBar(
-    title: @Composable () -> Unit,
+    titleText: String = "",
+    subtitle: String = "",
     modifier: Modifier = Modifier,
+    bottomContent: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
-    expandedHeight: Dp = TopAppBarDefaults.TopAppBarExpandedHeight,
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
-    scrollBehavior: TopAppBarScrollBehavior? = null,
+    color: Color = MiuixTheme.colorScheme.surface,
+    titleColor: Color = MiuixTheme.colorScheme.onSurface,
+    largeTitleColor: Color = MiuixTheme.colorScheme.onSurface,
+    subtitleColor: Color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+    titlePadding: Dp = TopAppBarDefaults.TitlePadding,
+    scrollBehavior: ScrollBehavior? = null,
     canScroll: Boolean = true,
 ) {
-    val actualScrollBehavior = if (canScroll || scrollBehavior == null) {
-        scrollBehavior
-    } else {
-        remember(scrollBehavior) {
-            object : TopAppBarScrollBehavior by scrollBehavior {
-                // disable inner scroll effect
-                override val isPinned: Boolean
-                    get() = true
-            }
-        }
-    }
-    // SingleRowTopAppBar 内部 containerColor+scrolledContainerColor 合成了一个动画
-    // 应用主题颜色更新时形成叠加动画，导致和周围正常组件视觉变换效果表现割裂
-    key(MiuixTheme.colorScheme.primary) {
-        TopAppBar(
-            title = title,
-            modifier = modifier,
-            navigationIcon = navigationIcon,
-            actions = actions,
-            expandedHeight = expandedHeight,
-            windowInsets = (LocalActivity.current as MainActivity).topBarWindowInsets,
-            colors = colors,
-            scrollBehavior = actualScrollBehavior,
-        )
-    }
+    TopAppBar(
+        title = titleText,
+        subtitle = subtitle,
+        bottomContent = bottomContent,
+        modifier = modifier,
+        color = color,
+        titleColor = titleColor,
+        largeTitleColor = largeTitleColor,
+        subtitleColor = subtitleColor,
+        titlePadding = titlePadding,
+        navigationIcon = navigationIcon,
+        actions = actions,
+        scrollBehavior = if (canScroll) scrollBehavior else null,
+        defaultWindowInsetsPadding = true,
+    )
 }

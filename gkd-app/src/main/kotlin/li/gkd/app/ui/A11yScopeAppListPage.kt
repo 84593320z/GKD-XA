@@ -115,8 +115,8 @@ fun A11yScopeAppListPage() {
                         GkBackCloseIcon(backOrClose = !editable)
                     }
                 },
-                title = {
-                    val firstShowSearchBar = remember { showSearchBar }
+                titleText = UiStrings.a11y_scoped,
+                bottomContent = {
                     if (showSearchBar) {
                         BackHandler {
                             if (!context.imeController.requestHide()) {
@@ -127,18 +127,7 @@ fun A11yScopeAppListPage() {
                             value = searchStr,
                             onValueChange = vm::setSearchStr,
                             hint = UiStrings.app_name_id_input_hint,
-                            modifier = if (firstShowSearchBar) Modifier else Modifier.autoFocus(),
-                        )
-                    } else {
-                        val titleModifier = Modifier
-                            .noRippleClickable(
-                                onClick = throttle {
-                                    pageScrollState.resetScroll()
-                                }
-                            )
-                        Text(
-                            modifier = titleModifier,
-                            text = UiStrings.a11y_scoped,
+                            modifier = Modifier,
                         )
                     }
                 },

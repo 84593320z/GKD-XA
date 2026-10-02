@@ -19,7 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -134,7 +134,7 @@ private fun AdvancedContent() {
         )
     }
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = MiuixScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -146,7 +146,7 @@ private fun AdvancedContent() {
                         onClick = mainVm::popPage,
                     )
                 },
-                title = { Text(text = UiStrings.advanced_settings) },
+                titleText = UiStrings.advanced_settings,
             )
         },
     ) { contentPadding ->

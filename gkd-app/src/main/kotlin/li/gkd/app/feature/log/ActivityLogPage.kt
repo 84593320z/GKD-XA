@@ -60,12 +60,7 @@ fun ActivityLogPage() {
                 navigationIcon = {
                     GkIconButton(imageVector = GkIcons.ArrowBack, onClick = mainVm::popPage)
                 },
-                title = {
-                    Text(
-                        text = UiStrings.activity_log_title,
-                        modifier = Modifier.noRippleClickable(onClick = pageScrollState::resetScroll),
-                    )
-                },
+                titleText = UiStrings.activity_log_title,
             )
         },
     ) { contentPadding ->

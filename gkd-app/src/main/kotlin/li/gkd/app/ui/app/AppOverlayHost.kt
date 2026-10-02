@@ -3,7 +3,7 @@ package li.gkd.app.ui.app
 import li.gkd.app.MainViewModel
 
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -80,19 +80,21 @@ private fun AccessRestrictedSettingsDlg() {
                 dismissAccessRestrictedSettingsDialog()
             },
             confirmButton = {
-                TextButton({
-                    dismissAccessRestrictedSettingsDialog()
-                    mainVm.navigatePage(PrivilegeServiceRoute)
-                }) {
-                    Text(text = UiStrings.permission_go_grant)
-                }
+                TextButton(
+                    text = UiStrings.permission_go_grant,
+                    onClick = {
+                        dismissAccessRestrictedSettingsDialog()
+                        mainVm.navigatePage(PrivilegeServiceRoute)
+                    },
+                )
             },
             dismissButton = {
-                TextButton({
-                    dismissAccessRestrictedSettingsDialog()
-                }) {
-                    Text(text = UiStrings.action_close)
-                }
+                TextButton(
+                    text = UiStrings.action_close,
+                    onClick = {
+                        dismissAccessRestrictedSettingsDialog()
+                    },
+                )
             },
         )
     }
@@ -110,11 +112,12 @@ private fun UiAutomationAlreadyRegisteredDlg() {
                 Text(text = UiStrings.automation_service_occupied_description)
             },
             confirmButton = {
-                TextButton(onClick = {
-                    AutomationService.dismissOccupiedWarning()
-                }) {
-                    Text(text = UiStrings.action_understood)
-                }
+                TextButton(
+                    text = UiStrings.action_understood,
+                    onClick = {
+                        AutomationService.dismissOccupiedWarning()
+                    },
+                )
             }
         )
     }

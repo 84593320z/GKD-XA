@@ -85,12 +85,7 @@ fun CrashReportPage() {
                         onClick = mainVm::popPage,
                     )
                 },
-                title = {
-                    Text(
-                        text = UiStrings.crash_reports,
-                        modifier = Modifier.noRippleClickable(onClick = throttle(pageScrollState::resetScroll))
-                    )
-                },
+                titleText = UiStrings.crash_reports,
                 actions = {
                     if (crashDataList.isNotEmpty()) {
                         GkIconButton(

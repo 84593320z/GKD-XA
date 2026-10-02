@@ -43,9 +43,8 @@ fun RuleExcludeEditorPage(route: RuleExcludeEditorRoute) {
             }
         }
         GkEditorScaffold(
-            title = {
-                GkTwoLineText(state.group.name, if (route.appId == null) UiStrings.config_edit else UiStrings.page_exclusion)
-            },
+            title = state.group.name,
+            subtitle = if (route.appId == null) UiStrings.config_edit else UiStrings.page_exclusion,
             hasChanges = { value != expected },
             onSave = {
                 val changed = vm.save(subscription, expected, value)

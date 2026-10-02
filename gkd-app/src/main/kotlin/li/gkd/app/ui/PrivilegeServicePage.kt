@@ -66,9 +66,7 @@ fun PrivilegeServicePage() {
                         onClick = mainVm::popPage,
                     )
                 },
-                title = {
-                    Text(text = UiStrings.privilege_service)
-                },
+                titleText = UiStrings.privilege_service,
                 actions = {
                     GkIconButton(
                         imageVector = GkIcons.Info,

@@ -24,7 +24,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,7 +69,7 @@ fun WorkModePage() {
     val a11yRunning by A11yService.isRunning.collectAsStateWithLifecycle()
     val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
     val automatorMode by mainVm.automatorModeFlow.collectAsStateWithLifecycle()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = MiuixScrollBehavior()
     Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
         GkTopAppBar(scrollBehavior = scrollBehavior, navigationIcon = {
             GkIconButton(
@@ -77,9 +77,7 @@ fun WorkModePage() {
                 onClick = {
                     mainVm.popPage()
                 })
-        }, title = {
-            Text(text = UiStrings.work_mode_title)
-        })
+        }, titleText = UiStrings.work_mode_title)
     }) { contentPadding ->
         Column(
             modifier = Modifier
