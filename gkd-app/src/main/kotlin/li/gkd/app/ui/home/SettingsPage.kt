@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -130,8 +131,8 @@ fun useSettingsPage(): ScaffoldExt {
             Text(
                 text = UiStrings.settings_general,
                 modifier = Modifier.titleItemPadding(showTop = false),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MiuixTheme.textStyles.subtitle,
+                color = MiuixTheme.colorScheme.primary,
             )
             GkSettingItem(
                 title = UiStrings.action_toast,
@@ -174,8 +175,8 @@ fun useSettingsPage(): ScaffoldExt {
                 Text(
                     text = UiStrings.a11y_label,
                     modifier = Modifier.titleItemPadding(),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    style = MiuixTheme.textStyles.subtitle,
+                    color = MiuixTheme.colorScheme.primary,
                 )
             }
             GkTextSwitch(
@@ -203,8 +204,8 @@ fun useSettingsPage(): ScaffoldExt {
             Text(
                 text = UiStrings.settings_appearance,
                 modifier = Modifier.titleItemPadding(),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MiuixTheme.textStyles.subtitle,
+                color = MiuixTheme.colorScheme.primary,
             )
 
             GkTextMenu(
@@ -228,8 +229,8 @@ fun useSettingsPage(): ScaffoldExt {
             Text(
                 text = UiStrings.settings_other,
                 modifier = Modifier.titleItemPadding(),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MiuixTheme.textStyles.subtitle,
+                color = MiuixTheme.colorScheme.primary,
             )
 
             GkSettingItem(title = UiStrings.advanced_settings, onClick = {

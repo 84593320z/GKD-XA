@@ -15,12 +15,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,15 +58,13 @@ fun GkCategoryActionsSheet(
             Column(Modifier.fillMaxWidth().animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 category.desc?.takeIf { it.isNotBlank() }?.let { description ->
-                    Text(description, style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(description, style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                 }
                 if (overrideCount > 0) {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        shape = MaterialTheme.shapes.large,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainerHigh,
                         ),
                     ) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -74,15 +73,15 @@ fun GkCategoryActionsSheet(
                                 property = RuleProperty.CustomSetting,
                                 modifier = Modifier.padding(end = 12.dp).size(24.dp),
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                             Column(Modifier.weight(1f).padding(end = 16.dp),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(UiStrings.category_override_count(overrideCount),
-                                    style = MaterialTheme.typography.bodyMedium)
+                                    style = MiuixTheme.textStyles.body2)
                                 Text(UiStrings.category_override_unaffected,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    style = MiuixTheme.textStyles.footnote1,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                             }
                             TextButton(
                                 enabled = !busy,
@@ -167,10 +166,8 @@ private fun CategoryDefaultContent(
             }
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(
-                    containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer
-                        else MaterialTheme.colorScheme.surfaceContainerHigh,
+                colors = CardDefaults.defaultColors(color = if (selected) MiuixTheme.colorScheme.secondaryContainer
+                        else MiuixTheme.colorScheme.surfaceContainerHigh,
                 ),
             ) {
                 Row(
@@ -195,13 +192,13 @@ private fun CategoryDefaultContent(
                                 animateMorph = choice == CategoryChoice.Custom,
                                 modifier = Modifier.size(20.dp),
                                 contentDescription = null,
-                                tint = if (selected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = if (selected) MiuixTheme.colorScheme.primary
+                                    else MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
-                            Text(label, style = MaterialTheme.typography.bodyLarge)
+                            Text(label, style = MiuixTheme.textStyles.body1)
                         }
-                        Text(description, style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(description, style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                     }
                     Box(Modifier.size(width = 56.dp, height = 48.dp), contentAlignment = Alignment.Center) {
                         if (choice == CategoryChoice.Custom) {

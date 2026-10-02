@@ -16,9 +16,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -127,8 +128,8 @@ fun SnapshotSettingsPage() {
             Text(
                 text = UiStrings.snapshot_capture_methods,
                 modifier = Modifier.titleItemPadding(showTop = false),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MiuixTheme.textStyles.subtitle,
+                color = MiuixTheme.colorScheme.primary,
             )
             if (!AndroidTarget.R) {
                 GkTextSwitch(
@@ -164,8 +165,8 @@ fun SnapshotSettingsPage() {
             Text(
                 text = UiStrings.screenshot_processing,
                 modifier = Modifier.titleItemPadding(),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MiuixTheme.textStyles.subtitle,
+                color = MiuixTheme.colorScheme.primary,
             )
             GkTextSwitch(
                 title = UiStrings.snapshot_hide_status_bar,
@@ -177,8 +178,8 @@ fun SnapshotSettingsPage() {
             Text(
                 text = UiStrings.action_export,
                 modifier = Modifier.titleItemPadding(),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MiuixTheme.textStyles.subtitle,
+                color = MiuixTheme.colorScheme.primary,
             )
             GkTextSwitch(
                 title = UiStrings.snapshot_auto_export,

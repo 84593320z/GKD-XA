@@ -25,7 +25,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -94,8 +95,8 @@ fun BlockA11ySetupPage() {
                     text = if (remainingRequirements == 0) UiStrings.partial_disable_ready
                     else UiStrings.partial_disable_remaining(remainingRequirements),
                     modifier = Modifier.weight(1f).padding(horizontal = itemHorizontalPadding),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
                 Button(
                     enabled = store.enableBlockA11yAppList || remainingRequirements == 0,
@@ -128,13 +129,13 @@ fun BlockA11ySetupPage() {
             Text(
                 text = UiStrings.partial_disable_intro,
                 modifier = Modifier.padding(top = 16.dp),
-                style = MaterialTheme.typography.titleMedium,
+                style = MiuixTheme.textStyles.title3,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = UiStrings.partial_disable_description,
-                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.body2.copy(lineHeight = 22.sp),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
             BlockA11ySectionTitle(text = UiStrings.usage_requirements)
             BlockA11ySettingsCard {
@@ -230,12 +231,12 @@ private fun BlockA11ySectionTitle(text: String, optional: Boolean = false) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = text, style = MaterialTheme.typography.titleSmall)
+        Text(text = text, style = MiuixTheme.textStyles.subtitle)
         if (optional) {
             Text(
                 text = UiStrings.optional_label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.footnote2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
         }
     }
@@ -255,11 +256,11 @@ private fun BlockA11ySettingsCard(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun BlockA11yNoticeItem(title: String, text: String) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(text = title, style = MaterialTheme.typography.labelLarge)
+        Text(text = title, style = MiuixTheme.textStyles.button)
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MiuixTheme.textStyles.body2.copy(lineHeight = 22.sp),
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
     }
 }
@@ -272,8 +273,8 @@ private fun BlockA11yRequirementItem(
     satisfied: Boolean = false,
     onClickLabel: String,
 ) {
-    val statusColor = if (satisfied) MaterialTheme.colorScheme.onSurfaceVariant
-    else MaterialTheme.colorScheme.primary
+    val statusColor = if (satisfied) MiuixTheme.colorScheme.onSurfaceVariantSummary
+    else MiuixTheme.colorScheme.primary
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -293,8 +294,8 @@ private fun BlockA11yRequirementItem(
         Text(
             text = text,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MiuixTheme.textStyles.body1,
+            color = MiuixTheme.colorScheme.onSurface,
         )
         GkIcon(
             imageVector = imageVector,

@@ -1,8 +1,5 @@
 package li.gkd.app.ui.style
 
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -10,11 +7,14 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import li.songe.json5.Json5
 import li.songe.json5.Json5SyntaxKind
+import top.yukonga.miuix.kmp.basic.CardColors
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 val surfaceCardColors: CardColors
     @Composable
-    get() = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    get() = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer)
 
 private fun getDarkJson5SyntaxColor(kind: Json5SyntaxKind): Color = when (kind) {
     Json5SyntaxKind.Comment -> Color(0xFF75715E)

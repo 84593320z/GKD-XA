@@ -17,14 +17,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
+import top.yukonga.miuix.kmp.basic.Card
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -104,20 +105,20 @@ fun WorkModePage() {
                     Text(
                         modifier = Modifier.padding(start = 12.dp),
                         text = AutomatorModeOption.A11yMode.label,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MiuixTheme.textStyles.title3,
                     )
                 }
                 Text(
                     modifier = Modifier
                         .padding(horizontal = 20.dp),
                     text = UiStrings.work_mode_basic,
-                    style = MaterialTheme.typography.titleSmall
+                    style = MiuixTheme.textStyles.subtitle
                 )
                 TextListItem(
                     modifier = Modifier
                         .padding(horizontal = 20.dp)
                         .padding(top = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MiuixTheme.textStyles.body2,
                     list = listOf(
                         UiStrings.a11y_permission_grant,
                         UiStrings.a11y_permission_regrant_description
@@ -131,8 +132,8 @@ fun WorkModePage() {
                                 .padding(horizontal = 20.dp)
                                 .padding(top = 8.dp),
                             text = UiStrings.a11y_permission_ready,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     },
                     contentFalse = {
@@ -148,7 +149,7 @@ fun WorkModePage() {
                             ) {
                                 Text(
                                     text = UiStrings.a11y_enable,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MiuixTheme.textStyles.body1,
                                 )
                             }
                             TextButton(
@@ -158,7 +159,7 @@ fun WorkModePage() {
                             ) {
                                 Text(
                                     text = UiStrings.help_view,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MiuixTheme.textStyles.body1,
                                 )
                             }
                         }
@@ -169,13 +170,13 @@ fun WorkModePage() {
                         .padding(horizontal = 20.dp)
                         .padding(top = 20.dp),
                     text = UiStrings.work_mode_enhanced,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MiuixTheme.textStyles.subtitle,
                 )
                 TextListItem(
                     modifier = Modifier
                         .padding(horizontal = 20.dp)
                         .padding(top = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MiuixTheme.textStyles.body2,
                     list = listOf(
                         UiStrings.secure_settings_permission_grant,
                         UiStrings.secure_settings_permission_description,
@@ -189,8 +190,8 @@ fun WorkModePage() {
                                 .padding(horizontal = 20.dp)
                                 .padding(top = 8.dp),
                             text = UiStrings.secure_settings_permission_granted,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     },
                     contentFalse = {},
@@ -231,7 +232,7 @@ fun WorkModePage() {
                     ) {
                         Text(
                             text = UiStrings.keep_alive_title,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MiuixTheme.textStyles.body1,
                         )
                     }
                 }
@@ -270,13 +271,13 @@ fun WorkModePage() {
                     Text(
                         modifier = Modifier.padding(start = 12.dp),
                         text = AutomatorModeOption.AutomationMode.label,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MiuixTheme.textStyles.title3,
                     )
                 }
                 TextListItem(
                     modifier = Modifier
                         .padding(horizontal = 20.dp),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MiuixTheme.textStyles.body2,
                     list = listOf(
                         UiStrings.automation_a11y_description,
                         UiStrings.automation_no_display_issues,
@@ -292,8 +293,8 @@ fun WorkModePage() {
                                 .padding(horizontal = 20.dp)
                                 .padding(top = 8.dp),
                             text = UiStrings.privilege_service_connected,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     },
                     contentFalse = {},
@@ -311,7 +312,7 @@ fun WorkModePage() {
                     ) {
                         Text(
                             text = UiStrings.a11y_scoped,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MiuixTheme.textStyles.body1,
                         )
                     }
                 }
@@ -336,7 +337,7 @@ private fun PrivilegeAuthButton(
     ) {
         Text(
             text = UiStrings.permission_grant,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MiuixTheme.textStyles.body1,
         )
     }
 }
@@ -358,7 +359,7 @@ private fun TextListItem(
                     modifier = Modifier
                         .padding(vertical = (lineHeightDp - 4.dp) / 2)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.tertiary)
+                        .background(MiuixTheme.colorScheme.secondary)
                         .size(4.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))

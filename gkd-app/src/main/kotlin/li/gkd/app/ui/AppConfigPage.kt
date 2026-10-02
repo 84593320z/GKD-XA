@@ -11,7 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import li.gkd.app.ui.component.GkAppRuleRestrictionCard
 import li.gkd.app.store.AppStore
 import androidx.compose.runtime.Composable
@@ -337,8 +338,8 @@ fun AppConfigPage(route: AppConfigRoute) {
                             Text(
                                 modifier = Modifier.weight(1f),
                                 text = entry.subscription.name,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.primary,
+                                style = MiuixTheme.textStyles.subtitle,
+                                color = MiuixTheme.colorScheme.primary,
                                 maxLines = 1,
                                 softWrap = false,
                                 overflow = TextOverflow.Ellipsis,

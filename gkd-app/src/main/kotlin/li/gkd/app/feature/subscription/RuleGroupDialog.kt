@@ -15,9 +15,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -106,7 +107,7 @@ fun RuleGroupDialog(
             GkGroupNameText(
                 text = title,
                 isGlobal = group is RawSubscription.RawGlobalGroup,
-                style = MaterialTheme.typography.titleMedium,
+                style = MiuixTheme.textStyles.title3,
             )
         },
         subtitle = group.desc?.takeIf { it.isNotBlank() },
@@ -126,9 +127,9 @@ fun RuleGroupDialog(
                     },
                     shape = MaterialTheme.shapes.extraLarge,
                     colors = AssistChipDefaults.assistChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        trailingIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        containerColor = MiuixTheme.colorScheme.secondaryContainer,
+                        labelColor = MiuixTheme.colorScheme.onSecondaryContainer,
+                        trailingIconContentColor = MiuixTheme.colorScheme.onSecondaryContainer,
                     ),
                     border = null,
                 )
@@ -217,15 +218,15 @@ private fun RuleSourceDialog(group: RawSubscription.RawGroupProps, onDismissRequ
         }) { contentPadding ->
             val textModifier = Modifier.scaffoldPadding(contentPadding).padding(16.dp)
                 .fillMaxSize().clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .background(MiuixTheme.colorScheme.surfaceContainerHigh)
             if (source.length > JSON5_LARGE_TEXT_THRESHOLD) {
                 GkLazyCopyableText(text = annotatedText, modifier = textModifier,
-                    contentPadding = PaddingValues(16.dp), textStyle = MaterialTheme.typography.bodySmall,
-                    contentColor = MaterialTheme.colorScheme.onSurface, textContentDescription = UiStrings.rule_content)
+                    contentPadding = PaddingValues(16.dp), textStyle = MiuixTheme.textStyles.footnote1,
+                    contentColor = MiuixTheme.colorScheme.onSurface, textContentDescription = UiStrings.rule_content)
             } else {
                 GkCopyableText(text = annotatedText, textToCopy = source, modifier = textModifier,
-                    contentPadding = PaddingValues(16.dp), textStyle = MaterialTheme.typography.bodySmall,
-                    contentColor = MaterialTheme.colorScheme.onSurface, textContentDescription = UiStrings.rule_content)
+                    contentPadding = PaddingValues(16.dp), textStyle = MiuixTheme.textStyles.footnote1,
+                    contentColor = MiuixTheme.colorScheme.onSurface, textContentDescription = UiStrings.rule_content)
             }
         }
     }

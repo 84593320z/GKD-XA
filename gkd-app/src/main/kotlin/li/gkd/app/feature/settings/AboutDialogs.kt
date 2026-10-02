@@ -8,8 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
@@ -74,7 +75,7 @@ private fun VersionInfoDialog(
                         Text(
                             modifier = Modifier.clickable { IntentUtils.openUri(META.commitUrl) },
                             text = META.tagName ?: META.commitId.substring(0, 16),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MiuixTheme.colorScheme.primary,
                             style = LocalTextStyle.current.copy(textDecoration = TextDecoration.Underline),
                         )
                     }
@@ -109,7 +110,7 @@ private fun ShareAppDialog(
                     TextLinkStyles(
                         style = SpanStyle(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MiuixTheme.colorScheme.primary,
                         )
                     )
                 )

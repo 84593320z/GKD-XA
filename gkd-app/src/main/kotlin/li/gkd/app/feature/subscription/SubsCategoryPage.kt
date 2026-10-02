@@ -20,7 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -189,16 +190,16 @@ private fun CategoryItemCard(
                     modifier = Modifier.size(20.dp),
                     contentDescription = summary.setting.label,
                     tint = if (summary.setting == CategorySetting.FollowSubscription)
-                        MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                        MiuixTheme.colorScheme.onSurfaceVariantSummary else MiuixTheme.colorScheme.primary,
                 )
             }
         }
     }) {
-        Text(summary.category.name, style = MaterialTheme.typography.bodyLarge,
+        Text(summary.category.name, style = MiuixTheme.textStyles.body1,
             maxLines = 2, overflow = TextOverflow.Ellipsis)
         summary.category.desc?.trim()?.takeIf { it.isNotEmpty() && it != summary.category.name.trim() }?.let { description ->
-            Text(description, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Text(description, style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(4.dp))
         }

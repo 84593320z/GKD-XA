@@ -19,7 +19,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -95,7 +96,7 @@ fun ActionToastPage() {
                 }
             }
             ActionToastCard {
-                Text(UiStrings.toast_style, style = MaterialTheme.typography.titleSmall)
+                Text(UiStrings.toast_style, style = MiuixTheme.textStyles.subtitle)
                 Column(Modifier.selectableGroup()) {
                     ActionToastStyleOption(UiStrings.action_toast_style_custom, !systemStyle) {
                         systemStyle = false
@@ -107,8 +108,8 @@ fun ActionToastPage() {
                     }
                 }
                 Text(UiStrings.action_toast_style_hint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
             }
             OutlinedTextField(
                 value = text,
@@ -124,19 +125,19 @@ fun ActionToastPage() {
                 modifier = Modifier.fillMaxWidth(),
             )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(UiStrings.action_toast_preview, style = MaterialTheme.typography.titleSmall)
+                Text(UiStrings.action_toast_preview, style = MiuixTheme.textStyles.subtitle)
                 Text(UiStrings.action_toast_preview_hint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
             }
             ActionToastCard {
-                Text(previewText, style = MaterialTheme.typography.bodyMedium)
+                Text(previewText, style = MiuixTheme.textStyles.body2)
             }
             ActionToastCard {
-                Text(UiStrings.action_toast_variables, style = MaterialTheme.typography.titleSmall)
+                Text(UiStrings.action_toast_variables, style = MiuixTheme.textStyles.subtitle)
                 Text(UiStrings.action_toast_variables_hint,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                 GkTemplateVariableRow($$"${1}", UiStrings.action_toast_variable_rule)
                 GkTemplateVariableRow($$"${2}", UiStrings.action_toast_variable_group)
                 GkTemplateVariableRow($$"${3}", UiStrings.action_toast_variable_count)
@@ -169,6 +170,6 @@ private fun ActionToastStyleOption(label: String, selected: Boolean, onClick: ()
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         RadioButton(selected = selected, onClick = null)
-        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Text(label, style = MiuixTheme.textStyles.body1)
     }
 }

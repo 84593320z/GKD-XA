@@ -16,7 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -122,19 +123,19 @@ fun GkRuleControlDialog(
                     )
                     Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
                         GkGroupNameText(text = group.name, isGlobal = false,
-                            categoryName = category?.name, style = MaterialTheme.typography.titleMedium,
+                            categoryName = category?.name, style = MiuixTheme.textStyles.title3,
                             modifier = Modifier.padding(bottom = 20.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             GkIcon(if (ruleEnabled) GkIcons.ToggleOn else GkIcons.ToggleOff,
                                 modifier = Modifier.size(20.dp), contentDescription = null,
-                                tint = if (ruleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                                tint = if (ruleEnabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.error)
                             Text(result, modifier = Modifier.padding(start = 8.dp),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (ruleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                                style = MiuixTheme.textStyles.button,
+                                color = if (ruleEnabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.error)
                         }
                         Text(reason, modifier = Modifier.padding(start = 28.dp, top = 4.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                     }
                 }
             },
@@ -185,11 +186,11 @@ private fun ControlTimelineStep(
     skippedReason: String,
 ) {
     val color = when {
-        !active -> MaterialTheme.colorScheme.outline
-        decisive && step.blocked -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.primary
+        !active -> MiuixTheme.colorScheme.outline
+        decisive && step.blocked -> MiuixTheme.colorScheme.error
+        else -> MiuixTheme.colorScheme.primary
     }
-    val lineColor = MaterialTheme.colorScheme.outlineVariant
+    val lineColor = MiuixTheme.colorScheme.outline
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         Canvas(Modifier.width(32.dp).fillMaxHeight()) {
             val x = 12.dp.toPx()
@@ -206,9 +207,9 @@ private fun ControlTimelineStep(
         }
         Surface(
             color = when {
-                decisive && step.blocked -> MaterialTheme.colorScheme.errorContainer
-                decisive -> MaterialTheme.colorScheme.primaryContainer
-                else -> MaterialTheme.colorScheme.surface
+                decisive && step.blocked -> MiuixTheme.colorScheme.errorContainer
+                decisive -> MiuixTheme.colorScheme.primaryContainer
+                else -> MiuixTheme.colorScheme.surface
             },
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.weight(1f).padding(bottom = 4.dp).semantics(mergeDescendants = true) {
@@ -218,21 +219,21 @@ private fun ControlTimelineStep(
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(step.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
-                        color = if (active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(step.title, Modifier.weight(1f), style = MiuixTheme.textStyles.subtitle,
+                        color = if (active) MiuixTheme.colorScheme.onSurface else MiuixTheme.colorScheme.onSurfaceVariantSummary)
                     GkIcon(step.icon, Modifier.padding(start = 12.dp).size(24.dp),
                         tint = color, contentDescription = null)
                 }
                 if (step.appId != null) {
                     GkAppNameText(appId = step.appId, fallbackName = step.reason,
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        style = MiuixTheme.textStyles.footnote1, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                     if (!active) {
                         Text(skippedReason,
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            style = MiuixTheme.textStyles.footnote1, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                     }
                 } else {
                     Text(if (!active) skippedReason else step.reason,
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        style = MiuixTheme.textStyles.footnote1, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                 }
             }
         }

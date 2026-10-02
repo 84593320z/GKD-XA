@@ -22,9 +22,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -158,7 +159,7 @@ fun useAppListPage(): ScaffoldExt {
                 }
             }, actions = {
                 if (state.queryPackagesAbnormal) {
-                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.error) {
+                    CompositionLocalProvider(LocalContentColor provides MiuixTheme.colorScheme.error) {
                         GkIconButton(
                             imageVector = GkIcons.WarningAmber,
                             contentDescription = PermissionStates.queryPackages.name + UiStrings.error_label,
@@ -334,8 +335,8 @@ private fun AppItemCard(
             } else {
                 Text(
                     text = appInfo.id,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false,
@@ -353,7 +354,7 @@ private fun AppItemCard(
                     .padding(2.dp)
                     .size(20.dp),
                 imageVector = GkIcons.Block,
-                tint = MaterialTheme.colorScheme.secondary,
+                tint = MiuixTheme.colorScheme.secondary,
             )
         }
     }

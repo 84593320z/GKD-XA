@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Scaffold
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -191,8 +192,8 @@ fun SubsCategoryGroupPage(route: SubsCategoryGroupRoute) {
                                 modifier = Modifier.weight(1f),
                                 appId = app.id,
                                 fallbackName = app.name,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.primary,
+                                style = MiuixTheme.textStyles.subtitle,
+                                color = MiuixTheme.colorScheme.primary,
                             )
                         }
                     }

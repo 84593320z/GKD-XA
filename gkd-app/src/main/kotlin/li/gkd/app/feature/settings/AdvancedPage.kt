@@ -17,9 +17,10 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -309,8 +310,8 @@ private fun AdvancedSectionTitle(title: String, showTop: Boolean = true) {
     Text(
         text = title,
         modifier = Modifier.titleItemPadding(showTop = showTop),
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
+        style = MiuixTheme.textStyles.subtitle,
+        color = MiuixTheme.colorScheme.primary,
     )
 }
 
@@ -324,14 +325,14 @@ private fun HttpServiceItem(
     onRunningChange: (Boolean) -> Unit,
     onAddressClick: (String) -> Unit,
 ) {
-    val addressStyle = MaterialTheme.typography.bodySmall.copy(
+    val addressStyle = MiuixTheme.textStyles.footnote1.copy(
         fontFeatureSettings = TABULAR_NUMBERS_FONT_FEATURE,
     )
     val addressItem: @Composable (String, String) -> Unit = { host, type ->
         Text(
             text = UiStrings.http_address_description(host, port, type),
             style = addressStyle,
-            color = MaterialTheme.colorScheme.primary,
+            color = MiuixTheme.colorScheme.primary,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
@@ -375,7 +376,7 @@ private fun HttpServiceItem(
                         imageVector = GkIcons.PageInfo,
                         contentDescription = UiStrings.http_settings_button,
                         tint = if (settingsSelected) {
-                            MaterialTheme.colorScheme.primary
+                            MiuixTheme.colorScheme.primary
                         } else {
                             LocalContentColor.current
                         },

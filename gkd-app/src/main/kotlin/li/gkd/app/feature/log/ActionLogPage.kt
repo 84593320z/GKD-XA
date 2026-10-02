@@ -10,11 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -201,7 +202,7 @@ private fun ActionLogContextHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .gkLogTimelineRail(MaterialTheme.colorScheme.outlineVariant)
+            .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .padding(start = 20.dp, end = itemHorizontalPadding,
                 top = if (previousLog == null) 4.dp else 8.dp, bottom = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -211,14 +212,14 @@ private fun ActionLogContextHeader(
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface),
+                .background(MiuixTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
             if (activityChanged) {
                 GkIcon(
                     imageVector = GkIcons.Layers,
                     modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MiuixTheme.colorScheme.primary,
                     contentDescription = null,
                 )
             } else {
@@ -226,7 +227,7 @@ private fun ActionLogContextHeader(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(MiuixTheme.colorScheme.primary),
                 )
             }
         }
@@ -258,8 +259,8 @@ private fun ActionLogContextText(
         if (showActivity) {
             Text(
                 text = actionLog.showActivityId ?: UiStrings.action_log_activity_unknown,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
@@ -274,8 +275,8 @@ private fun ActionLogContextText(
                 } else {
                     UiStrings.version_prefixed(actionLog.subsVersion)
                 },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.tertiary,
+                style = MiuixTheme.textStyles.footnote2,
+                color = MiuixTheme.colorScheme.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -299,7 +300,7 @@ private fun ActionLogEntry(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .gkLogTimelineRail(MaterialTheme.colorScheme.outlineVariant)
+            .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .clickable(onClick = onClick)
             .padding(start = 56.dp, end = itemHorizontalPadding, top = 6.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -312,16 +313,16 @@ private fun ActionLogEntry(
             GkGroupNameText(
                 isGlobal = actionLog.groupType == RuleGroupType.Global,
                 text = group?.name ?: UiStrings.rule_missing,
-                color = if (group == null) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified,
-                style = MaterialTheme.typography.bodyMedium,
+                color = if (group == null) MiuixTheme.colorScheme.onSurfaceVariantSummary else Color.Unspecified,
+                style = MiuixTheme.textStyles.body2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             if (ruleName != null) {
                 Text(
                     text = ruleName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -356,8 +357,7 @@ private fun ActionLogDialog(
         }
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainerHigh),
         ) {
             if (showAppContext) {
                 ItemText(text = UiStrings.action_log_open_app, onClick = onOpenApp)

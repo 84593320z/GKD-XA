@@ -19,18 +19,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -109,7 +110,7 @@ private fun subsManageStatePage(
                 color = if (error == null) {
                     LocalContentColor.current
                 } else {
-                    MaterialTheme.colorScheme.error
+                    MiuixTheme.colorScheme.error
                 },
             )
         }
@@ -178,7 +179,7 @@ private fun useLoadedSubsManagePage(
                             mainVm.navigatePage(WebViewRoute(initUrl = ShortUrlSet.URL6))
                         }),
                         textDecoration = TextDecoration.Underline,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MiuixTheme.colorScheme.primary,
                     )
                 }
             },
@@ -187,7 +188,7 @@ private fun useLoadedSubsManagePage(
                 TextButton(
                     onClick = throttle(vm::confirmPowerWarning),
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
+                        contentColor = MiuixTheme.colorScheme.error,
                     ),
                 ) {
                     Text(text = UiStrings.enable_anyway)
@@ -358,10 +359,8 @@ private fun useLoadedSubsManagePage(
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .fillMaxWidth(),
-                    shape = MaterialTheme.shapes.small,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MiuixTheme.colorScheme.onSurface,
                     ),
                 ) {
                     Row(
@@ -375,19 +374,19 @@ private fun useLoadedSubsManagePage(
                                 withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
                                     append(UiStrings.rule_matching_paused)
                                 }
-                                withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
+                                withStyle(SpanStyle(color = MiuixTheme.colorScheme.onSurfaceVariantSummary)) {
                                     append(UiStrings.rule_matching_resume_suffix)
                                 }
                             },
                             modifier = Modifier.weight(1f).padding(end = 8.dp),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MiuixTheme.textStyles.body2,
                         )
                         GkIconButton(
                             imageVector = GkIcons.FlashOn,
                             contentDescription = UiStrings.rule_matching_enable,
                             colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                containerColor = MiuixTheme.colorScheme.primaryContainer,
+                                contentColor = MiuixTheme.colorScheme.onPrimaryContainer,
                             ),
                             onClickLabel = UiStrings.rule_matching_enable,
                             onClick = vm::enableMatching,

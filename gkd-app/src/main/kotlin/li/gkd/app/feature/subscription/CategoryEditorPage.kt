@@ -14,12 +14,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -139,10 +140,10 @@ private fun CategoryEditorContent(
                 )
             }
             if (conflict) {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.errorContainer)) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         Text(UiStrings.category_edit_conflict,
-                            color = MaterialTheme.colorScheme.onErrorContainer)
+                            color = MiuixTheme.colorScheme.onErrorContainer)
                         if (category != null) {
                             TextButton(onClick = {
                                 originalCategory = categorySnapshot
@@ -160,8 +161,8 @@ private fun CategoryEditorContent(
                     Text(
                         text = UiStrings.category_no_matching_groups,
                         modifier = Modifier.padding(vertical = 8.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 } else {
                     Row(
@@ -169,14 +170,14 @@ private fun CategoryEditorContent(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(apps.size.toString(), style = MaterialTheme.typography.bodyMedium)
+                        Text(apps.size.toString(), style = MiuixTheme.textStyles.body2)
                         GkIcon(
                             imageVector = GkIcons.Android,
                             modifier = Modifier.size(18.dp),
                             contentDescription = UiStrings.app_count(apps.size),
                         )
                         val groupCount = apps.sumOf { it.groups.size }
-                        Text(groupCount.toString(), style = MaterialTheme.typography.bodyMedium)
+                        Text(groupCount.toString(), style = MiuixTheme.textStyles.body2)
                         GkIcon(
                             imageVector = GkIcons.FlashOn,
                             modifier = Modifier.size(18.dp),
@@ -197,26 +198,25 @@ private fun CategoryEditorContent(
                                         top = if (index == 0) 0.dp else 12.dp,
                                         bottom = 4.dp,
                                     ),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MiuixTheme.textStyles.subtitle,
+                                    color = MiuixTheme.colorScheme.primary,
                                 )
                             }
                             items(app.groups, key = { "group:${app.id}:${it.key}" }, contentType = { "group" }) { group ->
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.small,
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                                    colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(12.dp),
                                         verticalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        Text(group.name, style = MaterialTheme.typography.bodyLarge)
+                                        Text(group.name, style = MiuixTheme.textStyles.body1)
                                         group.desc?.takeIf { it.isNotBlank() }?.let {
                                             Text(
                                                 it,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                style = MiuixTheme.textStyles.footnote1,
+                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                             )
                                         }
                                     }

@@ -2,7 +2,7 @@ package li.gkd.app.feature.snapshot
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -24,21 +24,22 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.material3.rememberTooltipState
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -462,7 +463,7 @@ private fun SnapshotGroupHeader(
     onToggleSelection: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxWidth().background(MiuixTheme.colorScheme.background),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (appId != null) {
@@ -470,13 +471,13 @@ private fun SnapshotGroupHeader(
                 appId = appId,
                 fallbackName = title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
+                style = MiuixTheme.textStyles.subtitle,
             )
         } else {
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
+                style = MiuixTheme.textStyles.subtitle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -525,6 +526,9 @@ private fun SnapshotCard(
     var imageFailed by remember(cacheKey) { mutableStateOf(!screenshotFile.isFile) }
     Card(
         modifier = Modifier.fillMaxWidth().clip(cardShape)
+            .then(
+                if (selected) Modifier.border(2.dp, colorScheme.primary, cardShape) else Modifier
+            )
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
@@ -537,12 +541,9 @@ private fun SnapshotCard(
                     this.selected = selected
                 }
             },
-        shape = cardShape,
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) colorScheme.primaryContainer
+        colors = CardDefaults.defaultColors(color = if (selected) colorScheme.primaryContainer
                 else colorScheme.surfaceContainer,
         ),
-        border = if (selected) BorderStroke(2.dp, colorScheme.primary) else null,
     ) {
         Box(
             modifier = Modifier.fillMaxWidth().aspectRatio(1f)
@@ -567,7 +568,7 @@ private fun SnapshotCard(
                 Text(
                     text = UiStrings.snapshot_screenshot_unavailable,
                     modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MiuixTheme.textStyles.footnote1,
                 )
             }
             Row(
@@ -600,7 +601,7 @@ private fun SnapshotCard(
         }
         val fullTime = remember(snapshot.id) { snapshot.id.format("yyyy-MM-dd HH:mm:ss") }
         val firstLineHeight = with(LocalDensity.current) {
-            MaterialTheme.typography.bodyMedium.lineHeight.toDp()
+            MiuixTheme.textStyles.body2.lineHeight.toDp()
         }
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 8.dp)
@@ -613,7 +614,7 @@ private fun SnapshotCard(
                     appId = snapshot.appId,
                     fallbackName = appName,
                     modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MiuixTheme.textStyles.body2,
                 )
                 val timeTooltipState = rememberTooltipState()
                 val timeTooltipScope = rememberCoroutineScope()
@@ -630,14 +631,14 @@ private fun SnapshotCard(
                         modifier = (if (selectedMode) Modifier else Modifier.clickable {
                             timeTooltipScope.launch { timeTooltipState.show() }
                         }).semantics { contentDescription = fullTime },
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MiuixTheme.textStyles.footnote2,
                     )
                 }
             } else {
                 GkFixedTimeText(
                     text = snapshot.date,
                     modifier = Modifier.semantics { contentDescription = fullTime },
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MiuixTheme.textStyles.footnote2,
                 )
             }
         }
@@ -653,7 +654,7 @@ private fun SnapshotCard(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
-                style = MaterialTheme.typography.labelSmall,
+                style = MiuixTheme.textStyles.footnote2,
                 color = if (activityLabel == null) colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     else colorScheme.onSurface,
             )

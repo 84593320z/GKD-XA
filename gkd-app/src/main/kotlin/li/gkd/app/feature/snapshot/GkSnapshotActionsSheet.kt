@@ -17,7 +17,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -143,13 +144,13 @@ private fun SnapshotActionsHeader(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(56.dp).clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MiuixTheme.colorScheme.surfaceVariant),
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             GkAppNameText(
                 appId = snapshot.appId,
                 fallbackName = appName,
-                style = MaterialTheme.typography.titleMedium,
+                style = MiuixTheme.textStyles.title3,
             )
             getShowActivityId(snapshot.appId, snapshot.activityId)
                 ?.takeIf(String::isNotBlank)?.let { activityId ->
@@ -157,8 +158,8 @@ private fun SnapshotActionsHeader(
                     text = activityId,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
             FlowRow(
@@ -167,13 +168,13 @@ private fun SnapshotActionsHeader(
             ) {
                 GkFixedTimeText(
                     text = snapshot.id.format("yyyy-MM-dd HH:mm:ss"),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.footnote2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
                 Text(
                     text = "${snapshot.screenWidth} × ${snapshot.screenHeight}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.footnote2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
         }
@@ -188,7 +189,7 @@ private fun SnapshotActionRow(
     subtitle: String? = null,
     trailingText: String? = null,
 ) {
-    val contentColor = MaterialTheme.colorScheme.onSurface
+    val contentColor = MiuixTheme.colorScheme.onSurface
     Row(
         modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
             .clickable(onClick = onClick)
@@ -206,7 +207,7 @@ private fun SnapshotActionRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MiuixTheme.textStyles.body1,
                 color = contentColor,
                 maxLines = if (trailingText == null) Int.MAX_VALUE else 1,
                 overflow = TextOverflow.Ellipsis,
@@ -214,16 +215,16 @@ private fun SnapshotActionRow(
             if (subtitle != null) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
         }
         if (trailingText != null) {
             Text(
                 text = trailingText,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.footnote2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 maxLines = 1,
                 softWrap = false,
             )

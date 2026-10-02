@@ -18,12 +18,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Card
+import top.yukonga.miuix.kmp.basic.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -185,12 +186,11 @@ private fun CrashReportCard(
     val timeText = remember(crashData.mtime) {
         crashData.mtime.format("yyyy-MM-dd HH:mm:ss")
     }
-    val supportingColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val supportingColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
     Card(
         modifier = Modifier
             .padding(horizontal = itemHorizontalPadding / 2)
             .fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraSmall,
         colors = surfaceCardColors,
     ) {
         GkExpandableSection(
@@ -212,7 +212,7 @@ private fun CrashReportCard(
                         Text(
                             text = exceptionName,
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MiuixTheme.textStyles.title3,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -221,11 +221,11 @@ private fun CrashReportCard(
                     }
                     Text(
                         text = message ?: UiStrings.exception_message_empty,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MiuixTheme.textStyles.body2,
                         color = if (message == null) {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f)
                         } else {
-                            MaterialTheme.colorScheme.onSurface
+                            MiuixTheme.colorScheme.onSurface
                         },
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -237,7 +237,7 @@ private fun CrashReportCard(
                         Text(
                             text = UiStrings.crash_version_thread(crashData.versionName, crashData.versionCode, crashData.thread),
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = supportingColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -245,7 +245,7 @@ private fun CrashReportCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         GkFixedTimeText(
                             text = timeText,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = supportingColor,
                         )
                     }
@@ -263,13 +263,13 @@ private fun CrashReportCard(
                     ) {
                         Text(
                             text = UiStrings.crash_device_description(crashData.device),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = supportingColor,
                         )
                         Text(
                             text = UiStrings.android_version_description(crashData.androidVersionName, crashData.androidVersionCode),
                             modifier = Modifier.padding(end = 56.dp),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = supportingColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -277,7 +277,7 @@ private fun CrashReportCard(
                         Text(
                             text = UiStrings.crash_app_description(crashData.versionName, crashData.versionCode),
                             modifier = Modifier.padding(end = 56.dp),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = supportingColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -285,7 +285,7 @@ private fun CrashReportCard(
                         Text(
                             text = UiStrings.crash_thread_description(crashData.thread),
                             modifier = Modifier.padding(end = 56.dp),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = supportingColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -302,14 +302,14 @@ private fun CrashReportCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = UiStrings.stack_trace,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MiuixTheme.textStyles.subtitle,
                 )
                 GkCopyTextCard(
                     text = crashData.stackTrace,
                     modifier = Modifier.heightIn(max = 320.dp),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textStyle = MaterialTheme.typography.bodySmall,
+                    containerColor = MiuixTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    textStyle = MiuixTheme.textStyles.footnote1,
                 )
             }
         }

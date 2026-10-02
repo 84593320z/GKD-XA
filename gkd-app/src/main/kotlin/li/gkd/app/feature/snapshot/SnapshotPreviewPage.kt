@@ -8,7 +8,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -81,7 +82,7 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                             GkAppNameText(
                                 appId = item.appId,
                                 fallbackName = appName,
-                                style = MaterialTheme.typography.titleLarge.copy(
+                                style = MiuixTheme.textStyles.title2.copy(
                                     color = Color.White,
                                     fontWeight = FontWeight.Medium,
                                 ),
@@ -92,7 +93,7 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                                     maxLines = 1,
                                     softWrap = false,
                                     overflow = TextOverflow.MiddleEllipsis,
-                                    style = MaterialTheme.typography.titleSmall.copy(
+                                    style = MiuixTheme.textStyles.subtitle.copy(
                                         color = Color.White.copy(alpha = 0.8f),
                                     ),
                                 )

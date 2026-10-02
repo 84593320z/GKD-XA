@@ -18,12 +18,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -130,7 +131,7 @@ class SubsSheetState {
                 ) {
                     Text(
                         text = showName,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MiuixTheme.textStyles.title2,
                         modifier = childModifier
                     )
                     if (subscription != null) {
@@ -152,11 +153,11 @@ class SubsSheetState {
                             Text(
                                 text = if (subsItem.isLocal) META.appName else subscription.author ?: UiStrings.unknown,
                                 modifier = Modifier.weight(1f, fill = false),
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MiuixTheme.textStyles.footnote2,
                                 color = when {
-                                    subsItem.isLocal -> MaterialTheme.colorScheme.secondary
-                                    subscription.author == null -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                    subsItem.isLocal -> MiuixTheme.colorScheme.secondary
+                                    subscription.author == null -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.5f)
+                                    else -> MiuixTheme.colorScheme.onSurfaceVariantSummary
                                 },
                                 maxLines = 1,
                                 softWrap = false,
@@ -164,11 +165,11 @@ class SubsSheetState {
                             )
                             Text(
                                 text = UiStrings.version_prefixed(subscription.version),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary,
+                                style = MiuixTheme.textStyles.footnote2,
+                                color = MiuixTheme.colorScheme.secondary,
                                 modifier = Modifier
                                     .clip(MaterialTheme.shapes.extraSmall)
-                                    .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                    .background(MiuixTheme.colorScheme.tertiaryContainer)
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 maxLines = 1,
                                 softWrap = false,
@@ -191,8 +192,8 @@ class SubsSheetState {
                                             contentDescription = UiStrings.update_time_description(subsItem.mtimeStr)
                                         }
                                         .padding(horizontal = 4.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MiuixTheme.textStyles.footnote2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                     maxLines = 1,
                                     softWrap = false,
                                 )
@@ -212,12 +213,12 @@ class SubsSheetState {
                                 ) {
                                     Text(
                                         text = UiStrings.global_rules,
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MiuixTheme.textStyles.button,
                                     )
                                     Text(
                                         text = if (subscription.globalGroups.isNotEmpty()) UiStrings.subscription_global_rules_count(subscription.globalGroups.size) else UiStrings.none_available,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.let {
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.let {
                                             if (subscription.globalGroups.isEmpty()) {
                                                 it.copy(alpha = 0.5f)
                                             } else {
@@ -245,12 +246,12 @@ class SubsSheetState {
                                 ) {
                                     Text(
                                         text = UiStrings.app_rules,
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MiuixTheme.textStyles.button,
                                     )
                                     Text(
                                         text = if (subscription.appGroups.isNotEmpty()) UiStrings.subscription_apps_rules_count(subscription.apps.size, subscription.appGroups.size) else UiStrings.none_available,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.let {
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.let {
                                             if (subscription.appGroups.isEmpty()) {
                                                 it.copy(alpha = 0.5f)
                                             } else {
@@ -279,12 +280,12 @@ class SubsSheetState {
                                 ) {
                                     Text(
                                         text = UiStrings.rule_categories,
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MiuixTheme.textStyles.button,
                                     )
                                     Text(
                                         text = if (subscription.categories.isNotEmpty()) UiStrings.subscription_categories_count(subscription.categories.size) else UiStrings.none_available,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.let {
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.let {
                                             if (subscription.categories.isEmpty()) {
                                                 it.copy(alpha = 0.5f)
                                             } else {
@@ -324,12 +325,12 @@ class SubsSheetState {
                                 ) {
                                     Text(
                                         text = UiStrings.subscription_link,
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MiuixTheme.textStyles.button,
                                     )
                                     Text(
                                         text = updateUrl,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.secondary,
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        color = MiuixTheme.colorScheme.secondary,
                                         softWrap = false,
                                         overflow = TextOverflow.MiddleEllipsis,
                                         modifier = Modifier
@@ -357,8 +358,8 @@ class SubsSheetState {
                             } else {
                                 Text(
                                     text = UiStrings.file_load_failed_or_missing,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.error,
+                                    style = MiuixTheme.textStyles.button,
+                                    color = MiuixTheme.colorScheme.error,
                                 )
                                 TextButton(onClick = throttle {
                                     scope.launchUi {
@@ -422,7 +423,7 @@ private fun SubsSheetItem(
             .fillMaxWidth()
             .padding(horizontal = itemHorizontalPadding, vertical = 4.dp)
             .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
             .clickable(onClickLabel = onClickLabel, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

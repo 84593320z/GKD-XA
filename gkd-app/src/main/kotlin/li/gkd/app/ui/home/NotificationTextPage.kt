@@ -14,7 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,11 +129,11 @@ private fun NotificationTextPreview(title: String, text: String) {
     val ruleSummary by SubscriptionState.ruleSummaryFlow.collectAsStateWithLifecycle()
     val actionCount by actionCountFlow.collectAsStateWithLifecycle()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(UiStrings.notification_text_preview, style = MaterialTheme.typography.titleSmall)
+        Text(UiStrings.notification_text_preview, style = MiuixTheme.textStyles.subtitle)
         Text(
             UiStrings.notification_text_preview_hint,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MiuixTheme.textStyles.footnote1,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
     }
     Surface(
@@ -142,9 +143,9 @@ private fun NotificationTextPreview(title: String, text: String) {
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title.replaceNotificationTemplate(ruleSummary, actionCount),
-                style = MaterialTheme.typography.titleMedium)
+                style = MiuixTheme.textStyles.title3)
             Text(text.replaceNotificationTemplate(ruleSummary, actionCount),
-                style = MaterialTheme.typography.bodyMedium)
+                style = MiuixTheme.textStyles.body2)
         }
     }
 }
@@ -157,11 +158,11 @@ private fun NotificationTemplateVariables() {
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(UiStrings.notification_template_variables, style = MaterialTheme.typography.titleSmall)
+            Text(UiStrings.notification_template_variables, style = MiuixTheme.textStyles.subtitle)
             Text(
                 UiStrings.notification_template_variables_hint,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
             GkTemplateVariableRow($$"${i}", UiStrings.notification_variable_global_rules)
             GkTemplateVariableRow($$"${k}", UiStrings.notification_variable_apps)

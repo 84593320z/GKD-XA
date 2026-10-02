@@ -30,8 +30,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -157,7 +158,7 @@ fun ImagePreviewPage(route: ImagePreviewRoute) {
 
 @Composable
 private fun PreviewBaseTitle(title: String) {
-    val style = MaterialTheme.typography.titleLarge.copy(
+    val style = MiuixTheme.textStyles.title2.copy(
         color = Color.White,
         fontWeight = FontWeight.Medium,
     )
@@ -303,7 +304,7 @@ fun GkImagePreviewContent(
                                             maxLines = 1,
                                             softWrap = false,
                                             overflow = TextOverflow.MiddleEllipsis,
-                                            style = MaterialTheme.typography.titleSmall.copy(
+                                            style = MiuixTheme.textStyles.subtitle.copy(
                                                 color = Color.White.copy(alpha = 0.8f),
                                                 fontWeight = FontWeight.Normal
                                             )
@@ -321,7 +322,7 @@ fun GkImagePreviewContent(
                                         maxLines = 1,
                                         softWrap = false,
                                         overflow = TextOverflow.MiddleEllipsis,
-                                        style = MaterialTheme.typography.titleLarge.copy(
+                                        style = MiuixTheme.textStyles.title2.copy(
                                             color = Color.White,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -354,7 +355,7 @@ fun GkImagePreviewContent(
                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium.copy(
+                    style = MiuixTheme.textStyles.body2.copy(
                         fontWeight = FontWeight.Bold
                     ),
                 )
@@ -443,8 +444,8 @@ private fun UriImage(
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = text,
-                            color = MaterialTheme.colorScheme.outline,
-                            style = MaterialTheme.typography.bodySmall,
+                            color = MiuixTheme.colorScheme.outline,
+                            style = MiuixTheme.textStyles.footnote1,
                         )
                     }
                 }
@@ -476,15 +477,15 @@ private fun UriImage(
                             detectTapGestures(onTap = { reload() })
                         },
                         text = UiStrings.image_load_failed_retry,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
+                        color = MiuixTheme.colorScheme.error,
+                        style = MiuixTheme.textStyles.body2
                     )
                     stateVal.result.throwable.message?.let { msg ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = msg,
-                            color = MaterialTheme.colorScheme.outline,
-                            style = MaterialTheme.typography.labelSmall,
+                            color = MiuixTheme.colorScheme.outline,
+                            style = MiuixTheme.textStyles.footnote2,
                             modifier = Modifier.padding(horizontal = 16.dp),
                             textAlign = TextAlign.Center
                         )

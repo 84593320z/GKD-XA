@@ -19,16 +19,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkTooltipIconButtonBox
 import li.gkd.app.ui.icon.GkAnimatedRocketIcon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -111,9 +112,9 @@ fun useDashboardPage(): ScaffoldExt {
                 )
             }, actions = {
                 val (contentDescription, contentColor) = when (privilegeServiceStatus) {
-                    PrivilegeServiceStatus.Connected -> UiStrings.privilege_service_state_connected to MaterialTheme.colorScheme.onSurfaceVariant
-                    PrivilegeServiceStatus.Disconnected -> UiStrings.privilege_service_state_disconnected to MaterialTheme.colorScheme.onSurfaceVariant
-                    PrivilegeServiceStatus.DisconnectedDesired -> UiStrings.privilege_service_state_lost to MaterialTheme.colorScheme.error
+                    PrivilegeServiceStatus.Connected -> UiStrings.privilege_service_state_connected to MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    PrivilegeServiceStatus.Disconnected -> UiStrings.privilege_service_state_disconnected to MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    PrivilegeServiceStatus.DisconnectedDesired -> UiStrings.privilege_service_state_lost to MiuixTheme.colorScheme.error
                 }
                 GkTooltipIconButtonBox(contentDescription) {
                     IconButton(
@@ -147,8 +148,7 @@ fun useDashboardPage(): ScaffoldExt {
                         .semantics(mergeDescendants = true) {
                             this.onClick(label = UiStrings.privilege_service_open, action = null)
                         },
-                    shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.errorContainer),
                     onClick = throttle {
                         mainVm.navigatePage(PrivilegeServiceRoute)
                     },
@@ -164,7 +164,7 @@ fun useDashboardPage(): ScaffoldExt {
                         Text(
                             modifier = Modifier.weight(1f),
                             text = UiStrings.permission_restricted_privilege_notice,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MiuixTheme.textStyles.body1,
                         )
                         GkIcon(imageVector = GkIcons.KeyboardArrowRight)
                     }
@@ -346,7 +346,6 @@ private fun PageItemCard(
             .semantics {
                 this.onClick(label = onClickLabel, action = null)
             },
-        shape = MaterialTheme.shapes.large,
         colors = surfaceCardColors,
         onClick = throttle(fn = onClick)
     ) {
@@ -358,12 +357,12 @@ private fun PageItemCard(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MiuixTheme.textStyles.body1,
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
         }
@@ -385,7 +384,6 @@ private fun PageSwitchItemCard(
             .semantics(mergeDescendants = true) {
                 this.onClick(label = UiStrings.item_toggle_description(title), action = null)
             },
-        shape = MaterialTheme.shapes.large,
         colors = surfaceCardColors,
         onClick = onClick,
     ) {
@@ -397,12 +395,12 @@ private fun PageSwitchItemCard(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MiuixTheme.textStyles.body1,
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -426,7 +424,6 @@ private fun ServiceStatusCard(
     val onModeRowClick = throttle(onModeClick)
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
         colors = surfaceCardColors,
     ) {
         IconTextCard(
@@ -443,12 +440,12 @@ private fun ServiceStatusCard(
             ) {
                 Text(
                     text = UiStrings.service_state,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MiuixTheme.textStyles.body1,
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -484,24 +481,24 @@ private fun ServiceStatusCard(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
                     .size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 contentDescription = null,
             )
             Spacer(modifier = Modifier.width(itemHorizontalPadding))
             Text(
                 text = UiStrings.work_mode_title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MiuixTheme.textStyles.body2,
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = mode,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
             GkIcon(
                 imageVector = GkIcons.KeyboardArrowRight,
                 modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 contentDescription = null,
             )
         }
@@ -524,10 +521,10 @@ private fun IconTextCard(
             imageVector = imageVector,
             modifier = Modifier
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(MiuixTheme.colorScheme.primaryContainer)
                 .padding(8.dp)
                 .size(24.dp),
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MiuixTheme.colorScheme.primary,
             contentDescription = null,
         )
         Spacer(modifier = Modifier.width(itemHorizontalPadding))
@@ -545,7 +542,6 @@ private fun TriggerOverviewCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
         colors = surfaceCardColors,
     ) {
         Row(
@@ -567,10 +563,10 @@ private fun TriggerOverviewCard(
                 imageVector = GkIcons.History,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .background(MiuixTheme.colorScheme.primaryContainer)
                     .padding(8.dp)
                     .size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MiuixTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.width(itemHorizontalPadding))
             Column(
@@ -578,17 +574,17 @@ private fun TriggerOverviewCard(
             ) {
                 Text(
                     text = UiStrings.action_log_title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MiuixTheme.textStyles.body1,
                 )
                 Text(
                     text = UiStrings.action_log_description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
             GkIcon(
                 imageVector = GkIcons.KeyboardArrowRight,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 contentDescription = null,
             )
         }
@@ -601,8 +597,8 @@ private fun TriggerOverviewCard(
                 Text(
                     modifier = Modifier.padding(horizontal = 8.dp),
                     text = subsStatus,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
 
@@ -626,14 +622,14 @@ private fun TriggerOverviewCard(
                             preText = UiStrings.action_log_recent_prefix,
                             isGlobal = latestRecordIsGlobal,
                             text = latestRecordDesc,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.primary,
                         )
                     }
                     GkIcon(
                         imageVector = GkIcons.KeyboardArrowRight,
-                        modifier = Modifier.textSize(style = MaterialTheme.typography.bodyMedium),
-                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.textSize(style = MiuixTheme.textStyles.body2),
+                        tint = MiuixTheme.colorScheme.primary,
                     )
                 }
             }

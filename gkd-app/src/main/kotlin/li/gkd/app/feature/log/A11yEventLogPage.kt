@@ -14,8 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -127,7 +128,7 @@ fun A11yEventLogPage() {
             text = {
                 val textModifier = Modifier
                     .background(
-                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        color = MiuixTheme.colorScheme.tertiaryContainer,
                         shape = MaterialTheme.shapes.extraSmall,
                     )
                     .padding(horizontal = 4.dp)
@@ -152,9 +153,9 @@ fun A11yEventLogPage() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.extraSmall)
-                            .background(MaterialTheme.colorScheme.tertiaryContainer),
+                            .background(MiuixTheme.colorScheme.tertiaryContainer),
                         contentPadding = PaddingValues(horizontal = 4.dp),
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        contentColor = MiuixTheme.colorScheme.onTertiaryContainer,
                     )
                     if (eventLog.isStateChanged) {
                         Spacer(modifier = Modifier.height(12.dp))
@@ -198,12 +199,12 @@ fun A11yEventLogPage() {
 
 @Composable
 private fun EventLogEntry(eventLog: A11yEventLog, onClick: () -> Unit) {
-    val color = if (eventLog.isStateChanged) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant
+    val color = if (eventLog.isStateChanged) MiuixTheme.colorScheme.primary
+        else MiuixTheme.colorScheme.onSurfaceVariantSummary
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .gkLogTimelineRail(MaterialTheme.colorScheme.outlineVariant)
+            .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .clickable(onClick = onClick)
             .padding(start = 56.dp, end = itemHorizontalPadding, top = 6.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -217,7 +218,7 @@ private fun EventLogEntry(eventLog: A11yEventLog, onClick: () -> Unit) {
                 text = if (eventLog.isStateChanged) UiStrings.event_window_state_changed
                     else UiStrings.event_window_content_changed,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.labelMedium,
+                style = MiuixTheme.textStyles.footnote2,
                 color = color,
             )
             GkLogTimeText(eventLog.ctime)
@@ -225,7 +226,7 @@ private fun EventLogEntry(eventLog: A11yEventLog, onClick: () -> Unit) {
         if (eventLog.fixedName.isNotBlank()) {
             Text(
                 text = eventLog.fixedName,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MiuixTheme.textStyles.body2,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
@@ -252,14 +253,14 @@ private fun EventLogSummary(
         GkIcon(
             imageVector = icon,
             modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             contentDescription = null,
         )
         Text(
             text = text,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MiuixTheme.textStyles.footnote1,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
         )

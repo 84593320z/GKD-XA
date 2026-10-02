@@ -21,8 +21,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,7 +82,7 @@ fun AiSettingsDialog(
                     .verticalScroll(rememberScrollState()),
             ) {
                 // Protocol selector
-                Text(text = "协议", style = MaterialTheme.typography.labelMedium)
+                Text(text = "协议", style = MiuixTheme.textStyles.footnote2)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -94,7 +95,7 @@ fun AiSettingsDialog(
                             modifier = Modifier.weight(1f),
                             colors = if (protocolValue == proto) {
                                 ButtonDefaults.textButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    containerColor = MiuixTheme.colorScheme.primaryContainer,
                                 )
                             } else {
                                 ButtonDefaults.textButtonColors()
@@ -103,7 +104,7 @@ fun AiSettingsDialog(
                             Text(
                                 text = proto.replaceFirstChar { it.uppercase() },
                                 color = if (protocolValue == proto) {
-                                    MaterialTheme.colorScheme.primary
+                                    MiuixTheme.colorScheme.primary
                                 } else {
                                     LocalContentColor.current
                                 },
@@ -176,9 +177,9 @@ fun AiSettingsDialog(
                                     text = {
                                         Text(
                                             text = m,
-                                            style = MaterialTheme.typography.bodySmall,
+                                            style = MiuixTheme.textStyles.footnote1,
                                             color = if (m == modelValue) {
-                                                MaterialTheme.colorScheme.primary
+                                                MiuixTheme.colorScheme.primary
                                             } else {
                                                 LocalContentColor.current
                                             },
@@ -291,11 +292,11 @@ fun AiSettingsDialog(
                     testResult?.let {
                         Text(
                             text = it,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = if (it.startsWith("失败")) {
-                                MaterialTheme.colorScheme.error
+                                MiuixTheme.colorScheme.error
                             } else {
-                                MaterialTheme.colorScheme.primary
+                                MiuixTheme.colorScheme.primary
                             },
                             modifier = Modifier.align(Alignment.CenterVertically),
                         )

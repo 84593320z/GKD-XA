@@ -10,8 +10,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import li.gkd.app.ui.component.GkAppRuleRestrictionCard
 import li.gkd.app.store.AppStore
 import androidx.compose.runtime.Composable
@@ -279,12 +280,12 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
                                 if (!isSelectedMode) GkRuleEnableControl(appControl, setApp, modifier = it,
                                     identity = li.gkd.app.domain.rule.RuleSwitchTarget.App(subsItemId, appId))
                             }) {
-                                Text(UiStrings.rule_enable_in_app, style = MaterialTheme.typography.titleSmall)
+                                Text(UiStrings.rule_enable_in_app, style = MiuixTheme.textStyles.subtitle)
                                 val restriction = RulePropertyText.restrictionSummary(appControl)
                                 if (restriction != null) {
                                     Spacer(Modifier.height(4.dp))
-                                    Text(restriction, style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(restriction, style = MiuixTheme.textStyles.footnote1,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                                 }
                             }
                         }

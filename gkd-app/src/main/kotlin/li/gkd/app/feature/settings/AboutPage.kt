@@ -17,8 +17,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,10 +129,10 @@ fun AboutPage() {
                         .padding(horizontal = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(text = META.appName, style = MaterialTheme.typography.titleMedium)
+                    Text(text = META.appName, style = MiuixTheme.textStyles.title3)
                     Text(
                         text = META.versionName,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MiuixTheme.textStyles.body2,
                     )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
@@ -140,8 +141,8 @@ fun AboutPage() {
             Text(
                 text = "版本声明",
                 modifier = Modifier.titleItemPadding(),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MiuixTheme.textStyles.subtitle,
+                color = MiuixTheme.colorScheme.primary,
             )
             Column(
                 modifier = Modifier
@@ -150,13 +151,13 @@ fun AboutPage() {
             ) {
                 Text(
                     text = "GKD Plus 是基于 GKD 的社区改版，并非 GKD 原版官方发布版本。",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
                     text = "感谢原作者 lisonge 与 GKD 项目贡献者提供优秀的开源基础。本项目会尽量尊重原项目设计与 GPL-3.0 开源协议。",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
 
@@ -203,8 +204,8 @@ fun AboutPage() {
                 Text(
                     text = UiStrings.action_update,
                     modifier = Modifier.titleItemPadding(),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    style = MiuixTheme.textStyles.subtitle,
+                    color = MiuixTheme.colorScheme.primary,
                 )
                 GkTextMenu(
                     title = UiStrings.update_channel,
@@ -241,7 +242,7 @@ fun AboutPage() {
                 ) {
                     Text(
                         text = UiStrings.update_check,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MiuixTheme.textStyles.body1,
                     )
                     GkRotatingLoadingIcon(loading = mainVm.updateStatus.checkUpdatingFlow.collectAsStateWithLifecycle().value)
                 }
@@ -261,11 +262,11 @@ fun AboutPage() {
 @Composable
 private fun FeedbackSection() {
     val mainVm = MainViewModel.requireCurrent()
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MiuixTheme.colorScheme.primary
     Text(
         text = UiStrings.feedback_title,
         modifier = Modifier.titleItemPadding(),
-        style = MaterialTheme.typography.titleSmall,
+        style = MiuixTheme.textStyles.subtitle,
         color = primaryColor,
     )
     Column(
@@ -300,7 +301,7 @@ private fun FeedbackSection() {
     ) {
         Text(
             text = UiStrings.feedback_report,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MiuixTheme.textStyles.body1,
         )
     }
 }

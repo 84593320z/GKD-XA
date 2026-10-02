@@ -10,7 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,27 +97,27 @@ private fun ActivityLogEntry(log: ActivityLog, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .gkLogTimelineRail(MaterialTheme.colorScheme.outlineVariant)
+            .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .clickable(onClick = onClick)
             .padding(start = 20.dp, end = itemHorizontalPadding, top = 6.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier.size(24.dp).background(MaterialTheme.colorScheme.surface),
+            modifier = Modifier.size(24.dp).background(MiuixTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
             GkIcon(
                 imageVector = GkIcons.Layers,
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 contentDescription = null,
             )
         }
         Text(
             text = log.showActivityId ?: UiStrings.action_log_activity_unknown,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MiuixTheme.textStyles.body2,
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.MiddleEllipsis,
