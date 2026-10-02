@@ -8,8 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -74,13 +75,13 @@ class TextDialogState {
                             .fillMaxWidth()
                             .heightIn(max = 320.dp),
                         shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MiuixTheme.colorScheme.surfaceVariant,
                     ) {
                         GkCopyableText(
                             text = text,
                             modifier = Modifier.fillMaxWidth(),
                             contentPadding = PaddingValues(12.dp),
-                            textStyle = MaterialTheme.typography.bodyMedium,
+                            textStyle = MiuixTheme.textStyles.body2,
                         )
                     }
                 },

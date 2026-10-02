@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,12 +50,12 @@ fun GkRuleStats(
         stats.apps?.takeIf { it > 0 || stats.showZeroCounts }?.let { add(GkIcons.Android to it.toString()) }
         stats.appGroups?.takeIf { it > 0 || stats.showZeroCounts }?.let { add(GkIcons.FlashOn to (stats.enabledAppGroups?.let { enabled -> "$enabled/$it" } ?: it.toString())) }
     }
-    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    val color = MiuixTheme.colorScheme.onSurfaceVariantSummary
     if (!stats.hasRules && !stats.showZeroCounts) {
         Text(
             text = emptyText,
             modifier = modifier,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MiuixTheme.textStyles.body2,
             color = color,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -70,10 +71,10 @@ fun GkRuleStats(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     if (index > 0) {
-                        Text("·", style = MaterialTheme.typography.bodyMedium, color = color)
+                        Text("·", style = MiuixTheme.textStyles.body2, color = color)
                     }
                     GkIcon(icon, modifier = Modifier.size(16.dp), contentDescription = null, tint = color)
-                    Text(count, style = MaterialTheme.typography.bodyMedium, color = color)
+                    Text(count, style = MiuixTheme.textStyles.body2, color = color)
                 }
             }
         }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +26,7 @@ fun GkRuleListHeader(
 ) {
     Row(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
+            .background(MiuixTheme.colorScheme.background)
             .padding(horizontal = 8.dp)
             .clip(MaterialTheme.shapes.extraSmall)
             .clickable(enabled = enabled, onClickLabel = onClickLabel, onClick = onClick)
@@ -38,7 +39,7 @@ fun GkRuleListHeader(
         GkIcon(
             imageVector = GkIcons.KeyboardArrowRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MiuixTheme.colorScheme.primary,
             modifier = Modifier.iconTextSize(),
         )
     }

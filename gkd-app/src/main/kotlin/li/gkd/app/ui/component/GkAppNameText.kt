@@ -6,7 +6,8 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
@@ -58,7 +59,7 @@ fun GkAppNameText(
             color = color,
         )
     } else {
-        val userNameColor = MaterialTheme.colorScheme.tertiary
+        val userNameColor = MiuixTheme.colorScheme.secondary
         val annotatedString = remember(showSystemIcon, appName, userName, userNameColor) {
             buildAnnotatedString {
                 if (showSystemIcon) {

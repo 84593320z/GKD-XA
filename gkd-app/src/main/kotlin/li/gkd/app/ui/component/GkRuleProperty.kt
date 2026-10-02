@@ -10,7 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterAltOff
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,12 +57,12 @@ fun GkRuleSupportingContent(
     state: RuleControlState,
     text: String,
     modifier: Modifier = Modifier,
-    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    textColor: Color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
 ) {
     Row(modifier.fillMaxWidth().heightIn(min = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+        Text(text, Modifier.weight(1f), style = MiuixTheme.textStyles.body2,
             color = textColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
         GkRulePropertyIndicators(state)
     }
@@ -72,7 +73,7 @@ fun GkRulePropertyIndicators(state: RuleControlState) {
     // Keep the personal property's slot stable without reserving space for warnings.
     Box(Modifier.size(16.dp), contentAlignment = Alignment.Center) {
         if (state.limitations.hasPersonalProperties) {
-            GkRulePropertyIcon(RuleProperty.Personal, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            GkRulePropertyIcon(RuleProperty.Personal, tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
     }
 }

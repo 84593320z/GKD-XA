@@ -5,7 +5,8 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -120,7 +121,7 @@ fun GkRuleFocusNotice() {
     Text(
         text = UiStrings.rule_focus_missing,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MiuixTheme.textStyles.body2,
+        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
     )
 }

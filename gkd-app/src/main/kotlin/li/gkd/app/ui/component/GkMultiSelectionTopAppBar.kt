@@ -20,9 +20,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -169,7 +170,7 @@ fun GkMultiSelectionTopAppBar(
     } else {
         PinnedSelectionTopAppBar(modifier, scrollBehavior, canScroll) {
             CompositionLocalProvider(LocalContentColor provides colors.titleContentColor) {
-                ProvideTextStyle(MaterialTheme.typography.titleLarge) {
+                ProvideTextStyle(MiuixTheme.textStyles.title2) {
                     Box(Modifier.weight(1f)) { animatedTitle() }
                 }
             }

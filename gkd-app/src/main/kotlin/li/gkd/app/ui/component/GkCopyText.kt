@@ -20,6 +20,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -123,9 +124,9 @@ fun GkCopyIconOverlay(
 fun GkCopyTextCard(
     text: String,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
+    containerColor: Color = MiuixTheme.colorScheme.surfaceVariant,
+    contentColor: Color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+    textStyle: TextStyle = MiuixTheme.textStyles.body1,
 ) {
     val shape = MaterialTheme.shapes.extraSmall
     GkCopyableText(

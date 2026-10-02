@@ -9,9 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
+import top.yukonga.miuix.kmp.basic.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +32,6 @@ fun GkSettingsDialog(
     GkDialog(onDismissRequest = onDismissRequest) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = SettingsDialogShape,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
@@ -43,7 +43,7 @@ fun GkSettingsDialog(
                     Text(
                         modifier = Modifier.weight(1f),
                         text = title,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MiuixTheme.textStyles.headline2,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )

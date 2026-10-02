@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,7 +52,7 @@ fun GkExpandableSection(
                 GkIcon(
                     imageVector = GkIcons.ExpandMore,
                     modifier = Modifier.size(24.dp).graphicsLayer { rotationZ = rotation },
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     contentDescription = null,
                 )
             }

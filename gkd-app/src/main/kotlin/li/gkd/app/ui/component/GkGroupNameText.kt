@@ -6,7 +6,8 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -75,7 +76,7 @@ fun GkGroupNameText(
             maxLines = maxLines,
         )
     } else {
-        val categoryColor = MaterialTheme.colorScheme.primary
+        val categoryColor = MiuixTheme.colorScheme.primary
         val displayText = remember(preText, text, categoryName, categoryColor, hideCategoryPrefix) {
             buildAnnotatedString {
                 append(preText.orEmpty())

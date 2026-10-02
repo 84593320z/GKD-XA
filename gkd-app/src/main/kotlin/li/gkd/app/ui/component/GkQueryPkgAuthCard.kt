@@ -8,8 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -34,13 +35,13 @@ fun GkQueryPkgAuthCard(
         GkIcon(
             imageVector = GkIcons.WarningAmber,
             modifier = Modifier.size(40.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = UiStrings.query_apps_permission_notice,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             textAlign = TextAlign.Center,
         )
         TextButton(

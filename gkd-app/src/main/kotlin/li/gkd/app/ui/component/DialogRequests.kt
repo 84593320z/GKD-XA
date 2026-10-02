@@ -2,8 +2,9 @@ package li.gkd.app.ui.component
 
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
@@ -124,7 +125,7 @@ class DialogRequests {
                         onClick = throttle(::confirmCurrent),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = if (currentRequest.error) {
-                                MaterialTheme.colorScheme.error
+                                MiuixTheme.colorScheme.error
                             } else {
                                 Color.Unspecified
                             },

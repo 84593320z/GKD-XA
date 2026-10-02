@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -51,7 +52,7 @@ fun GkRuleGroupCard(
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             GkGroupNameText(text = group.name, modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MiuixTheme.textStyles.body1,
                 isGlobal = group is RawSubscription.RawGlobalGroup, maxLines = 2,
                 categoryName = if (group is RawSubscription.RawAppGroup) subs.getCategory(group.name)?.name else null,
                 hideCategoryPrefix = hideCategoryPrefix,
@@ -60,7 +61,7 @@ fun GkRuleGroupCard(
         }
         if (description != null) {
             GkRuleSupportingContent(control, text = description,
-                textColor = if (group.valid) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error)
+                textColor = if (group.valid) MiuixTheme.colorScheme.onSurfaceVariantSummary else MiuixTheme.colorScheme.error)
         }
     }
 }

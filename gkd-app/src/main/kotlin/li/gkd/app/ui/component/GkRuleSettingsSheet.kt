@@ -15,13 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,13 +39,13 @@ fun GkRuleSettingsSheet(
     title: String,
     onDismissRequest: () -> Unit,
     titleContent: @Composable () -> Unit = {
-        Text(title, modifier = Modifier.fillMaxWidth(), style = MaterialTheme.typography.titleMedium)
+        Text(title, modifier = Modifier.fillMaxWidth(), style = MiuixTheme.textStyles.title3)
     },
     subtitle: String? = null,
     subtitleContent: @Composable () -> Unit = {
         if (subtitle != null) {
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(subtitle, style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
     },
     footerLeadingContent: (@Composable () -> Unit)? = null,
@@ -91,8 +92,7 @@ fun GkRuleSettingsContent(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainerHigh),
     ) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min = 64.dp),
             verticalAlignment = Alignment.CenterVertically) {
@@ -100,12 +100,12 @@ fun GkRuleSettingsContent(
                 Modifier.weight(1f).padding(start = 16.dp, end = 8.dp, top = 16.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(title, style = MiuixTheme.textStyles.title3)
                 // Keep restrictions visible independently of the saved switch value.
                 val restriction = RulePropertyText.restrictionSummary(state)
                 if (restriction != null) {
-                    Text(restriction, style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(restriction, style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                 }
             }
             if (onViewControl != null) {
@@ -113,7 +113,7 @@ fun GkRuleSettingsContent(
                     imageVector = GkIcons.Flowchart,
                     contentDescription = UiStrings.rule_control_view,
                     colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     ),
                     onClick = onViewControl,
                 )
@@ -123,7 +123,7 @@ fun GkRuleSettingsContent(
                 contentDescription = UiStrings.settings_reset_default,
                 enabled = state.hasCustomSetting,
                 colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 ),
                 onClick = { onSettingChange(RuleSetting.FollowDefault) },
             )
@@ -143,22 +143,21 @@ fun GkRuleExclusionsCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainerHigh),
     ) {
         Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(if (appId == null) RuleProperty.Personal.label else UiStrings.page_exclusion, style = MaterialTheme.typography.titleMedium)
+                Text(if (appId == null) RuleProperty.Personal.label else UiStrings.page_exclusion, style = MiuixTheme.textStyles.title3)
                 val summary = RulePropertyText.personalSummary(exclude, appId)
                 if (summary != null) {
-                    Text(summary, style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(summary, style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                 }
             }
             GkRulePropertyIcon(RuleProperty.Personal, modifier = Modifier.size(24.dp), contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
     }
 }

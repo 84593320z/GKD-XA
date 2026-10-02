@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +41,9 @@ fun GkEmptyState(
         Text(
             text = text,
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MiuixTheme.textStyles.body2,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.5f),
         )
         if (action != null) {
             Spacer(Modifier.height(GkEmptyStateDefaults.ActionSpacing))

@@ -8,7 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,14 +46,14 @@ fun <T> GkTextMenu(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MiuixTheme.textStyles.body1,
         )
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = option.label,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MiuixTheme.textStyles.body2,
             )
             GkIcon(
                 imageVector = GkIcons.UnfoldMore,
@@ -64,7 +65,7 @@ fun <T> GkTextMenu(
                 option.options.forEach { otherOption ->
                     val selected = otherOption.value == option.value
                     DropdownMenuItem(
-                        modifier = if (selected) Modifier.background(MaterialTheme.colorScheme.onSecondary) else Modifier,
+                        modifier = if (selected) Modifier.background(MiuixTheme.colorScheme.onSecondary) else Modifier,
                         leadingIcon = if (otherOption is OptionIcon) ({
                             GkIcon(
                                 imageVector = otherOption.icon,

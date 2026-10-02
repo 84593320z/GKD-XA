@@ -11,8 +11,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -362,7 +363,7 @@ class GithubUploadState(
                                     GkCopyTextCard(text = visibleStatus.links.joinToString("\n"))
                                 }
                                 visibleStatus.failures.take(5).forEach { (label, message) ->
-                                    Text("$label: $message", style = MaterialTheme.typography.bodySmall)
+                                    Text("$label: $message", style = MiuixTheme.textStyles.footnote1)
                                 }
                             }
                         } else if (visibleStatus.remainingCount == 0) {

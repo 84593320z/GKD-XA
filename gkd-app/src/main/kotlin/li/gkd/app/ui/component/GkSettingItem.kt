@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +52,7 @@ fun GkSettingItem(
         Column(modifier = if (imageVector != null) Modifier.weight(1f) else Modifier.fillMaxWidth()) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MiuixTheme.textStyles.body1,
             )
             if (subtitle != null) {
                 if (suffix != null) {
@@ -60,20 +61,20 @@ fun GkSettingItem(
                             text = subtitle,
                             maxLines = subtitleMaxLines,
                             overflow = subtitleOverflow,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = suffix,
-                            style = MaterialTheme.typography.bodyMedium.run {
+                            style = MiuixTheme.textStyles.body2.run {
                                 if (suffixUnderline) {
                                     copy(textDecoration = TextDecoration.Underline)
                                 } else {
                                     this
                                 }
                             },
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MiuixTheme.colorScheme.primary,
                             modifier = if (onSuffixClick != null) Modifier.clickable(
                                 onClick = throttle(fn = onSuffixClick),
                             ) else Modifier
@@ -84,8 +85,8 @@ fun GkSettingItem(
                         text = subtitle,
                         maxLines = subtitleMaxLines,
                         overflow = subtitleOverflow,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 }
             }

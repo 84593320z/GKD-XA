@@ -2,8 +2,9 @@ package li.gkd.app.ui.component
 
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import li.gkd.app.util.TimeUtils.throttle
@@ -20,7 +21,7 @@ fun GkAuthButtonGroup(
             TextButton(onClick = throttle(click)) {
                 Text(
                     text = text,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MiuixTheme.textStyles.body1,
                 )
             }
         }

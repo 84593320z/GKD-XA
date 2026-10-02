@@ -7,6 +7,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -38,7 +39,7 @@ fun GkTopAppBar(
     }
     // SingleRowTopAppBar 内部 containerColor+scrolledContainerColor 合成了一个动画
     // 应用主题颜色更新时形成叠加动画，导致和周围正常组件视觉变换效果表现割裂
-    key(MaterialTheme.colorScheme.primary) {
+    key(MiuixTheme.colorScheme.primary) {
         TopAppBar(
             title = title,
             modifier = modifier,

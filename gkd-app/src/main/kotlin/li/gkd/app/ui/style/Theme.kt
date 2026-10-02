@@ -8,8 +8,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -34,7 +32,11 @@ import li.gkd.app.app
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.share.LocalDarkTheme
 import li.gkd.app.ui.share.LocalIsTalkbackEnabled
-import li.gkd.app.util.AndroidTarget
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.yukonga.miuix.kmp.theme.Colors as MiuixColors
+import top.yukonga.miuix.kmp.theme.LocalContentColor
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.ThemeController
 
 private val LightColorScheme = lightColorScheme()
 private val DarkColorScheme = darkColorScheme()
@@ -50,6 +52,14 @@ private fun createAppearanceFlow(scope: CoroutineScope) =
             storeFlow.value.let { it.enableDarkTheme to it.enableDynamicColor },
         )
 
+/**
+ * 应用主题（MIUIX 主导版）。
+ *
+ * 结构：MiuixTheme 提供 MIUIX 配色/字体作为**视觉主导**；
+ * 内层再套一层 MaterialTheme，把 MIUIX 配色桥接成 Material [ColorScheme]，
+ * 使尚未替换为 MIUIX 的 Material3 组件仍能正常工作。
+ * 这样视觉立刻变为 MIUIX，同时支持渐进式替换，不必一次性改完所有组件。
+ */
 @Composable
 fun AppTheme(
     invertedTheme: Boolean = false,
@@ -62,26 +72,6 @@ fun AppTheme(
     val darkTheme = (enableDarkTheme ?: systemInDarkTheme).let {
         if (invertedTheme) !it else it
     }
-    val colorScheme = when {
-        AndroidTarget.S && enableDynamicColor && darkTheme -> dynamicDarkColorScheme(app)
-        AndroidTarget.S && enableDynamicColor && !darkTheme -> dynamicLightColorScheme(app)
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
-    val activity = LocalActivity.current
-    if (activity != null) {
-        LaunchedEffect(darkTheme) {
-            // https://github.com/gkd-kit/gkd/pull/421
-            WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
-                isAppearanceLightStatusBars = !darkTheme
-            }
-        }
-        val bg = colorScheme.background.toArgb()
-        LaunchedEffect(darkTheme, bg) {
-            activity.window.decorView.setBackgroundColor(bg)
-        }
-    }
 
     var isTalkbackEnabled by remember { mutableStateOf(app.a11yManager.isTouchExplorationEnabled) }
     DisposableEffect(null) {
@@ -93,15 +83,87 @@ fun AppTheme(
             app.a11yManager.removeTouchExplorationStateChangeListener(listener)
         }
     }
+
+    val colorSchemeMode = when {
+        enableDynamicColor && darkTheme -> ColorSchemeMode.MonetDark
+        enableDynamicColor && !darkTheme -> ColorSchemeMode.MonetLight
+        darkTheme -> ColorSchemeMode.Dark
+        else -> ColorSchemeMode.Light
+    }
+    val controller = remember(colorSchemeMode) { ThemeController(colorSchemeMode = colorSchemeMode) }
+
     CompositionLocalProvider(
         LocalDarkTheme provides darkTheme,
-        LocalIsTalkbackEnabled provides isTalkbackEnabled
+        LocalIsTalkbackEnabled provides isTalkbackEnabled,
     ) {
-        MaterialTheme(
-            colorScheme = colorScheme.animation(),
-            content = content,
-        )
+        MiuixTheme(controller = controller) {
+            // 把 MIUIX 配色桥接为 Material ColorScheme，兼容尚未替换的 Material3 组件。
+            val materialScheme = MiuixTheme.colorScheme
+                .toMaterialColorScheme(darkTheme)
+                .animation()
+            ApplyWindowChrome(darkTheme = darkTheme, background = materialScheme.background)
+            CompositionLocalProvider(
+                LocalContentColor provides MiuixTheme.colorScheme.onSurface,
+            ) {
+                MaterialTheme(
+                    colorScheme = materialScheme,
+                    content = content,
+                )
+            }
+        }
     }
+}
+
+@Composable
+private fun ApplyWindowChrome(darkTheme: Boolean, background: Color) {
+    val activity = LocalActivity.current
+    if (activity == null) return
+    LaunchedEffect(darkTheme) {
+        // https://github.com/gkd-kit/gkd/pull/421
+        WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
+            isAppearanceLightStatusBars = !darkTheme
+        }
+    }
+    val bg = background.toArgb()
+    LaunchedEffect(darkTheme, bg) {
+        activity.window.decorView.setBackgroundColor(bg)
+    }
+}
+
+/**
+ * 把 MIUIX [MiuixColors] 映射为 Material3 [ColorScheme]。
+ * 用于让尚未替换为 MIUIX 的 Material3 组件跟随 MIUIX 配色。
+ */
+internal fun MiuixColors.toMaterialColorScheme(darkTheme: Boolean): ColorScheme {
+    val base = if (darkTheme) DarkColorScheme else LightColorScheme
+    return base.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        secondary = secondary,
+        onSecondary = onSecondary,
+        secondaryContainer = secondaryContainer,
+        onSecondaryContainer = onSecondaryContainer,
+        tertiaryContainer = tertiaryContainer,
+        onTertiaryContainer = onTertiaryContainer,
+        background = background,
+        onBackground = onBackground,
+        surface = surface,
+        onSurface = onSurface,
+        surfaceVariant = surfaceVariant,
+        onSurfaceVariant = onSurfaceVariantSummary,
+        error = error,
+        onError = onError,
+        errorContainer = errorContainer,
+        onErrorContainer = onErrorContainer,
+        outline = outline,
+        surfaceContainer = surfaceContainer,
+        surfaceContainerHigh = surfaceContainerHigh,
+        surfaceContainerHighest = surfaceContainerHighest,
+        tertiary = secondary,
+        onTertiary = onSecondary,
+    )
 }
 
 @Composable

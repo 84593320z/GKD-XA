@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +33,7 @@ fun GkFilterIconButton(
                 Modifier.align(Alignment.TopEnd)
                     .padding(8.dp)
                     .size(6.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    .background(MiuixTheme.colorScheme.primary, CircleShape)
             )
         }
     }

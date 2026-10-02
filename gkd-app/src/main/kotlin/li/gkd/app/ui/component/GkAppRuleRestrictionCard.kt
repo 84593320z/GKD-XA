@@ -5,10 +5,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +27,7 @@ fun GkAppRuleRestrictionCard(
     if (whitelisted || partialDisabled) {
         Card(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp).fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
         ) {
             if (whitelisted) {
                 RestrictionRow(UiStrings.whitelist_member,
@@ -47,8 +48,8 @@ private fun RestrictionRow(title: String, description: String, action: String, o
         verticalAlignment = Alignment.CenterVertically) {
         GkIcon(GkIcons.Info, Modifier.size(24.dp), contentDescription = null)
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall)
-            Text(description, style = MaterialTheme.typography.bodySmall)
+            Text(title, style = MiuixTheme.textStyles.subtitle)
+            Text(description, style = MiuixTheme.textStyles.footnote1)
         }
         GkIconButton(GkIcons.RemoveCircleOutline, onClick = onRemove, contentDescription = action)
     }

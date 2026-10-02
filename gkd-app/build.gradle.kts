@@ -232,6 +232,14 @@ dependencies {
     implementation(libs.compose.activity)
     implementation(libs.compose.material3)
 
+    // MIUIX：界面渲染层（视觉替换目标）
+    implementation(libs.miuix.ui)
+    implementation(libs.miuix.preference)
+    implementation(libs.miuix.icons)
+    implementation(libs.miuix.blur)
+    implementation(libs.miuix.navigation3.ui)
+    implementation(libs.loc.annotation)
+
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)

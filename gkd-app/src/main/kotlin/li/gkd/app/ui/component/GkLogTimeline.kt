@@ -13,7 +13,8 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -114,7 +115,7 @@ fun <T : Any> GkLogTimeline(
 @Composable
 fun GkLogTimeText(time: Long) {
     val formatted = time.format("HH:mm:ss.SSS")
-    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    val color = MiuixTheme.colorScheme.onSurfaceVariantSummary
     Text(
         text = buildAnnotatedString {
             append(formatted.dropLast(4))
@@ -122,7 +123,7 @@ fun GkLogTimeText(time: Long) {
                 append(formatted.takeLast(4))
             }
         },
-        style = MaterialTheme.typography.labelMedium.copy(
+        style = MiuixTheme.textStyles.footnote2.copy(
             fontFeatureSettings = TABULAR_NUMBERS_FONT_FEATURE,
         ),
         color = color,
@@ -183,7 +184,7 @@ private fun GkLogDateHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MiuixTheme.colorScheme.surface)
             .padding(start = 24.dp, end = itemHorizontalPadding, top = 8.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -191,21 +192,21 @@ private fun GkLogDateHeader(
         GkIcon(
             imageVector = GkIcons.Schedule,
             modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             contentDescription = null,
         )
         Text(
             text = date,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
+            style = MiuixTheme.textStyles.subtitle,
+            color = MiuixTheme.colorScheme.primary,
         )
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             appId?.let { id ->
                 val apps by AppInfoRepository.appInfoMapFlow.collectAsStateWithLifecycle()
                 Text(
                     text = apps[id]?.name ?: id,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.footnote2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     maxLines = 1,
                     softWrap = false,
                     overflow = TextOverflow.Ellipsis,
@@ -224,7 +225,7 @@ private fun GkLogAppHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .gkLogTimelineRail(MaterialTheme.colorScheme.outlineVariant)
+            .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(
                 start = 16.dp,
@@ -239,14 +240,14 @@ private fun GkLogAppHeader(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface),
+                .background(MiuixTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
             GkAppIcon(appId = appId, size = 24.dp)
         }
         GkAppNameText(
             appId = appId,
-            style = MaterialTheme.typography.titleSmall,
+            style = MiuixTheme.textStyles.subtitle,
             modifier = Modifier.weight(1f),
         )
     }

@@ -8,9 +8,10 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,7 +42,7 @@ fun GkMultiTextField(
             errorIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
         )
-        CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyLarge) {
+        CompositionLocalProvider(LocalTextStyle provides MiuixTheme.textStyles.body1) {
             val modifier = Modifier
                 .autoFocus(immediateFocus = immediateFocus)
                 .fillMaxSize()
@@ -63,10 +64,10 @@ fun GkMultiTextField(
                     .padding(8.dp)
                     .align(Alignment.TopEnd)
                     .clip(MaterialTheme.shapes.extraSmall)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .background(MiuixTheme.colorScheme.surfaceContainer)
                     .padding(horizontal = 2.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.tertiary,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.secondary,
             )
         }
     }

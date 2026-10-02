@@ -18,9 +18,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,16 +48,14 @@ fun GkRuleListItem(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val containerColor by animateColorAsState(
-        targetValue = if (selected || highlighted) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surfaceContainer,
+        targetValue = if (selected || highlighted) MiuixTheme.colorScheme.primaryContainer
+            else MiuixTheme.colorScheme.surfaceContainer,
         animationSpec = tween(durationMillis = 300),
         label = "Rule card background",
     )
     Card(
         modifier = modifier.padding(horizontal = 8.dp, vertical = 3.dp).fillMaxWidth(),
-        shape = MaterialTheme.shapes.small,
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
+        colors = CardDefaults.defaultColors(color = containerColor,
         ),
     ) {
         Row(

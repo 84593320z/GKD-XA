@@ -5,8 +5,9 @@ import li.gkd.app.MainViewModel
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,7 +36,7 @@ fun GkTermsAcceptDialog() {
                 val linkStyles = TextLinkStyles(
                     style = SpanStyle(
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MiuixTheme.colorScheme.primary,
                     )
                 )
                 Text(

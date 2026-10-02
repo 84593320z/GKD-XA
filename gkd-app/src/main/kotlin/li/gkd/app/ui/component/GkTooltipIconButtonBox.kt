@@ -1,7 +1,7 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults

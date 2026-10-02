@@ -10,9 +10,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextFieldDefaults.indicatorLine
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +50,7 @@ fun GkAppBarTextField(
         unfocusedIndicatorColor = Color.Transparent,
     )
 
-    val mergedTextStyle = LocalTextStyle.current.merge(MaterialTheme.typography.titleMedium)
+    val mergedTextStyle = LocalTextStyle.current.merge(MiuixTheme.textStyles.title3)
         .merge(color = LocalContentColor.current)
 
     // set the correct cursor position when this composable is first initialized
@@ -76,7 +77,7 @@ fun GkAppBarTextField(
             ),
 //                .focusRequester(focusRequester),
         textStyle = mergedTextStyle,
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         interactionSource = interactionSource,

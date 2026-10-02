@@ -21,6 +21,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -379,15 +380,15 @@ object GkTriStateSwitchDefaults {
     @Composable
     fun colors(
         // --- enabled checked ---
-        checkedThumbColor: Color = MaterialTheme.colorScheme.onPrimary,
-        checkedTrackColor: Color = MaterialTheme.colorScheme.primary,
+        checkedThumbColor: Color = MiuixTheme.colorScheme.onPrimary,
+        checkedTrackColor: Color = MiuixTheme.colorScheme.primary,
         checkedBorderColor: Color = Color.Transparent,
-        checkedIconColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+        checkedIconColor: Color = MiuixTheme.colorScheme.onPrimaryContainer,
         // --- enabled unchecked ---
-        uncheckedThumbColor: Color = MaterialTheme.colorScheme.outline,
-        uncheckedTrackColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        uncheckedBorderColor: Color = MaterialTheme.colorScheme.outline,
-        uncheckedIconColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        uncheckedThumbColor: Color = MiuixTheme.colorScheme.outline,
+        uncheckedTrackColor: Color = MiuixTheme.colorScheme.surfaceContainerHighest,
+        uncheckedBorderColor: Color = MiuixTheme.colorScheme.outline,
+        uncheckedIconColor: Color = MiuixTheme.colorScheme.surfaceContainerHighest,
         // --- enabled indeterminate (null) — default = midpoint blend ---
         indeterminateThumbColor: Color = lerp(uncheckedThumbColor, checkedThumbColor, 0.5f),
         indeterminateTrackColor: Color = lerp(uncheckedTrackColor, checkedTrackColor, 0.5f),
@@ -395,35 +396,35 @@ object GkTriStateSwitchDefaults {
         indeterminateIconColor: Color = lerp(uncheckedIconColor, checkedIconColor, 0.5f),
         // --- disabled checked ---
         disabledCheckedThumbColor: Color =
-            MaterialTheme.colorScheme.surface
+            MiuixTheme.colorScheme.surface
                 .copy(alpha = 1.0f)
-                .compositeOver(MaterialTheme.colorScheme.surface),
+                .compositeOver(MiuixTheme.colorScheme.surface),
         disabledCheckedTrackColor: Color =
-            MaterialTheme.colorScheme.onSurface
+            MiuixTheme.colorScheme.onSurface
                 .copy(alpha = 0.12f)
-                .compositeOver(MaterialTheme.colorScheme.surface),
+                .compositeOver(MiuixTheme.colorScheme.surface),
         disabledCheckedBorderColor: Color = Color.Transparent,
         disabledCheckedIconColor: Color =
-            MaterialTheme.colorScheme.onSurface
+            MiuixTheme.colorScheme.onSurface
                 .copy(alpha = 0.38f)
-                .compositeOver(MaterialTheme.colorScheme.surface),
+                .compositeOver(MiuixTheme.colorScheme.surface),
         // --- disabled unchecked ---
         disabledUncheckedThumbColor: Color =
-            MaterialTheme.colorScheme.onSurface
+            MiuixTheme.colorScheme.onSurface
                 .copy(alpha = 0.38f)
-                .compositeOver(MaterialTheme.colorScheme.surface),
+                .compositeOver(MiuixTheme.colorScheme.surface),
         disabledUncheckedTrackColor: Color =
-            MaterialTheme.colorScheme.surfaceContainerHighest
+            MiuixTheme.colorScheme.surfaceContainerHighest
                 .copy(alpha = 0.12f)
-                .compositeOver(MaterialTheme.colorScheme.surface),
+                .compositeOver(MiuixTheme.colorScheme.surface),
         disabledUncheckedBorderColor: Color =
-            MaterialTheme.colorScheme.onSurface
+            MiuixTheme.colorScheme.onSurface
                 .copy(alpha = 0.12f)
-                .compositeOver(MaterialTheme.colorScheme.surface),
+                .compositeOver(MiuixTheme.colorScheme.surface),
         disabledUncheckedIconColor: Color =
-            MaterialTheme.colorScheme.surfaceContainerHighest
+            MiuixTheme.colorScheme.surfaceContainerHighest
                 .copy(alpha = 0.38f)
-                .compositeOver(MaterialTheme.colorScheme.surface),
+                .compositeOver(MiuixTheme.colorScheme.surface),
         // --- disabled indeterminate ---
         disabledIndeterminateThumbColor: Color = lerp(
             disabledUncheckedThumbColor,

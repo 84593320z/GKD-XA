@@ -6,7 +6,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
@@ -22,8 +23,8 @@ inline fun GkMenuGroupCard(inTop: Boolean = false, title: String, content: @Comp
         modifier = Modifier
             .padding(MenuDefaults.DropdownMenuItemContentPadding)
             .padding(top = if (inTop) 0.dp else 8.dp, bottom = 4.dp),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primary,
+        style = MiuixTheme.textStyles.footnote2,
+        color = MiuixTheme.colorScheme.primary,
     )
     content()
 }

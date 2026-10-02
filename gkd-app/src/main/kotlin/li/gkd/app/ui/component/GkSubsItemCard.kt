@@ -12,11 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,6 +36,10 @@ import li.gkd.app.data.RawSubscription
 import li.gkd.db.SubsItem
 import li.gkd.app.util.TimeUtils.formatTimeAgo
 import li.gkd.app.util.TimeUtils.throttle
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @Composable
@@ -75,16 +74,15 @@ fun GkSubsItemCard(
     }
     val containerColor = animateColorAsState(
         if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer
+            MiuixTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainer
+            MiuixTheme.colorScheme.surfaceContainer
         },
         tween()
     )
     Card(
         modifier = modifier
             .padding(16.dp, 4.dp)
-            .clip(MaterialTheme.shapes.small)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
@@ -119,9 +117,8 @@ fun GkSubsItemCard(
                     }
                 }
             },
-        shape = MaterialTheme.shapes.small,
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor.value
+        colors = CardDefaults.defaultColors(
+            color = containerColor.value
         ),
     ) {
         Row(
@@ -141,7 +138,7 @@ fun GkSubsItemCard(
                         maxLines = 1,
                         softWrap = false,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MiuixTheme.textStyles.body1,
                     )
                     GkRuleStats(GkRuleStatsData(
                         globalGroups = subscription.globalGroups.size,
@@ -158,7 +155,7 @@ fun GkSubsItemCard(
                                         contentDescription = UiStrings.author_description(subscription.author)
                                     },
                                     text = subscription.author,
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style = MiuixTheme.textStyles.footnote2,
                                 )
                             }
                             Text(
@@ -166,14 +163,14 @@ fun GkSubsItemCard(
                                     contentDescription = UiStrings.subscription_version_description(subscription.version)
                                 },
                                 text = UiStrings.version_prefixed(subscription.version),
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MiuixTheme.textStyles.footnote2,
                             )
                         } else {
                             Text(
                                 modifier = Modifier.clearAndSetSemantics {},
                                 text = META.appName,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.secondary,
+                                style = MiuixTheme.textStyles.footnote2,
+                                color = MiuixTheme.colorScheme.secondary,
                             )
                         }
                         val timeStr = formatTimeAgo(subsItem.mtime)
@@ -182,7 +179,7 @@ fun GkSubsItemCard(
                                 contentDescription = UiStrings.update_time_description(timeStr)
                             },
                             text = timeStr,
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MiuixTheme.textStyles.footnote2,
                         )
                     }
                 } else {
@@ -191,31 +188,31 @@ fun GkSubsItemCard(
                         maxLines = 1,
                         softWrap = false,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MiuixTheme.textStyles.body2,
                     )
                     val color = if (loadError != null) {
-                        MaterialTheme.colorScheme.error
+                        MiuixTheme.colorScheme.error
                     } else {
                         Color.Unspecified
                     }
                     Text(
                         text = loadError?.message
                             ?: if (refreshing) UiStrings.loading_progress else UiStrings.file_missing,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MiuixTheme.textStyles.body2,
                         color = color
                     )
                 }
                 if (refreshError != null) {
                     Text(
                         text = UiStrings.update_error_detail(refreshError.message),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.error
                     )
                 }
             }
             Spacer(modifier = Modifier.width(4.dp))
             if (isSelectedMode) {
-                Checkbox(
+                GkCheckbox(
                     checked = isSelected,
                     onCheckedChange = null,
                     enabled = selectionEnabled,

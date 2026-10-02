@@ -3,7 +3,8 @@ package li.gkd.app.ui.component
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -25,9 +26,9 @@ fun GkTwoLineText(
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.MiddleEllipsis,
-            style = MaterialTheme.typography.titleMedium,
+            style = MiuixTheme.textStyles.title3,
         )
-        CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.titleSmall) {
+        CompositionLocalProvider(LocalTextStyle provides MiuixTheme.textStyles.subtitle) {
             if (showApp) {
                 GkAppNameText(appId = subtitle, fallbackName = appFallbackName)
             } else {

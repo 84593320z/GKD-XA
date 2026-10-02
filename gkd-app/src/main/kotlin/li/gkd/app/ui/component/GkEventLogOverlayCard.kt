@@ -11,7 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +29,7 @@ import li.gkd.db.A11yEventLog
 
 @Composable
 fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier) {
-    val railColor = MaterialTheme.colorScheme.secondary
+    val railColor = MiuixTheme.colorScheme.secondary
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -50,7 +51,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                 Spacer(
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
-                        .background(MaterialTheme.colorScheme.tertiary)
+                        .background(MiuixTheme.colorScheme.secondary)
                         .size(height = 8.dp, width = 1.dp)
                 )
                 GkAppNameText(
@@ -59,7 +60,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
             }
             Text(
                 text = eventLog.fixedName,
-                color = if (eventLog.isStateChanged) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                color = if (eventLog.isStateChanged) MiuixTheme.colorScheme.primary else Color.Unspecified,
                 maxLines = 1,
                 softWrap = false,
                 overflow = TextOverflow.MiddleEllipsis,
@@ -80,7 +81,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                         text = desc,
                         modifier = Modifier
                             .background(
-                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                color = MiuixTheme.colorScheme.secondaryContainer,
                                 shape = MaterialTheme.shapes.extraSmall,
                             )
                             .padding(horizontal = 2.dp),
@@ -109,7 +110,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                                 text = subText,
                                 modifier = Modifier
                                     .background(
-                                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                                        color = MiuixTheme.colorScheme.tertiaryContainer,
                                         shape = MaterialTheme.shapes.extraSmall,
                                     )
                                     .padding(horizontal = 2.dp),
