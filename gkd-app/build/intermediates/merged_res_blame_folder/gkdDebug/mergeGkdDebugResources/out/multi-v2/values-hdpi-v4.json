@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "li.gkd.app.gkd-app-mergeGkdDebugResources-56:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Y-H\\.gradle\\caches\\9.7.1\\transforms\\a8c90f4ec19bb54db2e64950158b29c8\\transformed\\appcompat-1.8.0\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,752 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="li.songe.gkdx.debug"
+4    android:versionCode="101"
+5    android:versionName="1.3.0-9837a0c" >
+6
+7    <uses-sdk
+7-->INJECTED
+8        android:minSdkVersion="26"
+8-->INJECTED
+9        android:targetSdkVersion="37" />
+9-->INJECTED
+10
+11    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+11-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\gkd\AndroidManifest.xml:5:5-7:55
+11-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\gkd\AndroidManifest.xml:6:9-67
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:6:5-67
+12-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:6:22-64
+13    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+13-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:7:5-77
+13-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:7:22-74
+14    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+14-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:8:5-77
+14-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:8:22-74
+15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+15-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:9:5-89
+15-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:9:22-86
+16    <uses-permission
+16-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:10:5-12:38
+17        android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"
+17-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:11:9-78
+18        android:maxSdkVersion="29" />
+18-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:12:9-35
+19    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+19-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:13:5-77
+19-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:13:22-74
+20    <uses-permission android:name="com.android.permission.GET_INSTALLED_APPS" />
+20-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:14:5-81
+20-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:14:22-78
+21    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+21-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:15:5-78
+21-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:15:22-75
+22    <uses-permission
+22-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:16:5-18:38
+23        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+23-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:17:9-65
+24        android:maxSdkVersion="28" />
+24-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:18:9-35
+25    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+25-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:19:5-80
+25-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:19:22-77
+26    <uses-permission android:name="android.permission.GET_APP_OPS_STATS" />
+26-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:20:5-76
+26-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:20:22-73
+27    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+27-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:21:5-95
+27-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:21:22-92
+28    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+28-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:7:5-79
+28-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:7:22-76
+29    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+29-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:9:5-87
+29-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:9:22-84
+30
+31    <permission
+31-->[androidx.core:core:1.19.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\a02c48fb66d302f1e31f22e84d3acd3c\transformed\core-1.19.0\AndroidManifest.xml:22:5-24:47
+32        android:name="li.songe.gkdx.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+32-->[androidx.core:core:1.19.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\a02c48fb66d302f1e31f22e84d3acd3c\transformed\core-1.19.0\AndroidManifest.xml:23:9-81
+33        android:protectionLevel="signature" />
+33-->[androidx.core:core:1.19.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\a02c48fb66d302f1e31f22e84d3acd3c\transformed\core-1.19.0\AndroidManifest.xml:24:9-44
+34
+35    <uses-permission android:name="li.songe.gkdx.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+35-->[androidx.core:core:1.19.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\a02c48fb66d302f1e31f22e84d3acd3c\transformed\core-1.19.0\AndroidManifest.xml:26:5-97
+35-->[androidx.core:core:1.19.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\a02c48fb66d302f1e31f22e84d3acd3c\transformed\core-1.19.0\AndroidManifest.xml:26:22-94
+36    <uses-permission android:name="android.permission.USE_LOOPBACK_INTERFACE" />
+36-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:10:5-81
+36-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:10:22-78
+37    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+37-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:11:5-79
+37-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:11:22-76
+38    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+38-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:12:5-86
+38-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:12:22-83
+39    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+39-->[dev.rikka.shizuku:provider:13.1.5] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c940bc41ead5d5530bc2a090621b7371\transformed\provider-13.1.5\AndroidManifest.xml:8:5-78
+39-->[dev.rikka.shizuku:provider:13.1.5] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c940bc41ead5d5530bc2a090621b7371\transformed\provider-13.1.5\AndroidManifest.xml:8:22-75
+40
+41    <application
+41-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:23:5-309:19
+42        android:name="li.gkd.app.App"
+42-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:24:9-28
+43        android:allowBackup="true"
+43-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:25:9-35
+44        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+44-->[androidx.core:core:1.19.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\a02c48fb66d302f1e31f22e84d3acd3c\transformed\core-1.19.0\AndroidManifest.xml:28:18-86
+45        android:debuggable="true"
+46        android:extractNativeLibs="true"
+46-->INJECTED
+47        android:icon="@drawable/ic_launcher"
+47-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:26:9-45
+48        android:label="@string/app_name"
+48-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:27:9-41
+49        android:networkSecurityConfig="@xml/network_security_config"
+49-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:28:9-69
+50        android:roundIcon="@drawable/ic_launcher"
+50-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:29:9-50
+51        android:supportsRtl="false"
+51-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:30:9-36
+52        android:theme="@style/AppTheme" >
+52-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:31:9-40
+53        <meta-data
+53-->INJECTED
+54            android:name="channel"
+55            android:value="gkd" />
+55-->INJECTED
+56        <meta-data
+56-->INJECTED
+57            android:name="buildKey"
+58            android:value="" />
+58-->INJECTED
+59        <meta-data
+59-->INJECTED
+60            android:name="commitId"
+61            android:value="9837a0c4357519d45098a66ece75883899461446" />
+61-->INJECTED
+62        <meta-data
+62-->INJECTED
+63            android:name="commitTime"
+64            android:value="1790070816000" />
+64-->INJECTED
+65        <meta-data
+65-->INJECTED
+66            android:name="tagName"
+67            android:value="" />
+67-->INJECTED
+68
+69        <activity
+69-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:49:9-60:20
+70            android:name="li.gkd.app.MainActivity"
+70-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:50:13-41
+71            android:enableOnBackInvokedCallback="false"
+71-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:51:13-56
+72            android:exported="true"
+72-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:52:13-36
+73            android:launchMode="singleTask"
+73-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:53:13-44
+74            android:theme="@style/SplashScreenTheme" >
+74-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:54:13-53
+75            <intent-filter>
+75-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:56:13-59:29
+76                <action android:name="android.intent.action.MAIN" />
+76-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:57:17-69
+76-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:57:25-66
+77
+78                <category android:name="android.intent.category.LAUNCHER" />
+78-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:58:17-77
+78-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:58:27-74
+79            </intent-filter>
+80        </activity>
+81        <activity
+81-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:61:9-73:20
+82            android:name="li.gkd.app.entry.OpenSchemeActivity"
+82-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:62:13-53
+83            android:exported="true"
+83-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:63:13-36
+84            android:theme="@style/TransparentTheme" >
+84-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:64:13-52
+85            <intent-filter>
+85-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:65:13-72:29
+86                <action android:name="android.intent.action.VIEW" />
+86-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:66:17-69
+86-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:66:25-66
+87
+88                <category android:name="android.intent.category.DEFAULT" />
+88-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:68:17-76
+88-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:68:27-73
+89                <category android:name="android.intent.category.BROWSABLE" />
+89-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:69:17-78
+89-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:69:27-75
+90
+91                <data android:scheme="gkd" />
+91-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:71:17-46
+91-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:71:23-43
+92            </intent-filter>
+93        </activity>
+94        <activity
+94-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:74:9-88:20
+95            android:name="li.gkd.app.entry.OpenFileActivity"
+95-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:75:13-51
+96            android:exported="true"
+96-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:76:13-36
+97            android:theme="@style/TransparentTheme" >
+97-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:77:13-52
+98            <intent-filter android:label="@string/import_backup" >
+98-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:78:13-87:29
+98-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:78:28-65
+99                <action android:name="android.intent.action.VIEW" />
+99-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:66:17-69
+99-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:66:25-66
+100
+101                <category android:name="android.intent.category.DEFAULT" />
+101-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:68:17-76
+101-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:68:27-73
+102                <category android:name="android.intent.category.BROWSABLE" />
+102-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:69:17-78
+102-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:69:27-75
+103
+104                <data android:scheme="content" />
+104-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:71:17-46
+104-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:71:23-43
+105                <data android:mimeType="application/zip" />
+105-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:71:17-46
+106                <data android:mimeType="application/x-zip-compressed" />
+106-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:71:17-46
+107            </intent-filter>
+108        </activity>
+109        <activity
+109-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:89:9-96:20
+110            android:name="li.gkd.app.entry.OpenTileActivity"
+110-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:90:13-51
+111            android:exported="true"
+111-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:91:13-36
+112            android:theme="@style/TransparentTheme" >
+112-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:92:13-52
+113            <intent-filter>
+113-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:93:13-95:29
+114                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+114-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:94:17-99
+114-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:94:25-96
+115            </intent-filter>
+116        </activity>
+117
+118        <provider
+118-->INJECTED
+119            android:name="rikka.shizuku.ShizukuProvider"
+120            android:authorities="li.songe.gkdx.debug.shizuku"
+120-->INJECTED
+121            android:enabled="true"
+122            android:exported="true"
+123            android:multiprocess="false"
+124            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+125        <provider
+125-->INJECTED
+126            android:name="androidx.core.content.FileProvider"
+127            android:authorities="li.songe.gkdx.debug.provider"
+127-->INJECTED
+128            android:exported="false"
+129            android:grantUriPermissions="true" >
+130            <meta-data
+131                android:name="android.support.FILE_PROVIDER_PATHS"
+132                android:resource="@xml/file_paths" />
+133        </provider>
+134
+135        <service
+135-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:115:9-128:19
+136            android:name="com.google.android.accessibility.selecttospeak.SelectToSpeakService"
+136-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:116:13-95
+137            android:exported="false"
+137-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:117:13-37
+138            android:label="@string/app_name"
+138-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:118:13-45
+139            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+139-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:119:13-79
+140            <intent-filter>
+140-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:121:13-123:29
+141                <action android:name="android.accessibilityservice.AccessibilityService" />
+141-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:122:17-92
+141-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:122:25-89
+142            </intent-filter>
+143
+144            <meta-data
+144-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:125:13-127:53
+145                android:name="android.accessibilityservice"
+145-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:126:17-60
+146                android:resource="@xml/a11y_info" />
+146-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:127:17-50
+147        </service>
+148        <service
+148-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:130:9-133:63
+149            android:name="li.gkd.app.service.ScreenshotService"
+149-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:131:13-54
+150            android:exported="false"
+150-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:132:13-37
+151            android:foregroundServiceType="mediaProjection" />
+151-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:133:13-60
+152        <service
+152-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:134:9-141:19
+153            android:name="li.gkd.app.service.StatusService"
+153-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:135:13-50
+154            android:exported="false"
+154-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:136:13-37
+155            android:foregroundServiceType="specialUse" >
+155-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:137:13-55
+156            <property
+156-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:138:13-140:80
+157                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+157-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:139:17-76
+158                android:value="Display the running state of the application" />
+158-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:140:17-77
+159        </service>
+160        <service
+160-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:142:9-149:19
+161            android:name="li.gkd.app.service.HttpService"
+161-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:143:13-48
+162            android:exported="false"
+162-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:144:13-37
+163            android:foregroundServiceType="specialUse" >
+163-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:145:13-55
+164            <property
+164-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:138:13-140:80
+165                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+165-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:139:17-76
+166                android:value="Enable the HTTP server to provide external browser connections and debugging" />
+166-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:140:17-77
+167        </service>
+168        <service
+168-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:150:9-157:19
+169            android:name="li.gkd.app.service.ButtonService"
+169-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:151:13-50
+170            android:exported="false"
+170-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:152:13-37
+171            android:foregroundServiceType="specialUse" >
+171-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:153:13-55
+172            <property
+172-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:138:13-140:80
+173                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+173-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:139:17-76
+174                android:value="Display a screenshot button for users to actively save screen information." />
+174-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:140:17-77
+175        </service>
+176        <service
+176-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:158:9-165:19
+177            android:name="li.gkd.app.service.ActivityService"
+177-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:159:13-52
+178            android:exported="false"
+178-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:160:13-37
+179            android:foregroundServiceType="specialUse" >
+179-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:161:13-55
+180            <property
+180-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:138:13-140:80
+181                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+181-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:139:17-76
+182                android:value="Display a text card for users to show current activity info" />
+182-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:140:17-77
+183        </service>
+184        <service
+184-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:166:9-174:19
+185            android:name="li.gkd.app.service.EventService"
+185-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:167:13-49
+186            android:exported="false"
+186-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:168:13-37
+187            android:foregroundServiceType="specialUse" >
+187-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:169:13-55
+188            <property
+188-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:138:13-140:80
+189                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+189-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:139:17-76
+190                android:value="Display a text card for users to show a11y event log" />
+190-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:140:17-77
+191        </service>
+192        <service
+192-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:175:9-182:19
+193            android:name="li.gkd.app.service.TrackService"
+193-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:176:13-49
+194            android:exported="false"
+194-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:177:13-37
+195            android:foregroundServiceType="specialUse" >
+195-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:178:13-55
+196            <property
+196-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:138:13-140:80
+197                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+197-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:139:17-76
+198                android:value="Show Action Track" />
+198-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:140:17-77
+199        </service>
+200        <service
+200-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:183:9-191:19
+201            android:name="li.gkd.app.service.ExposeService"
+201-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:184:13-50
+202            android:exported="true"
+202-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:185:13-36
+203            android:foregroundServiceType="specialUse" >
+203-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:186:13-55
+204            <property
+204-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:138:13-140:80
+205                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+205-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:139:17-76
+206                android:value="Provide an interface for third-party applications to actively invoke snapshot capturing." />
+206-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:140:17-77
+207        </service>
+208        <service
+208-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:193:9-209:19
+209            android:name="li.gkd.app.service.GkdTileService"
+209-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:194:13-51
+210            android:exported="true"
+210-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:195:13-36
+211            android:icon="@drawable/ic_status"
+211-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:196:13-47
+212            android:label="@string/app_name"
+212-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:197:13-45
+213            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+213-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:198:13-77
+214            <meta-data
+214-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:199:13-201:40
+215                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+215-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:200:17-77
+216                android:value="true" />
+216-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:201:17-37
+217            <meta-data
+217-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:202:13-204:46
+218                android:name="QS_TILE_URI"
+218-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:203:17-43
+219                android:value="gkd://page" />
+219-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:204:17-43
+220
+221            <intent-filter>
+221-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:206:13-208:29
+222                <action android:name="android.service.quicksettings.action.QS_TILE" />
+222-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:17-87
+222-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:25-84
+223            </intent-filter>
+224        </service>
+225        <service
+225-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:210:9-222:19
+226            android:name="li.gkd.app.service.SnapshotTileService"
+226-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:211:13-56
+227            android:exported="true"
+227-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:212:13-36
+228            android:icon="@drawable/ic_capture"
+228-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:213:13-48
+229            android:label="@string/capture_snapshot"
+229-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:214:13-53
+230            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+230-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:215:13-77
+231            <meta-data
+231-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:202:13-204:46
+232                android:name="QS_TILE_URI"
+232-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:203:17-43
+233                android:value="gkd://page/2" />
+233-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:204:17-43
+234
+235            <intent-filter>
+235-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:206:13-208:29
+236                <action android:name="android.service.quicksettings.action.QS_TILE" />
+236-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:17-87
+236-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:25-84
+237            </intent-filter>
+238        </service>
+239        <service
+239-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:223:9-239:19
+240            android:name="li.gkd.app.service.HttpTileService"
+240-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:224:13-52
+241            android:exported="true"
+241-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:225:13-36
+242            android:icon="@drawable/ic_http"
+242-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:226:13-45
+243            android:label="@string/http_server"
+243-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:227:13-48
+244            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+244-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:228:13-77
+245            <meta-data
+245-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:199:13-201:40
+246                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+246-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:200:17-77
+247                android:value="true" />
+247-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:201:17-37
+248            <meta-data
+248-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:202:13-204:46
+249                android:name="QS_TILE_URI"
+249-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:203:17-43
+250                android:value="gkd://page/1" />
+250-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:204:17-43
+251
+252            <intent-filter>
+252-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:206:13-208:29
+253                <action android:name="android.service.quicksettings.action.QS_TILE" />
+253-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:17-87
+253-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:25-84
+254            </intent-filter>
+255        </service>
+256        <service
+256-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:240:9-256:19
+257            android:name="li.gkd.app.service.ButtonTileService"
+257-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:241:13-54
+258            android:exported="true"
+258-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:242:13-36
+259            android:icon="@drawable/ic_radio_button"
+259-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:243:13-53
+260            android:label="@string/snapshot_button"
+260-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:244:13-52
+261            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+261-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:245:13-77
+262            <meta-data
+262-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:199:13-201:40
+263                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+263-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:200:17-77
+264                android:value="true" />
+264-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:201:17-37
+265            <meta-data
+265-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:202:13-204:46
+266                android:name="QS_TILE_URI"
+266-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:203:17-43
+267                android:value="gkd://page/1" />
+267-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:204:17-43
+268
+269            <intent-filter>
+269-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:206:13-208:29
+270                <action android:name="android.service.quicksettings.action.QS_TILE" />
+270-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:17-87
+270-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:25-84
+271            </intent-filter>
+272        </service>
+273        <service
+273-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:257:9-273:19
+274            android:name="li.gkd.app.service.MatchTileService"
+274-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:258:13-53
+275            android:exported="true"
+275-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:259:13-36
+276            android:icon="@drawable/ic_flash_on"
+276-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:260:13-49
+277            android:label="@string/rule_match"
+277-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:261:13-47
+278            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+278-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:262:13-77
+279            <meta-data
+279-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:199:13-201:40
+280                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+280-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:200:17-77
+281                android:value="true" />
+281-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:201:17-37
+282            <meta-data
+282-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:202:13-204:46
+283                android:name="QS_TILE_URI"
+283-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:203:17-43
+284                android:value="gkd://page?tab=1" />
+284-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:204:17-43
+285
+286            <intent-filter>
+286-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:206:13-208:29
+287                <action android:name="android.service.quicksettings.action.QS_TILE" />
+287-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:17-87
+287-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:25-84
+288            </intent-filter>
+289        </service>
+290        <service
+290-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:274:9-290:19
+291            android:name="li.gkd.app.service.ActivityTileService"
+291-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:275:13-56
+292            android:exported="true"
+292-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:276:13-36
+293            android:icon="@drawable/ic_layers"
+293-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:277:13-47
+294            android:label="@string/record_activity"
+294-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:278:13-52
+295            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+295-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:279:13-77
+296            <meta-data
+296-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:199:13-201:40
+297                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+297-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:200:17-77
+298                android:value="true" />
+298-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:201:17-37
+299            <meta-data
+299-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:202:13-204:46
+300                android:name="QS_TILE_URI"
+300-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:203:17-43
+301                android:value="gkd://page/1" />
+301-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:204:17-43
+302
+303            <intent-filter>
+303-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:206:13-208:29
+304                <action android:name="android.service.quicksettings.action.QS_TILE" />
+304-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:17-87
+304-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:25-84
+305            </intent-filter>
+306        </service>
+307        <service
+307-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:291:9-307:19
+308            android:name="li.gkd.app.service.EventTileService"
+308-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:292:13-53
+309            android:exported="true"
+309-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:293:13-36
+310            android:icon="@drawable/ic_event_list"
+310-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:294:13-51
+311            android:label="@string/record_a11y_event"
+311-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:295:13-54
+312            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+312-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:296:13-77
+313            <meta-data
+313-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:199:13-201:40
+314                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+314-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:200:17-77
+315                android:value="true" />
+315-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:201:17-37
+316            <meta-data
+316-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:202:13-204:46
+317                android:name="QS_TILE_URI"
+317-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:203:17-43
+318                android:value="gkd://page/1" />
+318-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:204:17-43
+319
+320            <intent-filter>
+320-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:206:13-208:29
+321                <action android:name="android.service.quicksettings.action.QS_TILE" />
+321-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:17-87
+321-->E:\yuanbao\2026-10-02-16-39-45\mine\gkd-app\src\main\AndroidManifest.xml:207:25-84
+322            </intent-filter>
+323        </service>
+324
+325        <activity
+325-->[androidx.compose.ui:ui-tooling-android:1.12.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\75b86e1b534237a22190279fc39a87f8\transformed\ui-tooling\AndroidManifest.xml:23:9-25:39
+326            android:name="androidx.compose.ui.tooling.PreviewActivity"
+326-->[androidx.compose.ui:ui-tooling-android:1.12.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\75b86e1b534237a22190279fc39a87f8\transformed\ui-tooling\AndroidManifest.xml:24:13-71
+327            android:exported="true" />
+327-->[androidx.compose.ui:ui-tooling-android:1.12.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\75b86e1b534237a22190279fc39a87f8\transformed\ui-tooling\AndroidManifest.xml:25:13-36
+328
+329        <service
+329-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:14:9-17:56
+330            android:name="priv.kit.ui.PrivilegeAdbPairingService"
+330-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:15:13-66
+331            android:exported="false"
+331-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:16:13-37
+332            android:foregroundServiceType="dataSync" />
+332-->[io.github.priv-kit:priv-ui-android:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d24fecb18e97349af785b9c4994ecc90\transformed\priv-ui\AndroidManifest.xml:17:13-53
+333
+334        <provider
+334-->[org.jetbrains.compose.components:components-resources-android:1.12.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\754b06b098fd0b02a2b9d580d6933ae6\transformed\library-release\AndroidManifest.xml:8:9-13:20
+335            android:name="org.jetbrains.compose.resources.AndroidContextProvider"
+335-->[org.jetbrains.compose.components:components-resources-android:1.12.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\754b06b098fd0b02a2b9d580d6933ae6\transformed\library-release\AndroidManifest.xml:9:13-82
+336            android:authorities="li.songe.gkdx.debug.resources.AndroidContextProvider"
+336-->[org.jetbrains.compose.components:components-resources-android:1.12.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\754b06b098fd0b02a2b9d580d6933ae6\transformed\library-release\AndroidManifest.xml:10:13-84
+337            android:enabled="true"
+337-->[org.jetbrains.compose.components:components-resources-android:1.12.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\754b06b098fd0b02a2b9d580d6933ae6\transformed\library-release\AndroidManifest.xml:11:13-35
+338            android:exported="false" >
+338-->[org.jetbrains.compose.components:components-resources-android:1.12.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\754b06b098fd0b02a2b9d580d6933ae6\transformed\library-release\AndroidManifest.xml:12:13-37
+339        </provider>
+340
+341        <service
+341-->[androidx.room3:room3-runtime-android:3.0.3] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\800f9ed04d14c68c4d3c27040fc6a7f5\transformed\room3-runtime\AndroidManifest.xml:24:9-28:63
+342            android:name="androidx.room3.MultiInstanceInvalidationService"
+342-->[androidx.room3:room3-runtime-android:3.0.3] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\800f9ed04d14c68c4d3c27040fc6a7f5\transformed\room3-runtime\AndroidManifest.xml:25:13-75
+343            android:directBootAware="true"
+343-->[androidx.room3:room3-runtime-android:3.0.3] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\800f9ed04d14c68c4d3c27040fc6a7f5\transformed\room3-runtime\AndroidManifest.xml:26:13-43
+344            android:exported="false" />
+344-->[androidx.room3:room3-runtime-android:3.0.3] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\800f9ed04d14c68c4d3c27040fc6a7f5\transformed\room3-runtime\AndroidManifest.xml:27:13-37
+345
+346        <provider
+346-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\0fa00ab414c24609f88c3cae391233c7\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
+347            android:name="androidx.startup.InitializationProvider"
+347-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\0fa00ab414c24609f88c3cae391233c7\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
+348            android:authorities="li.songe.gkdx.debug.androidx-startup"
+348-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\0fa00ab414c24609f88c3cae391233c7\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
+349            android:exported="false" >
+349-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\0fa00ab414c24609f88c3cae391233c7\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
+350            <meta-data
+350-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\0fa00ab414c24609f88c3cae391233c7\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
+351                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+351-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\0fa00ab414c24609f88c3cae391233c7\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
+352                android:value="androidx.startup" />
+352-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\0fa00ab414c24609f88c3cae391233c7\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
+353            <meta-data
+353-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\2f262a9925c10228366e0ef1e7dd9099\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:29:13-31:52
+354                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+354-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\2f262a9925c10228366e0ef1e7dd9099\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:30:17-78
+355                android:value="androidx.startup" />
+355-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\2f262a9925c10228366e0ef1e7dd9099\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:31:17-49
+356            <meta-data
+356-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:29:13-31:52
+357                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+357-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:30:17-85
+358                android:value="androidx.startup" />
+358-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:31:17-49
+359            <meta-data
+359-->[com.squareup.okhttp3:okhttp-android:5.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\27ef18e076cc8566611c25838c2385be\transformed\okhttp\AndroidManifest.xml:16:13-18:52
+360                android:name="okhttp3.internal.platform.PlatformInitializer"
+360-->[com.squareup.okhttp3:okhttp-android:5.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\27ef18e076cc8566611c25838c2385be\transformed\okhttp\AndroidManifest.xml:17:17-77
+361                android:value="androidx.startup" />
+361-->[com.squareup.okhttp3:okhttp-android:5.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\27ef18e076cc8566611c25838c2385be\transformed\okhttp\AndroidManifest.xml:18:17-49
+362        </provider>
+363
+364        <uses-library
+364-->[androidx.window:window:1.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c6320e6a639f4651a3059fb9bdeba55d\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
+365            android:name="androidx.window.extensions"
+365-->[androidx.window:window:1.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c6320e6a639f4651a3059fb9bdeba55d\transformed\window-1.5.0\AndroidManifest.xml:24:13-54
+366            android:required="false" />
+366-->[androidx.window:window:1.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c6320e6a639f4651a3059fb9bdeba55d\transformed\window-1.5.0\AndroidManifest.xml:25:13-37
+367        <uses-library
+367-->[androidx.window:window:1.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c6320e6a639f4651a3059fb9bdeba55d\transformed\window-1.5.0\AndroidManifest.xml:26:9-28:40
+368            android:name="androidx.window.sidecar"
+368-->[androidx.window:window:1.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c6320e6a639f4651a3059fb9bdeba55d\transformed\window-1.5.0\AndroidManifest.xml:27:13-51
+369            android:required="false" />
+369-->[androidx.window:window:1.5.0] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c6320e6a639f4651a3059fb9bdeba55d\transformed\window-1.5.0\AndroidManifest.xml:28:13-37
+370
+371        <provider
+371-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:18:9-22:82
+372            android:name="priv.kit.core.internal.runtime.PrivilegeHandshakeProvider"
+372-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:19:13-85
+373            android:authorities="li.songe.gkdx.debug.privilege.handshake"
+373-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:20:13-71
+374            android:exported="true"
+374-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:21:13-36
+375            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+375-->[io.github.priv-kit:priv-core:0.16.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\8402fb9470982f6cb1d08b61caafb233\transformed\priv-core-0.16.1\AndroidManifest.xml:22:13-79
+376
+377        <receiver
+377-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:34:9-52:20
+378            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+378-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:35:13-76
+379            android:directBootAware="false"
+379-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:36:13-44
+380            android:enabled="true"
+380-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:37:13-35
+381            android:exported="true"
+381-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:38:13-36
+382            android:permission="android.permission.DUMP" >
+382-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:39:13-57
+383            <intent-filter>
+383-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:40:13-42:29
+384                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+384-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:41:17-91
+384-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:41:25-88
+385            </intent-filter>
+386            <intent-filter>
+386-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:43:13-45:29
+387                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+387-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:44:17-85
+387-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:44:25-82
+388            </intent-filter>
+389            <intent-filter>
+389-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:46:13-48:29
+390                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+390-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:47:17-88
+390-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:47:25-85
+391            </intent-filter>
+392            <intent-filter>
+392-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:49:13-51:29
+393                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+393-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:50:17-95
+393-->[androidx.profileinstaller:profileinstaller:1.4.1] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\d9d49d87e3f391f261153d11a4a19a4a\transformed\profileinstaller-1.4.1\AndroidManifest.xml:50:25-92
+394            </intent-filter>
+395        </receiver>
+396
+397        <meta-data
+397-->[dev.rikka.shizuku:provider:13.1.5] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c940bc41ead5d5530bc2a090621b7371\transformed\provider-13.1.5\AndroidManifest.xml:11:9-13:36
+398            android:name="moe.shizuku.client.V3_SUPPORT"
+398-->[dev.rikka.shizuku:provider:13.1.5] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c940bc41ead5d5530bc2a090621b7371\transformed\provider-13.1.5\AndroidManifest.xml:12:13-57
+399            android:value="true" />
+399-->[dev.rikka.shizuku:provider:13.1.5] C:\Users\Y-H\.gradle\caches\9.7.1\transforms\c940bc41ead5d5530bc2a090621b7371\transformed\provider-13.1.5\AndroidManifest.xml:13:13-33
+400    </application>
+401
+402</manifest>

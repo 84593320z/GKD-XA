@@ -1,13 +1,5 @@
-rootProject.name = "gkd-x"
-include(
-    ":app",
-    ":hidden_api",
-    ":selector",
-)
-
 pluginManagement {
     repositories {
-        mavenLocal()
         mavenCentral()
         google {
             content {
@@ -21,9 +13,20 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
+rootProject.name = "gkd-x"
+include(
+    ":gkd-app",
+    ":gkd-db",
+    ":gkd-hidden-api",
+    ":gkd-selector",
+)
+
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
         mavenCentral()
         google {
             content {

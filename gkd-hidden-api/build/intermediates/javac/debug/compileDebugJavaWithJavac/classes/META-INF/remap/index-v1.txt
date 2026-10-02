@@ -1,0 +1,16 @@
+T	android/accessibilityservice/AccessibilityServiceInfoHidden	android/accessibilityservice/AccessibilityServiceInfo
+T	android/app/AppOpsManagerHidden	android/app/AppOpsManager
+T	android/app/TaskInfoHidden	android/app/TaskInfo
+T	android/app/UiAutomationHidden	android/app/UiAutomation
+T	android/content/pm/PackageInfoHidden	android/content/pm/PackageInfo
+T	android/hardware/input/InputManagerHidden	android/hardware/input/InputManager
+T	android/os/UserManagerHidden	android/os/UserManager
+T	android/view/KeyEventHidden	android/view/KeyEvent
+T	android/view/MotionEventHidden	android/view/MotionEvent
+T	android/view/SurfaceControlHidden	android/view/SurfaceControl
+T	android/view/SurfaceControlHidden$CaptureArgs	android/view/SurfaceControl$CaptureArgs
+T	android/view/SurfaceControlHidden$CaptureArgs$Builder	android/view/SurfaceControl$CaptureArgs$Builder
+T	android/view/SurfaceControlHidden$DisplayCaptureArgs	android/view/SurfaceControl$DisplayCaptureArgs
+T	android/view/SurfaceControlHidden$DisplayCaptureArgs$Builder	android/view/SurfaceControl$DisplayCaptureArgs$Builder
+T	android/view/SurfaceControlHidden$ScreenshotHardwareBuffer	android/view/SurfaceControl$ScreenshotHardwareBuffer
+T	android/view/accessibility/AccessibilityNodeInfoHidden	android/view/accessibility/AccessibilityNodeInfo
