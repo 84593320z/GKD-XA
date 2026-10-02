@@ -78,6 +78,23 @@ import li.gkd.app.ui.component.GkMenuGroupCard
 import li.gkd.app.ui.component.GkMenuItemCheckbox
 import li.gkd.app.ui.component.GkMenuItemRadioButton
 import li.gkd.app.ui.component.GkQueryPkgAuthCard
+import li.gkd.app.ui.component.PerfIcon
+import li.gkd.app.ui.icon.GkSearchCloseIconButton
+import li.gkd.app.ui.component.PerfTopAppBar
+import li.gkd.app.ui.component.PerfIconButton
+import li.gkd.app.ui.component.PerfDropdownMenu
+import li.gkd.app.ui.component.PerfCheckbox
+import li.gkd.app.ui.component.AppIcon
+import androidx.compose.foundation.layout.fillMaxWidth
+import li.gkd.app.ui.component.AppBarTextField
+import li.gkd.app.ui.component.MenuGroupCard
+import li.gkd.app.ui.component.MenuItemCheckbox
+import li.gkd.app.ui.component.MenuItemRadioButton
+import li.gkd.app.ui.component.perfDefaultIconTint
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Card
+import androidx.compose.foundation.layout.PaddingValues
+import li.gkd.app.R
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.ui.component.rememberListScrollState
@@ -116,9 +133,9 @@ fun useAppListPage(): ScaffoldExt {
                     vm.onLeaveScreen()
                 }
             }
-            GkTopAppBar(
-                scrollBehavior = scrollBehavior,
+            PerfTopAppBar(
                 titleText = if (editWhiteListMode) UiStrings.app_whitelist else BottomNavItem.AppList.label,
+                miuixScrollBehavior = scrollBehavior,
                 bottomContent = {
                     if (showSearchBar) {
                         BackHandler {
@@ -126,7 +143,7 @@ fun useAppListPage(): ScaffoldExt {
                                 vm.closeSearch()
                             }
                         }
-                        GkAppBarTextField(
+                        AppBarTextField(
                             value = searchStr,
                             onValueChange = vm::setSearchText,
                             hint = UiStrings.app_name_id_input_hint,
@@ -137,8 +154,8 @@ fun useAppListPage(): ScaffoldExt {
                 actions = {
                 if (state.queryPackagesAbnormal) {
                     CompositionLocalProvider(LocalContentColor provides MiuixTheme.colorScheme.error) {
-                        GkIconButton(
-                            imageVector = GkIcons.WarningAmber,
+                        PerfIconButton(
+                            imageVector = PerfIcon.WarningAmber,
                             contentDescription = PermissionStates.queryPackages.name + UiStrings.error_label,
                             onClick = throttle(vm.scope.launchUiAction {
                                 mainVm.dialogRequests.showMessage(
@@ -155,34 +172,33 @@ fun useAppListPage(): ScaffoldExt {
                     contentDescription = if (showSearchBar) UiStrings.search_close else UiStrings.app_list_search,
                 )
                 var expanded by remember { mutableStateOf(false) }
-                GkFilterIconButton(
-                    filtered = !state.showAllApps,
-                    contentDescription = UiStrings.sort_filter,
-                    onClick = {
-                        expanded = true
-                    }
-                )
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize(Alignment.TopStart)
+                PerfDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    anchor = {
+                        PerfIconButton(
+                            imageVector = PerfIcon.Sort,
+                            contentDescription = UiStrings.sort_filter,
+                            tint = if (!state.showAllApps) MiuixTheme.colorScheme.primary else perfDefaultIconTint(),
+                            onClick = {
+                                expanded = true
+                            },
+                        )
+                    },
                 ) {
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                        ) {
-                        GkMenuGroupCard(inTop = true, title = UiStrings.sort_title) {
+                        MenuGroupCard(inTop = true, title = UiStrings.sort_title) {
                             AppSortOption.objects.forEach { option ->
-                                GkMenuItemRadioButton(
+                                MenuItemRadioButton(
                                     text = option.label,
                                     selected = AppSortOption.objects.findOption(store.appSort) == option,
                                     onClick = { vm.setSortType(option) },
                                 )
                             }
                         }
-                        GkMenuGroupCard(title = UiStrings.group_title) {
+                        MenuGroupCard(title = UiStrings.group_title) {
                             AppGroupOption.normalObjects.forEach { option ->
                                 val newValue = option.invert(store.appGroupType)
-                                GkMenuItemCheckbox(
+                                MenuItemCheckbox(
                                     enabled = newValue != 0,
                                     text = option.label,
                                     checked = option.include(store.appGroupType),
@@ -190,8 +206,8 @@ fun useAppListPage(): ScaffoldExt {
                                 )
                             }
                         }
-                        GkMenuGroupCard(title = UiStrings.filter_title) {
-                            GkMenuItemCheckbox(
+                        MenuGroupCard(title = UiStrings.filter_title) {
+                            MenuItemCheckbox(
                                 text = UiStrings.whitelist_title,
                                 checked = store.showBlockApp,
                                 onClick = {
@@ -199,12 +215,12 @@ fun useAppListPage(): ScaffoldExt {
                                 },
                             )
                         }
-                    }
                 }
-                GkBlockCloseIconButton(
-                    isClose = editWhiteListMode,
+                PerfIconButton(
+                    imageVector = GkIcons.Block,
                     contentDescription = UiStrings.whitelist_edit_mode_toggle,
                     onClickLabel = if (editWhiteListMode) UiStrings.edit_exit else UiStrings.edit_enter,
+                    tint = if (editWhiteListMode) MiuixTheme.colorScheme.primary else perfDefaultIconTint(),
                     onClick = vm::toggleEditWhiteListMode,
                 )
             })
@@ -277,14 +293,16 @@ private fun AppItemCard(
     inWhiteList: Boolean,
     onClick: () -> Unit,
 ) {
-    Row(
+    val summary = stats?.takeIf { it.hasRules }?.description ?: appInfo.id
+    Card(
         modifier = Modifier
-            .clickable(onClick = throttle(onClick))
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp)
             .clearAndSetSemantics {
                 contentDescription = if (editWhiteListMode) {
                     appInfo.name
                 } else {
-                    UiStrings.app_whitelist_state_description(appInfo.name, stats?.takeIf { it.hasRules }?.description ?: appInfo.id)
+                    UiStrings.app_whitelist_state_description(appInfo.name, summary)
                 }
                 if (inWhiteList) {
                     stateDescription = UiStrings.whitelist_member
@@ -295,44 +313,32 @@ private fun AppItemCard(
                     label = if (editWhiteListMode) if (inWhiteList) UiStrings.whitelist_remove else UiStrings.whitelist_add else UiStrings.rule_summary_open,
                     action = null
                 )
-            }
-            .appItemPadding(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            },
+        insideMargin = PaddingValues(0.dp),
     ) {
-        GkAppIcon(appId = appInfo.id)
-        Column(
-            modifier = Modifier
-                .weight(1f),
-            verticalArrangement = Arrangement.Center
-        ) {
-            GkAppNameText(appInfo = appInfo)
-            if (stats != null) {
-                GkRuleStats(stats, emptyText = appInfo.id)
-            } else {
-                Text(
-                    text = appInfo.id,
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false,
-                )
-            }
-        }
-        if (editWhiteListMode) {
-            GkCheckbox(
-                key = appInfo.id,
-                checked = inWhiteList,
-            )
-        } else if (inWhiteList) {
-            GkIcon(
-                modifier = Modifier
-                    .padding(2.dp)
-                    .size(20.dp),
-                imageVector = GkIcons.Block,
-                tint = MiuixTheme.colorScheme.secondary,
-            )
-        }
+        BasicComponent(
+            title = appInfo.name,
+            summary = summary,
+            onClick = throttle(onClick),
+            startAction = {
+                AppIcon(appId = appInfo.id)
+            },
+            endActions = {
+                if (editWhiteListMode) {
+                    PerfCheckbox(
+                        key = appInfo.id,
+                        checked = inWhiteList,
+                    )
+                } else if (inWhiteList) {
+                    PerfIcon(
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .size(20.dp),
+                        imageVector = PerfIcon.WhiteList,
+                        tint = MiuixTheme.colorScheme.primary,
+                    )
+                }
+            },
+        )
     }
 }
