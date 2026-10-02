@@ -29,9 +29,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TopAppBarDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -153,21 +151,6 @@ fun ImagePreviewPage(route: ImagePreviewRoute) {
                 )
             }
         },
-    )
-}
-
-@Composable
-private fun PreviewBaseTitle(title: String) {
-    val style = MiuixTheme.textStyles.title2.copy(
-        color = Color.White,
-        fontWeight = FontWeight.Medium,
-    )
-    Text(
-        text = title,
-        maxLines = 1,
-        softWrap = false,
-        overflow = TextOverflow.MiddleEllipsis,
-        style = style,
     )
 }
 

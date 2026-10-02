@@ -240,7 +240,8 @@ dependencies {
     implementation(libs.miuix.navigation3.ui)
     implementation(libs.loc.annotation)
 
-    implementation(libs.androidx.navigation3.ui)
+    // miuix-navigation3-ui 是 androidx.navigation3:navigation3-ui 的 MIUIX 替代实现
+    // （同包名 androidx.navigation3.*），因此不能再引入官方 UI 模块，否则重复类。
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
