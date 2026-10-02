@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -254,4 +255,39 @@ fun Modifier.textSize(
     val fontSizeDp = density.run { style.fontSize.toDp() }
     val lineHeightDp = density.run { style.lineHeight.toDp() }
     return height(lineHeightDp).width(fontSizeDp)
+}
+
+/** 兼容旧版：把可能为 State 的值解包。 */
+@Composable
+private fun getCompatStateValue(v: Any?): Any? = when (v) {
+    is State<*> -> v.value
+    else -> v
+}
+
+@Composable
+fun useListScrollState(
+    v1: Any?,
+    v2: Any? = null,
+    v3: Any? = null,
+): LazyListState {
+    val x1 = getCompatStateValue(v1)
+    val x2 = getCompatStateValue(v2)
+    val x3 = getCompatStateValue(v3)
+    return rememberSaveable(x1, x2, x3, saver = LazyListState.Saver) {
+        LazyListState(0, 0)
+    }
+}
+
+@Composable
+fun usePinnedScrollBehaviorState(v1: Any?): LazyListState {
+    val x1 = getCompatStateValue(v1)
+    return rememberSaveable(x1, saver = LazyListState.Saver) {
+        LazyListState(0, 0)
+    }
+}
+
+@Composable
+fun useScrollBehaviorState(v1: Any?): ScrollState {
+    val x1 = getCompatStateValue(v1)
+    return rememberSaveable(x1, saver = ScrollState.Saver) { ScrollState(initial = 0) }
 }

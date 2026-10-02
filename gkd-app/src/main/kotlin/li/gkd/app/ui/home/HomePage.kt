@@ -126,7 +126,7 @@ fun HomePage() {
     // 转场中只画当前 Tab，邻页先不参与布局/绘制（不卸载已创建的 page 状态，避免来回重组风暴）
     val lightPager = !contentReady || navTransitionRunning
 
-    val dashboardPage = if (contentReady || settled == 0) useDashboardPage() else null
+    val dashboardPage = if (contentReady || settled == 0) useControlPage() else null
     val subsPage = if (contentReady || settled == 1) useSubsManagePage() else null
     val appListPage = if (contentReady || settled == 2) useAppListPage() else null
     val settingsPage = if (contentReady || settled == 3) useSettingsPage() else null
