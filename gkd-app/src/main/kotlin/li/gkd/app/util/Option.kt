@@ -14,6 +14,11 @@ sealed interface OptionIcon {
     val icon: ImageVector
 }
 
+/** 下拉菜单里显示的长文案（label 给设置项右侧摘要用，menuLabel 给菜单项用）。 */
+sealed interface OptionMenuLabel {
+    val menuLabel: String
+}
+
 fun <V, T : Option<V>> Iterable<T>.findOption(value: V): T {
     return find { it.value == value } ?: first()
 }
@@ -164,6 +169,50 @@ sealed class AutomatorModeOption(
         val objects by lazy { listOf(A11yMode, AutomationMode) }
     }
 }
+
+sealed class ActionTipStyleOption(
+    override val value: Int,
+    override val label: String,
+    override val menuLabel: String,
+) : Option<Int>, OptionMenuLabel {
+    override val options get() = objects
+
+    data object Overlay : ActionTipStyleOption(0, "悬浮窗提示", "悬浮窗")
+    data object SystemToast : ActionTipStyleOption(1, "系统 Toast", "Toast")
+    data object LiveNotif : ActionTipStyleOption(2, "实时通知（流体云/超级岛）", "实时通知")
+
+    companion object {
+        val objects by lazy { listOf(Overlay, SystemToast, LiveNotif) }
+    }
+}
+
+sealed class ActionTipLiveDurationOption(
+    override val value: Int,
+    override val label: String,
+    override val menuLabel: String,
+) : Option<Int>, OptionMenuLabel {
+    override val options get() = objects
+
+    data object Sec3 : ActionTipLiveDurationOption(3, "3 秒", "3 秒")
+    data object Sec5 : ActionTipLiveDurationOption(5, "5 秒", "5 秒")
+    data object Sec8 : ActionTipLiveDurationOption(8, "8 秒", "8 秒")
+    data object Sec15 : ActionTipLiveDurationOption(15, "15 秒", "15 秒")
+    data object Sec30 : ActionTipLiveDurationOption(30, "30 秒", "30 秒")
+    data object Sec60 : ActionTipLiveDurationOption(60, "60 秒", "60 秒")
+
+    companion object {
+        val objects by lazy { listOf(Sec3, Sec5, Sec8, Sec15, Sec30, Sec60) }
+
+        fun resolve(sec: Int): ActionTipLiveDurationOption =
+            objects.find { it.value == sec } ?: ActionTipLiveDurationCustom(sec)
+
+        fun labelOf(sec: Int): String = resolve(sec).label
+    }
+}
+
+private data class ActionTipLiveDurationCustom(
+    private val sec: Int,
+) : ActionTipLiveDurationOption(sec, "${sec} 秒", "${sec} 秒")
 
 sealed class AiProtocolOption(
     override val value: String,
