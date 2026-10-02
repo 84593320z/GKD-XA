@@ -27,6 +27,7 @@ import li.gkd.app.ui.share.ActivityResultRequests
 import li.gkd.app.ui.app.AppRoot
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.SystemDownloads
+import li.gkd.app.util.applyPredictiveBackEnabled
 import li.gkd.app.util.mapState
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.tryStartActivity
@@ -79,6 +80,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         enableEdgeToEdge()
         fixTransparentNavigationBar()
+        applyPredictiveBackEnabled(storeFlow.value.enablePredictiveBack)
         super.onCreate(savedInstanceState)
         activityResultHost.bind(mainVm.activityResults)
         permissionRequestHost.bind(mainVm.permissionRequests)

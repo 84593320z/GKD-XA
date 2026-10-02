@@ -1,6 +1,7 @@
 package li.gkd.app.ui.home
 
 import android.net.Uri
+import li.gkd.app.app
 import li.gkd.app.text.UiStrings
 import li.gkd.app.service.fixRestartAutomatorService
 import li.gkd.app.store.AppStore.storeFlow
@@ -8,6 +9,7 @@ import li.gkd.app.store.AppStore
 import li.gkd.app.ui.share.BaseViewModel
 import li.gkd.app.data.backup.BackupManager
 import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.util.applyPredictiveBackEnabled
 import java.io.File
 
 class SettingsVm : BaseViewModel() {
@@ -64,6 +66,11 @@ class SettingsVm : BaseViewModel() {
 
     fun setLiquidGlass(enabled: Boolean) {
         AppStore.updateSettings { it.copy(enableLiquidGlass = enabled) }
+    }
+
+    fun setPredictiveBack(enabled: Boolean) {
+        AppStore.updateSettings { it.copy(enablePredictiveBack = enabled) }
+        app.applyPredictiveBackEnabled(enabled)
     }
 
     suspend fun importBackup(uri: Uri) {

@@ -248,6 +248,17 @@ fun useSettingsPage(): ScaffoldExt {
                 enabled = store.enableMiuixBlur && shaderOk,
                 onCheckedChange = { vm.setLiquidGlass(it) },
             )
+            if (AndroidTarget.TIRAMISU) {
+                GkTextSwitch(
+                    title = "预测式返回",
+                    subtitle = "侧滑返回时预览上一页，切换后立即重建页面生效",
+                    checked = store.enablePredictiveBack,
+                    onCheckedChange = { enabled ->
+                        vm.setPredictiveBack(enabled)
+                        context.recreate()
+                    },
+                )
+            }
 
             Text(
                 text = UiStrings.settings_other,
