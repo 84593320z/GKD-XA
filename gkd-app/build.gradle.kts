@@ -92,6 +92,24 @@ android {
                 "proguard-rules.pro",
             )
         }
+        // perf：把 release 的 R8 优化 + debug 的可直接安装签名结合起来，
+        // 用于「想测性能但不想签 release 包」的场景。非 debuggable，不能用断点。
+        create("perf") {
+            initWith(getByName("debug"))
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            signingConfig = gkdSigningConfig
+            matchingFallbacks += listOf("debug")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            resValue("color", "better_black", "#FF5D92")
+            for ((name, value) in debugSuffixResources) {
+                resValue("string", name, value)
+            }
+        }
         debug {
             signingConfig = gkdSigningConfig
             applicationIdSuffix = ".debug"
