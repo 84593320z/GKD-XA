@@ -47,6 +47,7 @@ import li.gkd.app.service.A11yService
 import li.gkd.app.ui.PrivilegeServiceRoute
 import li.gkd.app.ui.A11YScopeAppListRoute
 import li.gkd.app.ui.style.itemHorizontalPadding
+import li.gkd.app.ui.style.lineHeightDp
 import li.gkd.app.ui.style.surfaceCardColors
 import li.gkd.app.util.AutomatorModeOption
 import li.gkd.app.util.ShortUrlSet
@@ -346,7 +347,9 @@ private fun TextListItem(
     modifier: Modifier = Modifier,
     style: TextStyle = LocalTextStyle.current,
 ) {
-    val lineHeightDp = LocalDensity.current.run { style.lineHeight.toDp() }
+    // MIUIX 部分 TextStyle 的 lineHeight 不是 Sp，直接 toDp() 会抛
+    // IllegalStateException: Only Sp can convert to Px，必须走带 fallback 的工具
+    val lineHeightDp = style.lineHeightDp(LocalDensity.current)
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp),

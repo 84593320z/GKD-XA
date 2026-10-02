@@ -23,6 +23,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import li.gkd.app.ui.style.lineHeightDp
+import li.gkd.app.ui.style.toSpDpOr
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -252,8 +255,10 @@ fun Modifier.textSize(
     style: TextStyle = TextStyle.Default,
     density: Density = LocalDensity.current,
 ): Modifier {
-    val fontSizeDp = density.run { style.fontSize.toDp() }
-    val lineHeightDp = density.run { style.lineHeight.toDp() }
+    // MIUIX 部分 TextStyle 的 fontSize/lineHeight 不是 Sp，直接 toDp() 会抛
+    // IllegalStateException: Only Sp can convert to Px
+    val fontSizeDp = style.fontSize.toSpDpOr(density, 14.dp)
+    val lineHeightDp = style.lineHeightDp(density)
     return height(lineHeightDp).width(fontSizeDp)
 }
 

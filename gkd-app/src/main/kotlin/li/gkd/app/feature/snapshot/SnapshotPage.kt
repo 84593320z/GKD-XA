@@ -98,6 +98,7 @@ import li.gkd.app.ui.component.SheetRequest
 import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.share.ListPlaceholder
 import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.lineHeightDp
 import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.SnapshotDisplayModeOption
 import li.gkd.app.util.IMPORT_SHORT_URL
@@ -599,9 +600,9 @@ private fun SnapshotCard(
             }
         }
         val fullTime = remember(snapshot.id) { snapshot.id.format("yyyy-MM-dd HH:mm:ss") }
-        val firstLineHeight = with(LocalDensity.current) {
-            MiuixTheme.textStyles.body2.lineHeight.toDp()
-        }
+        // MIUIX 部分 TextStyle 的 lineHeight 不是 Sp，直接 toDp() 会抛
+        // IllegalStateException: Only Sp can convert to Px
+        val firstLineHeight = MiuixTheme.textStyles.body2.lineHeightDp(LocalDensity.current)
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 8.dp)
                 .heightIn(min = firstLineHeight),

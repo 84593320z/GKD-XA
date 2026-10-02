@@ -362,7 +362,7 @@ fun useSettingsPage(): ScaffoldExt {
         ) {
 
             PreferenceGroup(title = "常规", showTop = false) {
-                var showToastSettingsDlg by remember { mutableStateOf(false) }
+                var showToastSettingsDlg by rememberSaveable { mutableStateOf(false) }
                 TextSwitch(
                     title = "触发提示",
                     subtitle = store.actionToast,
