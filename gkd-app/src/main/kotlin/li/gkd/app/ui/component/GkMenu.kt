@@ -1,11 +1,10 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.RadioButton
+import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -40,7 +39,7 @@ fun GkMenuItemCheckbox(
     DropdownMenuItem(
         text = { Text(text = text) },
         trailingIcon = {
-            Checkbox(
+            GkCheckbox(
                 checked = checked,
                 onCheckedChange = { actualOnClick() },
                 enabled = enabled,

@@ -3,8 +3,7 @@ package li.gkd.app.ui.component
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -106,15 +105,8 @@ fun GkRuleEnableControl(
             { onSettingChange(RuleSetting.from(it)) }
         } else null,
         enabled = state.canEnable,
-        thumbContent = {
-            // Keep the thumb size consistent even when this surface hides its icon.
-            Box(Modifier.size(SwitchDefaults.IconSize)) {
-                if (showCustomSettingIcon && state.hasCustomSetting) {
-                    GkRulePropertyIcon(RuleProperty.CustomSetting,
-                        modifier = Modifier.size(SwitchDefaults.IconSize), contentDescription = null)
-                }
-            }
-        },
+        // 说明：MIUIX 的 Switch 不支持 thumbContent（M3 的 thumb 内图标特性），
+        // 此处省略该装饰；自定义设置状态已由外层 GkRulePropertyIcon 呈现。
     )
     if (showReason) {
         GkAlertDialog(

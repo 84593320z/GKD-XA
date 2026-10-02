@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Checkbox
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -89,7 +88,7 @@ fun GkRuleListItem(
             // 52 dp switch + 8 dp on either side matches the content inset.
             Box(Modifier.width(68.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
                 if (selectedMode) {
-                    if (selectable) Checkbox(selected, onCheckedChange = null, enabled = selectionEnabled)
+                    if (selectable) GkCheckbox(selected, onCheckedChange = null, enabled = selectionEnabled)
                 } else {
                     trailing(Modifier.fillMaxSize())
                 }
