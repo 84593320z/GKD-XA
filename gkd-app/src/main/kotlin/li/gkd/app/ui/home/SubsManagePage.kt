@@ -25,12 +25,12 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -74,7 +74,12 @@ import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
 import li.gkd.app.ui.component.GkSettingsDialog
-import li.gkd.app.ui.component.GkSubsItemCard
+import li.gkd.app.ui.component.SubsItemCard
+import li.gkd.app.ui.component.PerfTopAppBar
+import li.gkd.app.ui.component.PerfIconButton
+import li.gkd.app.ui.component.PerfIcon
+import li.gkd.app.ui.component.PerfDropdownMenu
+import li.gkd.app.ui.component.PerfDropdownMenuItem
 import li.gkd.app.ui.component.GkTextMenu
 import li.gkd.app.ui.component.GkTextSwitch
 import li.gkd.app.ui.component.rememberMultiSelectionState
@@ -210,30 +215,32 @@ private fun useLoadedSubsManagePage(
         navItem = BottomNavItem.SubsManage,
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            GkMultiSelectionTopAppBar(
-                selectedMode = isSelectedMode,
-                selectedCount = selectedIds.size,
-                onExitSelection = selectionState::clear,
-                scrollBehavior = scrollBehavior,
-                title = {
-                    Text(text = BottomNavItem.SubsManage.label)
+            PerfTopAppBar(
+                titleText = if (isSelectedMode) {
+                    if (selectedIds.isNotEmpty()) selectedIds.size.toString() else ""
+                } else {
+                    BottomNavItem.SubsManage.label
                 },
-                actions = { selectedMode ->
-                    if (selectedMode) {
-                        GkMultiSelectionActions(
-                            selectionState = selectionState,
-                            keys = allIds,
-                            enabled = !batchBusy && !refreshing && !reorderSession.dragging,
-                        ) { dismiss ->
-                            val canDeleteIds = selectedIds - LOCAL_SUBS_ID
-                            GkBatchActionMenuItem(
-                                text = if (canDeleteIds.isEmpty()) UiStrings.subscription_delete_except_local else UiStrings.subscription_delete,
-                                enabled = canDeleteIds.isNotEmpty(),
-                                onDismiss = dismiss,
+                miuixScrollBehavior = scrollBehavior,
+                navigationIcon = {
+                    if (isSelectedMode) {
+                        PerfIconButton(
+                            imageVector = PerfIcon.Close,
+                            contentDescription = "取消选择",
+                            onClick = { selectionState.clear() },
+                        )
+                    }
+                },
+                actions = {
+                    if (isSelectedMode) {
+                        val canDeleteIds = selectedIds - LOCAL_SUBS_ID
+                        if (canDeleteIds.isNotEmpty()) {
+                            val text = UiStrings.subscriptions_delete_confirmation(canDeleteIds.size) +
+                                if (LOCAL_SUBS_ID in selectedIds) UiStrings.subscriptions_local_excluded_suffix else ""
+                            PerfIconButton(
+                                imageVector = PerfIcon.Delete,
+                                contentDescription = "删除选中订阅",
                                 onClick = {
-                                    val idsToDelete = canDeleteIds
-                                    val text = UiStrings.subscriptions_delete_confirmation(idsToDelete.size) +
-                                        if (LOCAL_SUBS_ID in selectedIds) UiStrings.subscriptions_local_excluded_suffix else ""
                                     scope.launchUi {
                                         vm.runBatchAction {
                                             if (!mainVm.dialogRequests.confirm(
@@ -241,9 +248,9 @@ private fun useLoadedSubsManagePage(
                                                 text = text,
                                                 error = true,
                                             )) return@runBatchAction
-                                            val result = vm.deleteSubscriptions(idsToDelete)
+                                            val result = vm.deleteSubscriptions(canDeleteIds)
                                             if (result is SubscriptionResult.Success) {
-                                                selectionState.removeDeleted(idsToDelete)
+                                                selectionState.removeDeleted(canDeleteIds)
                                                 toast(if (result.count > 0) UiStrings.subscriptions_deleted_count(result.count) else UiStrings.selected_subscriptions_changed)
                                             } else {
                                                 result.message?.let { toast(it) }
@@ -255,72 +262,77 @@ private fun useLoadedSubsManagePage(
                         }
                     } else {
                         var expanded by remember { mutableStateOf(false) }
-                        GkIconButton(
-                            imageVector = if (store.enableMatch) GkIcons.FlashOn else GkIcons.FlashOff,
-                            animateMorph = true,
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = if (!store.enableMatch) {
-                                    CheckboxDefaults.colors().checkedBoxColor
+                        PerfIconButton(
+                            imageVector = PerfIcon.Autorenew,
+                            contentDescription = if (refreshing) "正在刷新订阅" else "刷新订阅",
+                            onClickLabel = "刷新订阅",
+                            enabled = !refreshing,
+                            onClick = throttle {
+                                if (refreshing) {
+                                    toast(UiStrings.subscription_refresh_wait)
                                 } else {
-                                    LocalContentColor.current
+                                    vm.refresh()
                                 }
-                            ),
+                            },
+                        )
+                        PerfIconButton(
+                            imageVector = if (store.enableMatch) PerfIcon.ToggleOn else PerfIcon.ToggleOff,
+                            tint = if (!store.enableMatch) MiuixTheme.colorScheme.primary else LocalContentColor.current,
                             contentDescription = UiStrings.rule_matching_label + if (store.enableMatch) UiStrings.enabled else UiStrings.disabled,
                             onClickLabel = UiStrings.switch_toggle,
                             onClick = throttle(vm::toggleMatching),
                         )
-                        GkIconButton(
-                            imageVector = GkIcons.PageInfo,
+                        PerfIconButton(
+                            imageVector = PerfIcon.PageInfo,
                             contentDescription = UiStrings.subscription_settings,
                             onClickLabel = UiStrings.settings_dialog_open,
-                            onClick = {
-                                vm.setSettingsDialogVisible(true)
-                            })
-                        Box {
-                            GkIconButton(
-                                imageVector = GkIcons.MoreVert,
-                                contentDescription = UiStrings.more_actions,
-                                onClick = {
-                                    if (refreshing) {
-                                        toast(UiStrings.subscription_refresh_wait)
-                                    } else {
-                                        expanded = true
-                                    }
+                            onClick = { vm.setSettingsDialogVisible(true) },
+                        )
+                        PerfDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            anchor = {
+                                PerfIconButton(
+                                    imageVector = PerfIcon.MoreVert,
+                                    contentDescription = UiStrings.more_actions,
+                                    onClick = {
+                                        if (refreshing) {
+                                            toast(UiStrings.subscription_refresh_wait)
+                                        } else {
+                                            expanded = true
+                                        }
+                                    },
+                                )
+                            },
+                        ) {
+                            PerfDropdownMenuItem(
+                                text = UiStrings.app_rule_add,
+                                onClick = throttle {
+                                    expanded = false
+                                    mainVm.navigatePage(
+                                        UpsertRuleGroupRoute(
+                                            subsId = LOCAL_SUBS_ID,
+                                            groupKey = null,
+                                            appId = "",
+                                            forward = true,
+                                        )
+                                    )
                                 },
                             )
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(text = UiStrings.app_rule_add) },
-                                    onClick = throttle {
-                                        expanded = false
-                                        mainVm.navigatePage(
-                                            UpsertRuleGroupRoute(
-                                                subsId = LOCAL_SUBS_ID,
-                                                groupKey = null,
-                                                appId = "",
-                                                forward = true,
-                                            )
+                            PerfDropdownMenuItem(
+                                text = UiStrings.global_rule_add,
+                                onClick = throttle {
+                                    expanded = false
+                                    mainVm.navigatePage(
+                                        UpsertRuleGroupRoute(
+                                            subsId = LOCAL_SUBS_ID,
+                                            groupKey = null,
+                                            appId = null,
+                                            forward = true,
                                         )
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(text = UiStrings.global_rule_add) },
-                                    onClick = throttle {
-                                        expanded = false
-                                        mainVm.navigatePage(
-                                            UpsertRuleGroupRoute(
-                                                subsId = LOCAL_SUBS_ID,
-                                                groupKey = null,
-                                                appId = null,
-                                                forward = true,
-                                            )
-                                        )
-                                    },
-                                )
-                            }
+                                    )
+                                },
+                            )
                         }
                     }
                 },
@@ -414,7 +426,7 @@ private fun useLoadedSubsManagePage(
                             enabled = canDrag,
                         ) {
                             val interactionSource = remember { MutableInteractionSource() }
-                            GkSubsItemCard(
+                            SubsItemCard(
                                 modifier = Modifier.longPressDraggableHandle(
                                     enabled = canDrag,
                                     interactionSource = interactionSource,
@@ -441,24 +453,13 @@ private fun useLoadedSubsManagePage(
                                 ),
                                 interactionSource = interactionSource,
                                 subsItem = subItem,
-                                matchingEnabled = store.enableMatch,
                                 subscription = subsIdToRaw[subItem.id],
                                 index = index + 1,
                                 isSelectedMode = isSelectedMode,
-                                selectionEnabled = !batchBusy && !refreshing && !reorderSession.dragging,
-                                handlesLongPress = !canDrag,
-                                onSelect = {
-                                    if (!batchBusy && !refreshing && !reorderSession.dragging) {
-                                        selectionState.select(subItem.id)
-                                    }
-                                },
                                 isSelected = selectedIds.contains(subItem.id),
                                 loadError = state.loadErrors[subItem.id],
                                 refreshError = state.refreshErrors[subItem.id],
                                 refreshing = refreshing,
-                                onOpen = {
-                                    mainVm.subsSheet.show(subItem.id)
-                                },
                                 onCheckedChange = { checked ->
                                     vm.requestSubscriptionEnabled(subItem, checked)
                                 },

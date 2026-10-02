@@ -153,4 +153,5 @@ object PerfIcon {
     val ArrowDownward get() = GkIcons.ArrowDownward
     val Check get() = GkIcons.Check
     val Update get() = GkIcons.Autorenew
+    val PageInfo get() = GkIcons.PageInfo
 }
