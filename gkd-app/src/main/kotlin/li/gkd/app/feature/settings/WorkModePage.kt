@@ -1,12 +1,11 @@
 package li.gkd.app.feature.settings
 
-import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,15 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -46,7 +43,8 @@ import li.gkd.app.priv.privilegeContextFlow
 import li.gkd.app.service.A11yService
 import li.gkd.app.ui.PrivilegeServiceRoute
 import li.gkd.app.ui.A11YScopeAppListRoute
-import li.gkd.app.ui.style.itemHorizontalPadding
+import li.gkd.app.ui.style.cardHorizontalPadding
+import li.gkd.app.ui.style.EmptyHeight
 import li.gkd.app.ui.style.lineHeightDp
 import li.gkd.app.ui.style.surfaceCardColors
 import li.gkd.app.util.AutomatorModeOption
@@ -55,9 +53,9 @@ import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.util.IntentUtils
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.ui.component.GkAnimatedBooleanContent
-import li.gkd.app.ui.component.GkIconButton
-import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
+import li.gkd.app.ui.component.PerfIcon
+import li.gkd.app.ui.component.PerfIconButton
 
 @Serializable
 data object WorkModeRoute : NavKey
@@ -70,16 +68,16 @@ fun WorkModePage() {
     val a11yRunning by A11yService.isRunning.collectAsStateWithLifecycle()
     val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
     val automatorMode by mainVm.automatorModeFlow.collectAsStateWithLifecycle()
-    val scrollBehavior = MiuixScrollBehavior()
-    Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
-        GkTopAppBar(scrollBehavior = scrollBehavior, navigationIcon = {
-            GkIconButton(
-                imageVector = GkIcons.ArrowBack,
+    GkPageScaffold(
+        title = UiStrings.work_mode_title,
+        navigationIcon = {
+            PerfIconButton(
+                imageVector = PerfIcon.ArrowBack,
                 onClick = {
                     mainVm.popPage()
                 })
-        }, titleText = UiStrings.work_mode_title)
-    }) { contentPadding ->
+        },
+    ) { contentPadding ->
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -88,13 +86,13 @@ fun WorkModePage() {
         ) {
             Card(
                 modifier = Modifier
-                    .padding(horizontal = itemHorizontalPadding)
+                    .padding(horizontal = cardHorizontalPadding)
                     .fillMaxWidth(),
                 onClick = throttle { mainVm.updateAutomatorMode(AutomatorModeOption.A11yMode) },
                 colors = surfaceCardColors,
             ) {
                 Row(
-                    modifier = Modifier.padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 12.dp),
+                    modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
@@ -109,15 +107,16 @@ fun WorkModePage() {
                 }
                 Text(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp),
+                        .padding(horizontal = cardHorizontalPadding)
+                        .padding(start = 4.dp),
                     text = UiStrings.work_mode_basic,
-                    style = MiuixTheme.textStyles.subtitle
+                    style = MiuixTheme.textStyles.subtitle,
                 )
                 TextListItem(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .padding(top = 8.dp),
-                    style = MiuixTheme.textStyles.body2,
+                        .padding(horizontal = cardHorizontalPadding)
+                        .padding(start = 8.dp, top = 4.dp),
+                    style = MiuixTheme.textStyles.body1,
                     list = listOf(
                         UiStrings.a11y_permission_grant,
                         UiStrings.a11y_permission_regrant_description
@@ -128,54 +127,53 @@ fun WorkModePage() {
                     contentTrue = {
                         Text(
                             modifier = Modifier
-                                .padding(horizontal = 20.dp)
-                                .padding(top = 8.dp),
+                                .padding(horizontal = cardHorizontalPadding)
+                                .padding(start = 8.dp, top = 4.dp),
                             text = UiStrings.a11y_permission_ready,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.body2,
                         )
                     },
                     contentFalse = {
-                        FlowRow(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 20.dp)
+                                .padding(horizontal = cardHorizontalPadding)
                                 .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             TextButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = UiStrings.a11y_enable,
+                                colors = ButtonDefaults.textButtonColorsPrimary(),
                                 onClick = throttle { IntentUtils.openA11ySettings() },
-                            ) {
-                                Text(
-                                    text = UiStrings.a11y_enable,
-                                    style = MiuixTheme.textStyles.body1,
-                                )
-                            }
-                            TextButton(
-                                onClick = throttle {
-                                    mainVm.navigateWebPage(ShortUrlSet.URL2)
-                                },
-                            ) {
-                                Text(
-                                    text = UiStrings.help_view,
-                                    style = MiuixTheme.textStyles.body1,
-                                )
-                            }
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .align(Alignment.End)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .clickable(onClick = throttle {
+                                        mainVm.navigateWebPage(ShortUrlSet.URL2)
+                                    })
+                                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                                text = UiStrings.help_view,
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.primary,
+                            )
                         }
                     }
                 )
                 Text(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .padding(top = 20.dp),
+                        .padding(horizontal = cardHorizontalPadding)
+                        .padding(start = 4.dp, top = 8.dp),
                     text = UiStrings.work_mode_enhanced,
                     style = MiuixTheme.textStyles.subtitle,
                 )
                 TextListItem(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .padding(top = 8.dp),
-                    style = MiuixTheme.textStyles.body2,
+                        .padding(horizontal = cardHorizontalPadding)
+                        .padding(start = 8.dp, top = 4.dp),
+                    style = MiuixTheme.textStyles.body1,
                     list = listOf(
                         UiStrings.secure_settings_permission_grant,
                         UiStrings.secure_settings_permission_description,
@@ -186,61 +184,57 @@ fun WorkModePage() {
                     contentTrue = {
                         Text(
                             modifier = Modifier
-                                .padding(horizontal = 20.dp)
-                                .padding(top = 8.dp),
+                                .padding(horizontal = cardHorizontalPadding)
+                                .padding(start = 8.dp, top = 4.dp),
                             text = UiStrings.secure_settings_permission_granted,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.body2,
                         )
                     },
-                    contentFalse = {},
-                )
-                FlowRow(
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    if (!writeSecureSettings) {
-                        PrivilegeAuthButton()
-                    }
-                    TextButton(
-                        onClick = throttle(vm.scope.launchUiAction {
-                            val tutorialText = UiStrings.keep_alive_tile_description(META.appName) +
-                                    UiStrings.keep_alive_setup_heading +
-                                    UiStrings.keep_alive_setup_open_tiles +
-                                    UiStrings.keep_alive_setup_add_tile(META.appName) +
-                                    UiStrings.keep_alive_setup_place_tile
-                            if (writeSecureSettings) {
-                                mainVm.dialogRequests.showMessage(
-                                    title = UiStrings.keep_alive_title,
-                                    text = tutorialText,
-                                )
-                            } else if (mainVm.dialogRequests.confirm(
-                                    title = UiStrings.keep_alive_title,
-                                    text = tutorialText + UiStrings.keep_alive_permission_missing +
-                                            UiStrings.keep_alive_permission_description,
-                                    confirmText = UiStrings.settings_go_to,
-                                    dismissText = UiStrings.action_close,
-                                    dismissOnRequest = true,
-                                )
-                            ) {
-                                mainVm.navigatePage(PrivilegeServiceRoute)
-                            }
-                        })
-                    ) {
-                        Text(
-                            text = UiStrings.keep_alive_title,
-                            style = MiuixTheme.textStyles.body1,
+                    contentFalse = {
+                        PrivilegeAuthButton(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = cardHorizontalPadding)
+                                .padding(top = 8.dp),
                         )
                     }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+                )
+                TextButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = cardHorizontalPadding)
+                        .padding(top = 8.dp),
+                    text = UiStrings.keep_alive_title,
+                    onClick = throttle(vm.scope.launchUiAction {
+                        val tutorialText = UiStrings.keep_alive_tile_description(META.appName) +
+                                UiStrings.keep_alive_setup_heading +
+                                UiStrings.keep_alive_setup_open_tiles +
+                                UiStrings.keep_alive_setup_add_tile(META.appName) +
+                                UiStrings.keep_alive_setup_place_tile
+                        if (writeSecureSettings) {
+                            mainVm.dialogRequests.showMessage(
+                                title = UiStrings.keep_alive_title,
+                                text = tutorialText,
+                            )
+                        } else if (mainVm.dialogRequests.confirm(
+                                title = UiStrings.keep_alive_title,
+                                text = tutorialText + UiStrings.keep_alive_permission_missing +
+                                        UiStrings.keep_alive_permission_description,
+                                confirmText = UiStrings.settings_go_to,
+                                dismissText = UiStrings.action_close,
+                                dismissOnRequest = true,
+                            )
+                        ) {
+                            mainVm.navigatePage(PrivilegeServiceRoute)
+                        }
+                    }),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
             Spacer(modifier = Modifier.height(12.dp))
             Card(
                 modifier = Modifier
-                    .padding(horizontal = itemHorizontalPadding)
+                    .padding(horizontal = cardHorizontalPadding)
                     .fillMaxWidth(),
                 onClick = vm.scope.launchUiAction {
                     if (privilegeContext == null) {
@@ -260,7 +254,7 @@ fun WorkModePage() {
                 colors = surfaceCardColors,
             ) {
                 Row(
-                    modifier = Modifier.padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 12.dp),
+                    modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
@@ -275,8 +269,9 @@ fun WorkModePage() {
                 }
                 TextListItem(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp),
-                    style = MiuixTheme.textStyles.body2,
+                        .padding(horizontal = cardHorizontalPadding)
+                        .padding(start = 8.dp),
+                    style = MiuixTheme.textStyles.body1,
                     list = listOf(
                         UiStrings.automation_a11y_description,
                         UiStrings.automation_no_display_issues,
@@ -289,35 +284,27 @@ fun WorkModePage() {
                     contentTrue = {
                         Text(
                             modifier = Modifier
-                                .padding(horizontal = 20.dp)
-                                .padding(top = 8.dp),
+                                .padding(horizontal = cardHorizontalPadding)
+                                .padding(start = 8.dp, top = 8.dp),
                             text = UiStrings.privilege_service_connected,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.body2,
                         )
                     },
                     contentFalse = {},
                 )
-                FlowRow(
+                TextButton(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = cardHorizontalPadding)
                         .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    TextButton(
-                        onClick = throttle {
-                            mainVm.navigatePage(A11YScopeAppListRoute)
-                        },
-                    ) {
-                        Text(
-                            text = UiStrings.a11y_scoped,
-                            style = MiuixTheme.textStyles.body1,
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+                    text = UiStrings.a11y_scoped,
+                    onClick = throttle {
+                        mainVm.navigatePage(A11YScopeAppListRoute)
+                    },
+                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
-            GkPageBottomSpace()
+            Spacer(modifier = Modifier.height(EmptyHeight))
         }
     }
 
@@ -330,15 +317,11 @@ private fun PrivilegeAuthButton(
     val mainVm = MainViewModel.requireCurrent()
     TextButton(
         modifier = modifier,
+        text = UiStrings.permission_grant,
         onClick = throttle {
             mainVm.navigatePage(PrivilegeServiceRoute)
         },
-    ) {
-        Text(
-            text = UiStrings.permission_grant,
-            style = MiuixTheme.textStyles.body1,
-        )
-    }
+    )
 }
 
 @Composable
@@ -352,7 +335,7 @@ private fun TextListItem(
     val lineHeightDp = style.lineHeightDp(LocalDensity.current)
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         list.forEach { text ->
             Row {
@@ -360,7 +343,7 @@ private fun TextListItem(
                     modifier = Modifier
                         .padding(vertical = (lineHeightDp - 4.dp) / 2)
                         .clip(CircleShape)
-                        .background(MiuixTheme.colorScheme.secondary)
+                        .background(MiuixTheme.colorScheme.primary)
                         .size(4.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))

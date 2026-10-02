@@ -1,12 +1,12 @@
-# GKD-X 融合版
+# GKD-XA 融合版
 
-基于 [GKD](https://github.com/gkd-kit/gkd) 的 Android 自定义屏幕点击应用分支，界面全面适配 [compose-miuix-ui](https://github.com/compose-miuix-ui/miuix)。
+基于 [GKD](https://github.com/gkd-kit/gkd) 的 Android 自定义屏幕点击应用分支，界面 100% 保留原 MIUIX 风格，底层跟随上游新架构。
 
 通过自定义规则，在指定界面满足条件（如屏幕存在特定文字）时，点击节点、位置或执行其他操作。
 
-- **应用**：GKD-X（`li.songe.gkdx`）
+- **应用**：GKD-XA（`li.songe.gkdx`）
 - **界面**：MIUIX（顶栏 / 底栏 / 设置分组 / 对话框 / 图标等）
-- **能力**：与上游 GKD 相同的选择器、订阅规则、快照与自动化能力同时融合分支plus的Ai功能
+- **能力**：上游 GKD 的选择器、订阅规则、快照与自动化能力，并融合 AI 生成规则
 
 ## 界面预览（MIUIX）
 
@@ -15,6 +15,56 @@
 | ![首页](docs/screenshots/01-home.png) | ![订阅](docs/screenshots/02-subs.png) | ![应用](docs/screenshots/03-apps.png) | ![设置](docs/screenshots/04-settings.png) |
 
 > 悬浮底栏、大标题顶栏、分组卡片与开关等组件来自 [compose-miuix-ui](https://github.com/compose-miuix-ui/miuix)。
+
+## 本次重构说明
+
+这一版做了一次**架构级重构**：编译底座换成上游 GKD 的新模块化架构，但**界面上层仍然沿用你熟悉的那套 MIUIX**。
+
+### 重构思路：翻译，而不是覆盖
+
+| | 做法 |
+| ---- | ---- |
+| **底座** | 跟随上游新架构：模块拆分、包名 `li.gkd.app.*`、Navigation3、Room、Ktor 等全部对齐上游 |
+| **界面层** | 不采用上游 UI，而是把**旧版 MIUIX 渲染层原样「翻译」**到新底座上（`Gk*` 骨架 + `Perf*` 组件） |
+| **业务逻辑** | 一律使用新底座的实现，不搬运旧代码 |
+
+换句话说：**你看到的还是老界面，跑的是新内核。**
+
+### 具体做了什么
+
+- 以 `Gk*` 系列（底座组件）为骨架，保留其数据流向与状态管理
+- 渲染层逐页替换为旧版 MIUIX 组件：`Card` / `BasicComponent` / `PreferenceGroup` / `SettingItem` / `TextSwitch` / `TextMenu` / `PerfTopAppBar` / `PerfAlertDialog` / `PerfIconButton` / `PerfSwitch` / `PerfDropdownMenu` / `WindowDropdownPreference` / `WindowListPopup` / `WindowDialog` 等
+- 四个 Tab 页 + 二级页面（高级设置、工作模式、关于、AI 服务商、订阅详情、快照等）全部按旧版观感重排
+- 补回底座缺失的**毛玻璃二级页壳** `GkPageScaffold`（等价旧版 `AppPageScaffold`），顶栏滚动透出毛玻璃、落定转实色；返回按钮统一为 MIUIX 无边框 `PerfIconButton`
+- 修复迁移过程中出现的一批崩溃与交互回退（详见下方「修复记录」）
+
+## 相对旧版的功能变化
+
+> 旧版 = 重构前的 MIUIX 版本；新版 = 当前 GKD-XA。
+
+### 新增 / 增强
+
+| 功能 | 说明 |
+| ---- | ---- |
+| **AI 生成规则（多服务商）** | 新增「AI 服务商」列表页，可同时保存多套协议 / 地址 / 密钥 / 模型池，点选圆点即切换当前服务商 |
+| **服务商详情页签** | 拆成「配置 / 模型」两页：Base URL、API Key（可显隐）、端点模式（Chat Completions / Responses）、`anthropic-version`、自定义请求头、系统提示词与生成参数 |
+| **模型管理** | 支持远端拉取并按 Model ID 合并、关键字搜索、多选批量删除、逐个编辑上下文长度与思考标记 |
+| **测试连接** | 直接读取远端 `/models` 并把返回模型并入列表，结果行内即时反馈 |
+| **自动迁移** | 首次启动把旧的单份 AI 配置迁移为一个服务商，无需重填 |
+| **通知文案自定义** | 主标题 / 副标题 / 正文均可用模板变量（含规则数、应用数、触发次数等），并带实时预览 |
+| **触发提示样式** | 支持悬浮窗 / Toast / 流体云与灵动岛实时通知等 |
+| **规则类别** | 类别前缀匹配、跟随订阅或规则组默认值、批量设置与冲突检测 |
+| **控制关系图** | 可视化当前规则组的开关来源（订阅 / 类别 / 应用 / 自身设置） |
+| **局部无线调试** | 基于自有特权运行时（priv-kit），不依赖外部授权器 |
+
+### 修复记录（重构期间）
+
+- **修复首页右上角火箭按钮闪退**：MIUIX 部分 `TextStyle` 的 `lineHeight` / `fontSize` 不是 `Sp` 单位，直接 `toDp()` 会抛 `IllegalStateException: Only Sp can convert to Px`。新增安全工具 `TextUnit.toSpDpOr()` / `TextStyle.lineHeightDp()` 做兜底，并全局排查修掉 3 处同类隐患（工作模式页、`Modifier.textSize`、快照页）
+- **修复订阅卡片语义**：恢复 `selected` / `Role.Checkbox` / `onClick(label)` / `onLongClick(label)` 无障碍语义；长按已选项不再误取消（`select` 而非 `toggle`）
+- **修复订阅页丢失全选 / 反选**：补回批量操作入口
+- **修复局部关闭「继续」按钮**：修正 scope 取消导致的点击无响应
+- **修复通知文案静默改开关**：条件收集改为无条件前置收集，避免切换开关时改变 composable 调用点数量
+- **修复二级页顶栏风格割裂**：补回 `GkPageScaffold` 毛玻璃顶栏（原底座为纯色实心，与首页不一致）
 
 ## 免责声明
 
@@ -40,17 +90,24 @@
 也可自行编译：
 
 ```bash
-./gradlew :app:assembleGkdRelease
+./gradlew :gkd-app:assembleGkdRelease
 ```
 
 如遇规则 / 选择器问题，可先查阅上游 [疑难解答](https://gkd.li/guide/faq)。
 
-## 主要改动（相对上游）
+## 构建类型
 
-- 全量 MIUIX 界面与图标资源
-- 首页、设置等使用 Preference 分组布局
-- 触发提示支持悬浮窗 / Toast / 流体云与灵动岛实时通知等样式
-- 订阅页改为顶栏刷新（取消下拉刷新）
+| 类型 | 包名 | 说明 |
+| ---- | ---- | ---- |
+| `debug` | `li.songe.gkdx.debug` | 调试版，应用名带 `Debug` 后缀 |
+| `perf` | `li.songe.gkdx` | 性能版：不混淆（无 R8）、关闭资源压缩、`isDebuggable=false`，用于日常使用与实测 |
+| `release` | `li.songe.gkdx` | 发布版，开启 R8 混淆与资源压缩 |
+
+日常测试建议用 `perf`：
+
+```bash
+./gradlew :gkd-app:assembleGkdPerf
+```
 
 ## 开源致谢
 
