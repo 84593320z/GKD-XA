@@ -1,45 +1,35 @@
 package li.gkd.app.feature.settings.ai
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import li.gkd.app.MainViewModel
 import li.gkd.app.data.settings.AiConfig
 import li.gkd.app.store.AppStore.storeFlow
-import li.gkd.app.ui.component.GkCheckbox
-import li.gkd.app.ui.component.GkIcon
-import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
-import androidx.compose.material3.Scaffold
-import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTopAppBar
-import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.AiProtocolOption
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
@@ -52,12 +42,18 @@ data class AiProviderDetailRoute(
     val protocol: String = "openai",
 ) : NavKey
 
+/**
+ * AI 服务商列表：顶部搜索 → 新增入口分组 → 已配置分组。
+ *
+ * 行排版沿用统一规格：行首 24dp 图标、标题 body1 Medium、地址 body2、
+ * 元信息 footnote1；点击进入详情，长按删除，行尾圆点选择当前服务商。
+ */
 @Composable
 fun AiProvidersPage() {
     val mainVm = MainViewModel.requireCurrent()
-    val scope = rememberCoroutineScope()
     val store by storeFlow.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
+    var providerToDelete by remember { mutableStateOf<AiConfig?>(null) }
 
     val providers = store.aiProviders
     val activeId = store.activeAiProvider()?.id
@@ -69,59 +65,46 @@ fun AiProvidersPage() {
             providers.filter {
                 it.name.contains(keyword, true) ||
                         it.apiUrl.contains(keyword, true) ||
-                        it.model.contains(keyword, true)
+                        it.model.contains(keyword, true) ||
+                        it.protocolLabel.contains(keyword, true)
             }
         }
     }
 
-    fun confirmDelete(provider: AiConfig) = scope.launch {
-        if (!mainVm.dialogRequests.confirm(
-                title = "移除服务商",
-                text = "确定移除「${provider.name.ifBlank { "未命名" }}」？它的模型列表会一并删除。",
-                confirmText = "移除",
-                error = true,
-            )
-        ) return@launch
-        AiProviders.remove(provider.id)
-        toast("已移除 ${provider.name.ifBlank { "未命名" }}")
-    }
-
-    Scaffold(
-        topBar = {
-            GkTopAppBar(
-                titleText = "AI 服务商",
-                navigationIcon = {
-                    GkIconButton(
-                        imageVector = GkIcons.ArrowBack,
-                        onClick = { mainVm.popPage() },
-                    )
-                },
-            )
-        },
+    AiPageScaffold(
+        title = "AI 服务商",
+        onBack = { mainVm.popPage() },
     ) { contentPadding ->
-        LazyColumn(modifier = Modifier.scaffoldPadding(contentPadding)) {
-            item(key = "add") {
-                AiSection(title = "添加服务商") {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = contentPadding.calculateTopPadding()),
+        ) {
+            item(key = "search") {
+                AiSearchField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    label = "搜索服务商",
+                    modifier = Modifier
+                        .padding(horizontal = AiUiDefaults.SidePadding)
+                        .padding(top = 12.dp, bottom = 8.dp),
+                )
+            }
+
+            item(key = "create_section") {
+                AiGroup(title = "添加服务商") {
                     AiProtocolOption.objects.forEachIndexed { index, option ->
-                        if (index > 0) {
-                            AiRowDivider(hasLeading = false)
-                        }
-                        BasicComponent(
+                        if (index > 0) AiDivider()
+                        AiArrowRow(
                             title = option.newTitle,
                             summary = option.newSummary,
                             startAction = { AiRowIcon(imageVector = GkIcons.Link) },
-                            endActions = { GkIcon(imageVector = GkIcons.Add) },
                             onClick = throttle {
                                 mainVm.navigatePage(AiProviderDetailRoute(protocol = option.value))
                             },
                         )
                     }
-                }
-            }
-
-            item(key = "help") {
-                AiSection(title = "关于") {
-                    BasicComponent(
+                    AiDivider()
+                    AiArrowRow(
                         title = "使用说明",
                         summary = "快照生成规则的流程与加强模式",
                         startAction = { AiRowIcon(imageVector = GkIcons.HelpOutline) },
@@ -130,96 +113,124 @@ fun AiProvidersPage() {
                 }
             }
 
-            item(key = "list") {
-                AiSection(title = "已配置 ${providers.size} 个") {
-                    TextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        label = "搜索名称 / 地址 / 模型",
-                        useLabelAsPlaceholder = true,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    )
+            item(key = "list_section") {
+                AiGroup(title = "已配置 ${providers.size} 个") {
                     if (filtered.isEmpty()) {
-                        AiHint(
+                        AiEmptyText(
                             text = if (providers.isEmpty()) {
                                 "还没有服务商，用上面的入口新建一个"
                             } else {
                                 "没有匹配的服务商"
                             },
-                            modifier = Modifier.padding(vertical = 16.dp),
                         )
                     } else {
-                        filtered.forEach { provider ->
-                            AiRowDivider(hasLeading = false)
-                            val isActive = provider.id == activeId
-                            val activate = throttle { AiProviders.setActive(provider.id) }
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(
-                                        onClick = throttle {
-                                            mainVm.navigatePage(AiProviderDetailRoute(id = provider.id))
-                                        },
-                                    )
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = provider.name.ifBlank { "未命名" },
-                                            style = MiuixTheme.textStyles.headline2,
-                                            color = MiuixTheme.colorScheme.onSurface,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                        Text(
-                                            text = provider.apiUrl.ifBlank { "未填写地址" },
-                                            style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.padding(top = 2.dp),
-                                        )
-                                    }
-                                    GkCheckbox(
-                                        checked = isActive,
-                                        key = provider.id,
-                                        onCheckedChange = { activate() },
-                                    )
-                                    GkSizedIconButton(
-                                        size = 36.dp,
-                                        iconSize = 19.dp,
-                                        onClickLabel = "移除服务商",
-                                        onClick = throttle(fn = { confirmDelete(provider) }),
-                                        imageVector = GkIcons.Delete,
-                                        contentDescription = "移除",
-                                        tint = MiuixTheme.colorScheme.error,
-                                    )
-                                }
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    modifier = Modifier.padding(top = 8.dp),
-                                ) {
-                                    AiTagChip(text = provider.protocolLabel)
-                                    AiTagChip(text = "模型 ${provider.models.size}")
-                                    if (provider.model.isNotBlank()) {
-                                        AiTagChip(text = provider.model)
-                                    }
-                                    if (!provider.enabled) {
-                                        AiTagChip(text = "已停用")
-                                    }
-                                    if (isActive) {
-                                        AiTagChip(text = "当前", emphasized = true)
-                                    }
-                                }
-                            }
+                        filtered.forEachIndexed { index, provider ->
+                            if (index > 0) AiDivider()
+                            AiProviderListRow(
+                                provider = provider,
+                                isActive = provider.id == activeId,
+                                onOpen = {
+                                    mainVm.navigatePage(AiProviderDetailRoute(id = provider.id))
+                                },
+                                onSelect = { AiProviders.setActive(provider.id) },
+                                onDelete = { providerToDelete = provider },
+                            )
                         }
                     }
                 }
+            }
+
+            item(key = "bottom_spacer") {
+                AiPageBottomSpacer()
+            }
+        }
+    }
+
+    val deleting = providerToDelete
+    AiDialog(
+        show = deleting != null,
+        title = "移除服务商",
+        summary = deleting?.let { "确定移除「${it.displayName}」？它的模型列表会一并删除。" },
+        onDismissRequest = { providerToDelete = null },
+    ) {
+        AiDialogActions(
+            confirmText = "移除",
+            destructive = true,
+            onCancel = { providerToDelete = null },
+            onConfirm = {
+                deleting?.let { provider ->
+                    AiProviders.remove(provider.id)
+                    toast("已移除 ${provider.displayName}")
+                }
+                providerToDelete = null
+            },
+        )
+    }
+}
+
+/** 列表行：整行点击进详情、长按删除，行尾圆点切换「当前使用」。 */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AiProviderListRow(
+    provider: AiConfig,
+    isActive: Boolean,
+    onOpen: () -> Unit,
+    onSelect: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val enabledOpacity = if (provider.enabled) 1f else 0.6f
+    AiRow(
+        modifier = Modifier.graphicsLayer { alpha = enabledOpacity },
+        startAction = {
+            AiRowIcon(
+                imageVector = GkIcons.Link,
+                tint = MiuixTheme.colorScheme.primary,
+                enabled = provider.enabled,
+            )
+        },
+        endActions = {
+            AiSelectionIcon(selected = isActive)
+        },
+        interaction = Modifier.combinedClickable(
+            onClick = throttle(fn = onOpen),
+            onLongClick = throttle(fn = onDelete),
+        ),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = provider.displayName,
+                style = MiuixTheme.textStyles.headline1,
+                fontWeight = FontWeight.Medium,
+                color = MiuixTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = provider.apiUrl.ifBlank { "未填写地址" },
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+            Text(
+                text = listOfNotNull(
+                    provider.protocolLabel,
+                    "模型 ${provider.models.size} 个",
+                ).joinToString(" · "),
+                style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            if (!provider.enabled) {
+                Text(
+                    text = "已停用",
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
             }
         }
     }

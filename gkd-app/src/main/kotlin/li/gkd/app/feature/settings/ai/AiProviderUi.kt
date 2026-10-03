@@ -2,8 +2,6 @@ package li.gkd.app.feature.settings.ai
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,39 +14,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import li.gkd.app.ui.component.GkIcon
-import li.gkd.app.ui.component.PreferenceGroup
-import li.gkd.app.util.TimeUtils.throttle
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/** 分组小标题 + 圆角卡片：AI 设置相关页面统一用这个壳。 */
-@Composable
-fun AiSection(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Column {
-        Text(
-            text = title,
-            style = MiuixTheme.textStyles.footnote1,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            modifier = Modifier.padding(start = 28.dp, top = 12.dp, bottom = 2.dp),
-        )
-        PreferenceGroup(content = content)
-    }
-}
-
-@Composable
-fun AiRowDivider(hasLeading: Boolean = true) {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = if (hasLeading) 16.dp else 0.dp),
-        thickness = 1.dp,
-    )
-}
-
-/** 行首圆角图标底座，对齐 MIUIX 设置的分组图标。 */
 @Composable
 fun AiRowIcon(
     imageVector: ImageVector,
@@ -115,30 +83,6 @@ fun AiHint(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp),
-    )
-}
-
-/** 右侧显示当前值的单选行，点击后由调用方弹出选择框。 */
-@Composable
-fun AiPickerRow(
-    title: String,
-    value: String,
-    summary: String? = null,
-    onClick: () -> Unit,
-) {
-    BasicComponent(
-        title = title,
-        summary = summary,
-        onClick = throttle(fn = onClick),
-        endActions = {
-            Text(
-                text = value,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
     )
 }
 

@@ -11,6 +11,10 @@ import li.gkd.app.util.findOption
 import java.net.URI
 import java.util.UUID
 
+/** 界面上统一显示的命名，未填名称时给占位。 */
+val AiConfig.displayName: String
+    get() = name.ifBlank { "未命名" }
+
 /** 列表页角标用的协议简述。 */
 val AiConfig.protocolLabel: String
     get() = AiProtocolOption.objects.findOption(protocol).label +
