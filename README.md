@@ -100,7 +100,7 @@
 | 类型 | 包名 | 说明 |
 | ---- | ---- | ---- |
 | `debug` | `li.songe.gkdx.debug` | 调试版，应用名带 `Debug` 后缀 |
-| `perf` | `li.songe.gkdx` | 性能版：不混淆（无 R8）、关闭资源压缩、`isDebuggable=false`，用于日常使用与实测 |
+| `perf` | `li.songe.gkdx` | 性能实测版：启用 R8 优化与资源压缩、`isDebuggable=false`；签名使用当前 GKD 签名配置 |
 | `release` | `li.songe.gkdx` | 发布版，开启 R8 混淆与资源压缩 |
 
 日常测试建议用 `perf`：

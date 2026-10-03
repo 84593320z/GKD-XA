@@ -106,9 +106,6 @@ android {
                 "proguard-rules.pro",
             )
             resValue("color", "better_black", "#FF5D92")
-            for ((name, value) in debugSuffixResources) {
-                resValue("string", name, value)
-            }
         }
         debug {
             signingConfig = gkdSigningConfig
