@@ -14,7 +14,15 @@ enum class AppNotificationChannel(
     val importance: Int = NotificationManager.IMPORTANCE_LOW,
 ) {
     Service(id = "0"),
-    Snapshot(id = "1", label = UiStrings.snapshot_notification_channel);
+    Snapshot(id = "1", label = UiStrings.snapshot_notification_channel),
+
+    /** 触发提示 / 实时通知（默认重要性，便于系统与厂商提升为岛/胶囊） */
+    Action(
+        id = "2",
+        label = "触发提示",
+        description = "规则触发时的实时状态通知：ColorOS 流体云 / HyperOS 超级岛",
+        importance = NotificationManager.IMPORTANCE_DEFAULT,
+    );
 
     val displayName: String
         get() = label ?: META.appName

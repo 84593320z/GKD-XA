@@ -18,6 +18,15 @@
   - 悬浮按钮恢复液态玻璃（vibrancy + 折射 + 高光，无 RuntimeShader 时回退实色），涉及 8 个页面
   - 关于页整页恢复 1.2.7 版式：滚动视差 Logo（渐变收起/标题淡入）、背景特效（BgEffect 组件包整体移植）、
     顶栏滚动模糊落定转实色；功能保持新底座实现（更新渠道/检查更新/反馈/导出日志/分享 APK）
+- 恢复「触发提示 → 实时通知（流体云/超级岛）」完整功能（1.3.0 换底座时丢失，表现为选项点击无反应）：
+  - 设置项恢复三选一样式（悬浮窗 / 系统 Toast / 实时通知）与选中态正确回显
+  - 移植 ActionTipNotif 渲染器：同一条 ongoing 通知同时适配 ColorOS 流体云（Google Live Update，
+    反射调用避免 ROM 缺方法崩溃）与 HyperOS 超级岛（miui.focus 模板）；通知权限缺失/无 Live Update
+    API 时给出结果提示
+  - 恢复「存在时间」快选与自定义秒数（2-120 秒，到期自动取消）、「实时更新系统开关」直达入口、
+    「发送测试通知」按当前样式分发并在需要时先请求通知权限
+  - store 新增 actionTipStyle / actionTipLiveDurationSec（带默认值，旧配置兼容）；
+    resolveActionTipStyle 兼容旧版 useSystemToast 开关
 
 ## v1.3.1（2026-10-03）
 

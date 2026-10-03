@@ -1,15 +1,18 @@
 package li.gkd.app.data.settings
 
 import kotlinx.serialization.Serializable
+import li.gkd.app.notif.ActionTipNotif
 import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.util.AppGroupOption
 import li.gkd.app.util.AppSortOption
+import li.gkd.app.util.ActionTipStyleOption
 import li.gkd.app.util.AutomatorModeOption
 import li.gkd.app.util.RuleSortOption
 import li.gkd.app.util.SnapshotDisplayModeOption
 import li.gkd.app.util.UpdateChannelOption
 import li.gkd.app.util.UpdateTimeOption
+import li.gkd.app.util.findOption
 
 /** 服务商下的一个模型条目：modelId 是发给接口的名字，其余字段只用于界面与选模型参考。 */
 @Serializable
@@ -102,6 +105,10 @@ data class SettingsStore(
     /** 系统预测式返回手势（Android 13+，切换后需重建 Activity） */
     val enablePredictiveBack: Boolean = false,
     val useSystemToast: Boolean = false,
+    /** 触发提示样式，见 [li.gkd.app.util.ActionTipStyleOption] */
+    val actionTipStyle: Int = 0,
+    /** 实时通知自动消失时间（秒），见 [li.gkd.app.notif.ActionTipNotif] 范围 */
+    val actionTipLiveDurationSec: Int = ActionTipNotif.DEFAULT_DURATION_SEC,
     val useCustomNotifText: Boolean = false,
     val customNotifTitle: String = META.appName,
     val customNotifText: String = UiStrings.notification_summary_template,
@@ -139,6 +146,27 @@ data class SettingsStore(
 ) {
     val useA11y get() = automatorMode == AutomatorModeOption.A11yMode.value
     val useAutomation get() = automatorMode == AutomatorModeOption.AutomationMode.value
+
+    /** 兼容旧版 [useSystemToast]：未改过 [actionTipStyle] 时沿用 Toast 开关 */
+    fun resolveActionTipStyle(): ActionTipStyleOption {
+        if (actionTipStyle != ActionTipStyleOption.Overlay.value) {
+            return ActionTipStyleOption.objects.findOption(actionTipStyle)
+        }
+        return if (useSystemToast) {
+            ActionTipStyleOption.SystemToast
+        } else {
+            ActionTipStyleOption.Overlay
+        }
+    }
+
+    fun resolveActionTipLiveDurationSec(): Int =
+        actionTipLiveDurationSec.coerceIn(
+            ActionTipNotif.MIN_DURATION_SEC,
+            ActionTipNotif.MAX_DURATION_SEC,
+        )
+
+    val actionTipLiveDurationMs: Long
+        get() = resolveActionTipLiveDurationSec() * 1000L
 
     /** 实际用于生成的服务商：先认界面上选中的，再回落到第一个启用的 */
     fun activeAiProvider(): AiConfig? =

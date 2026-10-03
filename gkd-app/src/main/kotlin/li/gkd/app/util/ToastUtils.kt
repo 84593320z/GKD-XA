@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.hjq.toast.Toaster
 import com.hjq.toast.style.WhiteToastStyle
+import li.gkd.app.notif.ActionTipNotif
 import li.gkd.app.text.UiStrings
 import li.gkd.app.app
 import li.gkd.app.data.ResolvedRule
@@ -131,11 +132,25 @@ object ToastUtils {
                     rule.g.group.name,
                     actionCountFlow.value,
                 )
-                if (storeFlow.value.useSystemToast) {
-                    showSystemToast(text)
-                } else {
-                    showA11yToast(text)
-                }
+                showActionTip(text)
+            }
+        }
+    }
+
+    /** 按当前「提示样式」分发：悬浮窗 / 系统 Toast / 实时通知（返回值仅实时通知有） */
+    fun showActionTip(text: CharSequence): ActionTipNotif.PostResult? {
+        return when (storeFlow.value.resolveActionTipStyle()) {
+            ActionTipStyleOption.LiveNotif -> ActionTipNotif.show(
+                text,
+                autoDismissMs = storeFlow.value.actionTipLiveDurationMs,
+            )
+            ActionTipStyleOption.SystemToast -> {
+                showSystemToast(text)
+                null
+            }
+            ActionTipStyleOption.Overlay -> {
+                showA11yToast(text)
+                null
             }
         }
     }

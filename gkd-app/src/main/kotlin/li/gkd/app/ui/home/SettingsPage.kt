@@ -56,6 +56,7 @@ import li.gkd.app.store.AppStore
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.store.AppStore.actionCountFlow
 import li.gkd.app.data.subscription.SubscriptionState
+import li.gkd.app.notif.ActionTipNotif
 import li.gkd.app.notif.replaceNotificationTemplate
 import li.gkd.app.feature.settings.AboutRoute
 import li.gkd.app.feature.settings.AdvancedPageRoute
@@ -82,10 +83,12 @@ import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.lineHeightDp
 import li.gkd.app.text.UiStrings
 import li.gkd.app.util.ActionTipStyleOption
+import li.gkd.app.util.ActionTipLiveDurationOption
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.DarkThemeOption
 import li.gkd.app.util.findOption
 import li.gkd.app.util.ActionToastTemplate
+import li.gkd.app.util.ToastUtils.showActionTip
 import li.gkd.app.util.FolderUtils
 import li.gkd.app.util.IntentUtils.openAppDetailsSettings
 import li.gkd.app.util.TimeUtils.throttle
@@ -363,6 +366,63 @@ fun useSettingsPage(): ScaffoldExt {
 
             PreferenceGroup(title = "常规", showTop = false) {
                 var showToastSettingsDlg by rememberSaveable { mutableStateOf(false) }
+                var showLiveDurationDlg by remember { mutableStateOf(false) }
+                if (showLiveDurationDlg) {
+                    var value by remember { mutableStateOf(store.resolveActionTipLiveDurationSec().toString()) }
+                    val parsedSec = value.toIntOrNull()
+                    val validSec = parsedSec != null &&
+                        parsedSec in ActionTipNotif.MIN_DURATION_SEC..ActionTipNotif.MAX_DURATION_SEC
+                    PerfAlertDialog(
+                        properties = DialogProperties(dismissOnClickOutside = false),
+                        title = { Text(text = "实时通知存在时间") },
+                        text = {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                TextField(
+                                    value = value,
+                                    onValueChange = { newValue ->
+                                        value = newValue.filter(Char::isDigit).take(3)
+                                    },
+                                    label = "秒数（${ActionTipNotif.MIN_DURATION_SEC}-${ActionTipNotif.MAX_DURATION_SEC}）",
+                                    useLabelAsPlaceholder = true,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .autoFocus(),
+                                )
+                                Text(
+                                    text = "到期后自动取消通知；常用 3 / 5 / 8 / 15 / 30 / 60",
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                )
+                            }
+                        },
+                        onDismissRequest = { showLiveDurationDlg = false },
+                        confirmButton = {
+                            TextButton(
+                                text = "确认",
+                                enabled = validSec,
+                                onClick = {
+                                    if (parsedSec != null && parsedSec != store.resolveActionTipLiveDurationSec()) {
+                                        AppStore.updateSettings {
+                                            it.copy(actionTipLiveDurationSec = parsedSec)
+                                        }
+                                        toast("已设置为 ${parsedSec} 秒")
+                                    }
+                                    showLiveDurationDlg = false
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.textButtonColorsPrimary(),
+                            )
+                        },
+                        dismissButton = {
+                            TextButton(
+                                text = "取消",
+                                onClick = { showLiveDurationDlg = false },
+                                modifier = Modifier.weight(1f),
+                            )
+                        },
+                    )
+                }
                 TextSwitch(
                     title = "触发提示",
                     subtitle = store.actionToast,
@@ -387,40 +447,87 @@ fun useSettingsPage(): ScaffoldExt {
                     Column {
                         TextMenu(
                             title = "提示样式",
-                            option = if (store.useSystemToast) ActionTipStyleOption.SystemToast
-                            else ActionTipStyleOption.Overlay,
+                            option = store.resolveActionTipStyle(),
                             onOptionChange = { option ->
                                 val style = option as ActionTipStyleOption
                                 AppStore.updateSettings {
                                     it.copy(
+                                        actionTipStyle = style.value,
                                         useSystemToast = style == ActionTipStyleOption.SystemToast,
                                     )
                                 }
                             },
                         )
+                        if (store.resolveActionTipStyle() == ActionTipStyleOption.LiveNotif) {
+                            TextMenu(
+                                title = "存在时间",
+                                option = ActionTipLiveDurationOption.resolve(
+                                    store.resolveActionTipLiveDurationSec(),
+                                ),
+                                onOptionChange = { option ->
+                                    AppStore.updateSettings {
+                                        it.copy(
+                                            actionTipLiveDurationSec = (option as ActionTipLiveDurationOption).value,
+                                        )
+                                    }
+                                },
+                            )
+                            SettingItem(
+                                title = "自定义存在时间",
+                                subtitle = "当前 ${ActionTipLiveDurationOption.labelOf(store.resolveActionTipLiveDurationSec())}，可输入 ${ActionTipNotif.MIN_DURATION_SEC}-${ActionTipNotif.MAX_DURATION_SEC} 秒",
+                                onClick = { showLiveDurationDlg = true },
+                            )
+                        }
                         SettingItem(
                             title = "样式说明",
-                            subtitle = "悬浮窗 / 系统 Toast；悬浮窗兼容性更好",
+                            subtitle = "悬浮窗 / Toast / Google Live Update 实时通知；可进入系统开关页",
                             onClick = {
                                 scope.launchUi {
                                     mainVm.dialogRequests.showMessage(
                                         title = "提示样式说明",
                                         text = "• 悬浮窗：无障碍/悬浮窗绘制，兼容最好\n" +
-                                            "• 系统 Toast：受系统频率限制，高触发规则可能不显示",
+                                            "• 系统 Toast：受系统频率限制，高触发规则可能不显示\n" +
+                                            "• 实时通知：同一条通知同时适配\n" +
+                                            "  - ColorOS：Google Live Update → 流体云\n" +
+                                            "  - HyperOS：miui.focus 模板 → 超级岛\n" +
+                                            "  请在系统通知设置中开启「实时更新/流体云」或焦点通知相关开关。",
                                     )
                                 }
                             },
                         )
                         SettingItem(
-                            title = "发送测试通知",
-                            subtitle = "预览当前触发提示的显示效果",
+                            title = "实时更新系统开关",
+                            subtitle = "打开系统里本应用的 Live Updates / 实时更新设置",
                             onClick = throttle {
-                                previewActionToast(
-                                    ActionToastTemplate.render(
+                                if (!ActionTipNotif.openPromotedSettings()) {
+                                    toast("当前系统无此设置页")
+                                }
+                            },
+                        )
+                        SettingItem(
+                            title = "发送测试通知",
+                            subtitle = "应用内不会上岛，请下拉通知栏查看是否存在实时通知",
+                            onClick = throttle {
+                                scope.launchUi {
+                                    if (store.resolveActionTipStyle() == ActionTipStyleOption.LiveNotif) {
+                                        if (!mainVm.permissionRequests.ensurePermissions(
+                                                PermissionStates.notification,
+                                            )
+                                        ) return@launchUi
+                                    }
+                                    val sample = ActionToastTemplate.render(
                                         store.actionToast, "子规则", "规则组", 1L
-                                    ),
-                                    useSystemToast = store.useSystemToast,
-                                )
+                                    )
+                                    val result = showActionTip(sample)
+                                    if (result != null) {
+                                        toast("已发送；应用内不会上岛，请在通知栏查看是否存在实时通知")
+                                        if (result.canPostPromoted == false) {
+                                            ActionTipNotif.openPromotedSettings()
+                                        }
+                                    } else {
+                                        toast("已发送测试提示")
+                                    }
+                                }
                             },
                         )
                         TextSwitch(
