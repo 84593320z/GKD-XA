@@ -1,42 +1,42 @@
 # GKD-XA 融合版
 
-基于 [GKD](https://github.com/gkd-kit/gkd) 的 Android 自定义屏幕点击应用分支，界面 100% 保留原 MIUIX 风格，底层跟随上游新架构。
+基于 [GKD](https://github.com/gkd-kit/gkd) 的 Android 自定义屏幕点击应用分支，界面直接使用 [compose-miuix-ui](https://github.com/compose-miuix-ui/miuix) 的原版 miuix 组件，底层跟随上游新架构。
 
 通过自定义规则，在指定界面满足条件（如屏幕存在特定文字）时，点击节点、位置或执行其他操作。
 
 - **应用**：GKD-XA（`li.songe.gkdx`）
-- **界面**：MIUIX（顶栏 / 底栏 / 设置分组 / 对话框 / 图标等）
+- **界面**：原版 miuix（Scaffold / TopAppBar / NavigationBar / Card / BasicComponent / Preference / Blur / Icons）
 - **能力**：上游 GKD 的选择器、订阅规则、快照与自动化能力，并融合 AI 生成规则
 
-## 界面预览（MIUIX）
+## 界面预览（miuix）
 
 | 首页 | 订阅 | 应用 | 设置 |
 | :---: | :---: | :---: | :---: |
 | ![首页](docs/screenshots/01-home.png) | ![订阅](docs/screenshots/02-subs.png) | ![应用](docs/screenshots/03-apps.png) | ![设置](docs/screenshots/04-settings.png) |
 
-> 悬浮底栏、大标题顶栏、分组卡片与开关等组件来自 [compose-miuix-ui](https://github.com/compose-miuix-ui/miuix)。
+> 悬浮底栏、大标题顶栏、分组卡片与开关等组件来自 [compose-miuix-ui](https://github.com/compose-miuix-ui/miuix)，不再叠加自绘包装层。
 
-## 本次重构说明
+## 架构与界面说明
 
-这一版做了一次**架构级重构**：编译底座换成上游 GKD 的新模块化架构，但**界面上层仍然沿用你熟悉的那套 MIUIX**。
-
-### 重构思路：翻译，而不是覆盖
+编译底座是上游 GKD 的新模块化架构（包名 `li.gkd.app.*`、Navigation3、Room、Ktor），界面上层**直接使用原版 miuix 组件**。
 
 | | 做法 |
 | ---- | ---- |
-| **底座** | 跟随上游新架构：模块拆分、包名 `li.gkd.app.*`、Navigation3、Room、Ktor 等全部对齐上游 |
-| **界面层** | 不采用上游 UI，而是把**旧版 MIUIX 渲染层原样「翻译」**到新底座上（`Gk*` 骨架 + `Perf*` 组件） |
-| **业务逻辑** | 一律使用新底座的实现，不搬运旧代码 |
+| **底座** | 跟随上游新架构：模块拆分、Navigation3、Room、Ktor 等全部对齐上游 |
+| **界面层** | 只用 `top.yukonga.miuix.kmp.*` 官方组件（ui / preference / icons / blur / navigation3-ui） |
+| **业务逻辑** | 使用新底座的实现，不搬运旧代码 |
 
-换句话说：**你看到的还是老界面，跑的是新内核。**
+### 已弃用的 gkd-miuix 界面方案
 
-### 具体做了什么
+早期版本把旧版 MIUIX 渲染层「翻译」到新底座上（自绘 `Perf*` / `Gk*` 包装层 + 自研液态玻璃底栏），
+这套方案 bug 偏多（底栏偶发变黑、转场后毛玻璃断档、按压高亮露出尖角、内联图标占位符崩溃等），
+现已整体弃用：
 
-- 以 `Gk*` 系列（底座组件）为骨架，保留其数据流向与状态管理
-- 渲染层逐页替换为旧版 MIUIX 组件：`Card` / `BasicComponent` / `PreferenceGroup` / `SettingItem` / `TextSwitch` / `TextMenu` / `PerfTopAppBar` / `PerfAlertDialog` / `PerfIconButton` / `PerfSwitch` / `PerfDropdownMenu` / `WindowDropdownPreference` / `WindowListPopup` / `WindowDialog` 等
-- 四个 Tab 页 + 二级页面（高级设置、工作模式、关于、AI 服务商、订阅详情、快照等）全部按旧版观感重排
-- 补回底座缺失的**毛玻璃二级页壳** `GkPageScaffold`（等价旧版 `AppPageScaffold`），顶栏滚动透出毛玻璃、落定转实色；返回按钮统一为 MIUIX 无边框 `PerfIconButton`
-- 修复迁移过程中出现的一批崩溃与交互回退（详见下方「修复记录」）
+- 首页外壳改为「一个 `Scaffold` + 一个 `LayerBackdrop`」，模糊统一交给 miuix 官方 `Modifier.textureBlur`
+- 删除自研液态玻璃底栏（`ui/liquid` 整包）与配套的分页采样互斥 / 离屏栅格化 hack
+- 删除 `GkTriStateSwitch`（691 行自绘开关）、`GkSubsItemCard`、`GkAuthCard`、`GkAuthButtonGroup`、`EmptyText` 等无人引用的残留组件
+- 点击 / 按压反馈回归 miuix `Card` 内部，由 `squircleSurface` 统一裁剪
+- 内联图标占位符改用统一的 `TextStyle.placeholderWidth()/placeholderHeight()` 兜底
 
 ## 相对旧版的功能变化
 
@@ -57,9 +57,12 @@
 | **控制关系图** | 可视化当前规则组的开关来源（订阅 / 类别 / 应用 / 自身设置） |
 | **局部无线调试** | 基于自有特权运行时（priv-kit），不依赖外部授权器 |
 
-### 修复记录（重构期间）
+### 修复记录
 
-- **修复首页右上角火箭按钮闪退**：MIUIX 部分 `TextStyle` 的 `lineHeight` / `fontSize` 不是 `Sp` 单位，直接 `toDp()` 会抛 `IllegalStateException: Only Sp can convert to Px`。新增安全工具 `TextUnit.toSpDpOr()` / `TextStyle.lineHeightDp()` 做兜底，并全局排查修掉 3 处同类隐患（工作模式页、`Modifier.textSize`、快照页）
+- **修复首页「应用」数量不准确**：该卡片误用订阅快照表的 `size`（等于订阅条数），改为与「应用」Tab 同源的已安装应用列表
+- **修复应用列表点击闪退**：miuix 的 `TextStyle`（`body1` / `body2` …）默认只声明 `fontSize`，`lineHeight` 是 `TextUnit.Unspecified`，而 Compose 的 `Placeholder` 不接受 Unspecified。含全局规则组的应用、以及系统应用，进入应用配置页必崩；现已在 `GkGroupNameText` / `GkAppNameText` / `GroupNameText` 统一兜底
+- **修复订阅卡片按压高亮露出尖角**：点击反馈曾挂在卡片外层的 `combinedClickable` 上，涟漪绘制在卡片背景之下且不受 squircle 裁剪，只从四个圆角溢出；现已移入卡片内部
+- **修复首页右上角火箭按钮闪退**：`TextStyle` 的 `lineHeight` / `fontSize` 不是 `Sp` 单位时直接 `toDp()` 会抛 `IllegalStateException: Only Sp can convert to Px`。新增安全工具 `TextUnit.toSpDpOr()` / `TextStyle.lineHeightDp()` 兜底
 - **修复订阅卡片语义**：恢复 `selected` / `Role.Checkbox` / `onClick(label)` / `onLongClick(label)` 无障碍语义；长按已选项不再误取消（`select` 而非 `toggle`）
 - **修复订阅页丢失全选 / 反选**：补回批量操作入口
 - **修复局部关闭「继续」按钮**：修正 scope 取消导致的点击无响应

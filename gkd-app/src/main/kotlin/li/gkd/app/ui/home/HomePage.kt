@@ -9,23 +9,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,11 +31,7 @@ import kotlinx.serialization.Serializable
 import li.gkd.app.MainViewModel
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.text.UiStrings
-import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.PerfIcon
-import li.gkd.app.ui.component.rememberContentReady
-import li.gkd.app.ui.component.rememberNavTransitionRunning
-import li.gkd.app.ui.liquid.IosLiquidGlassNavigationBar
 import li.gkd.app.ui.share.LocalLayerBackdrop
 import li.gkd.app.ui.share.LocalMiuixBlurActive
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
@@ -47,7 +39,6 @@ import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.basic.NavigationBar as MiuixNavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem as MiuixNavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.BlurDefaults
@@ -112,126 +103,90 @@ fun ResetPageScrollOnRequest(
     }
 }
 
+/**
+ * 首页外壳：完全使用原版 miuix 组件（Scaffold / TopAppBar / NavigationBar / FloatingNavigationBar
+ * + miuix-blur 的 textureBlur）。
+ *
+ * 已弃用的 gkd-miuix 方案（自研液态玻璃底栏、分页采样互斥 hack、离屏图层栅格化）全部移除：
+ * 那些逻辑不但代码量大，还会互相抢 LayerBackdrop 导致底栏偶发变黑、转场后毛玻璃断档。
+ * 现在只剩「一个 Scaffold + 一个 LayerBackdrop」，模糊由 miuix 官方 textureBlur 统一处理。
+ */
 @Composable
 fun HomePage() {
     val mainVm = MainViewModel.requireCurrent()
     viewModel<SubsManageVm>()
     val tab by mainVm.tabFlow.collectAsStateWithLifecycle()
-    // KernelSU：转场落定前只组当前 Tab，邻页延后
-    val contentReady = rememberContentReady()
-    // 进/退二级页时一级页仍在播退场动画；此时毛玻璃每帧采样会和转场抢 GPU
-    val navTransitionRunning = rememberNavTransitionRunning()
     val navItems = BottomNavItem.allSubObjects
     val initialIndex = navItems.indexOfFirst { it.key == tab }.coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = initialIndex, pageCount = { navItems.size })
-    val homePager = rememberHomePagerState(pagerState)
-    val settled = pagerState.settledPage
-    // 转场中只画当前 Tab，邻页先不参与布局/绘制（不卸载已创建的 page 状态，避免来回重组风暴）
-    // 返回转场落定后先让毛玻璃在「轻树」上恢复采样，隔两帧再放开邻页重组：
-    // 否则邻页重组风暴与模糊恢复抢同一帧，底栏模糊会视觉断档 1-2s
-    var pagerRecovery by remember { mutableStateOf(true) }
-    LaunchedEffect(navTransitionRunning) {
-        if (navTransitionRunning || !contentReady) {
-            pagerRecovery = true
-        } else {
-            withFrameNanos { }
-            withFrameNanos { }
-            pagerRecovery = false
-        }
-    }
-    val lightPager = !contentReady || navTransitionRunning || pagerRecovery
-
-    val dashboardPage = if (contentReady || settled == 0) useControlPage() else null
-    val subsPage = if (contentReady || settled == 1) useSubsManagePage() else null
-    val appListPage = if (contentReady || settled == 2) useAppListPage() else null
-    val settingsPage = if (contentReady || settled == 3) useSettingsPage() else null
-    val pages = arrayOf(dashboardPage, subsPage, appListPage, settingsPage)
+    // 四个 Tab 的壳在这里构建；内容只由当前页真正组合（HorizontalPager 负责）
+    val pages = arrayOf(useControlPage(), useSubsManagePage(), useAppListPage(), useSettingsPage())
 
     LaunchedEffect(tab) {
         val index = navItems.indexOfFirst { it.key == tab }.coerceAtLeast(0)
-        homePager.animateToPage(index)
+        if (index != pagerState.currentPage) {
+            pagerState.animateScrollToPage(index)
+        }
     }
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { settledPage ->
-            homePager.syncPage()
             val key = navItems.getOrNull(settledPage)?.key ?: return@collect
             mainVm.setTab(key)
         }
     }
 
     val store by storeFlow.collectAsStateWithLifecycle()
-    val useFloating = store.useFloatingNavBar
-    val blurWanted = store.enableMiuixBlur && isRuntimeShaderSupported()
-    // 仅动画窗口内关毛玻璃；落定后立刻恢复（被盖住时仍保持，避免再出现“二级页底栏变实色”）
-    val blurActive = blurWanted && !navTransitionRunning
-    // 液态玻璃组件树保持不变，只关采样；否则转场开头会整棵底栏换树，反而更卡
-    val liquidGlass = useFloating && store.enableLiquidGlass && blurWanted
-
-    if (useFloating) {
-        MiuixFloatingNavScaffold(
+    val blurActive = store.enableMiuixBlur && isRuntimeShaderSupported()
+    if (store.useFloatingNavBar) {
+        FloatingNavShell(
             pages = pages,
             navItems = navItems,
-            homePager = homePager,
+            pagerState = pagerState,
             blurActive = blurActive,
-            liquidGlass = liquidGlass,
-            lightPager = lightPager,
-            offscreenLayer = navTransitionRunning,
         )
     } else {
-        MiuixDockedNavScaffold(
+        DockedNavShell(
             pages = pages,
             navItems = navItems,
-            homePager = homePager,
+            pagerState = pagerState,
             blurActive = blurActive,
-            lightPager = lightPager,
-            offscreenLayer = navTransitionRunning,
         )
     }
 }
 
 /**
  * miuix Scaffold 会把 content 全屏铺在顶栏下方（place 0,0），顶栏叠在上面。
- * 顶栏必须走 Scaffold.topBar + textureBlur；内容区只挂**一个** layerBackdrop。
- * 切勿 Column 上下拆开顶栏，否则 backdrop 采不到顶栏区域，看起来像实色遮罩；
- * 也勿给每个 Pager 页各挂 layerBackdrop，多节点抢同一 LayerBackdrop 会让底栏偶发变黑。
+ * 顶栏走 Scaffold.topBar + textureBlur；内容区只挂**一个** layerBackdrop，
+ * 否则多节点抢同一 LayerBackdrop 会让底栏偶发变黑。
  */
 @Composable
 private fun HomePagerContent(
-    pages: Array<ScaffoldExt?>,
-    homePager: HomePagerState,
+    pages: Array<ScaffoldExt>,
+    pagerState: PagerState,
     contentPadding: PaddingValues,
-    lightPager: Boolean,
-    modifier: Modifier = Modifier,
 ) {
-    val settledPage = homePager.pagerState.settledPage
     HorizontalPager(
-        modifier = modifier.fillMaxSize(),
-        state = homePager.pagerState,
-        beyondViewportPageCount = if (lightPager) 0 else 3,
-        userScrollEnabled = !lightPager,
+        modifier = Modifier.fillMaxSize(),
+        state = pagerState,
     ) { index ->
-        val isCurrentPage = index == settledPage
-        if (isCurrentPage || !lightPager) {
-            val page = pages[index] ?: return@HorizontalPager
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(page.modifier),
-            ) {
-                page.content(contentPadding)
-            }
+        val page = pages[index]
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(page.modifier),
+        ) {
+            page.content(contentPadding)
         }
     }
 }
 
+/** 停靠式底栏：官方 [MiuixNavigationBar] + textureBlur。 */
 @Composable
-private fun MiuixDockedNavScaffold(
-    pages: Array<ScaffoldExt?>,
+private fun DockedNavShell(
+    pages: Array<ScaffoldExt>,
     navItems: Array<BottomNavItem>,
-    homePager: HomePagerState,
+    pagerState: PagerState,
     blurActive: Boolean,
-    lightPager: Boolean,
-    offscreenLayer: Boolean,
 ) {
     val mainVm = MainViewModel.requireCurrent()
     val surfaceColor = MiuixTheme.colorScheme.surface
@@ -239,28 +194,12 @@ private fun MiuixDockedNavScaffold(
         drawRect(surfaceColor)
         drawContent()
     }
-    val barColor = if (blurActive) Color.Transparent else surfaceColor
-    val blurColors = BlurDefaults.blurColors(
-        blendColors = listOf(
-            BlendColorEntry(color = surfaceColor.copy(alpha = 0.8f)),
-        ),
-    )
-    val selectedIndex = homePager.selectedPage
-    val settledPage = homePager.pagerState.settledPage
+    val settledPage = pagerState.settledPage
 
     CompositionLocalProvider(LocalLayerBackdrop provides backdrop) {
         MiuixScaffold(
-            modifier = Modifier.graphicsLayer {
-                // 转场时栅格成一层，让 NavDisplay 只做层变换，避免每帧重绘整棵首页树
-                if (offscreenLayer) {
-                    compositingStrategy = CompositingStrategy.Offscreen
-                }
-            },
             topBar = {
-                MiuixBlurredTopBar(
-                    backdrop = backdrop,
-                    blurActive = blurActive,
-                ) {
+                BlurredBar(backdrop = backdrop, blurActive = blurActive) {
                     pages.getOrNull(settledPage)?.topBar?.invoke()
                 }
             },
@@ -268,13 +207,16 @@ private fun MiuixDockedNavScaffold(
                 pages.getOrNull(settledPage)?.floatingActionButton?.invoke()
             },
             bottomBar = {
+                val barColor = if (blurActive) Color.Transparent else surfaceColor
                 Box(
                     modifier = if (blurActive) {
                         Modifier.textureBlur(
                             backdrop = backdrop,
                             shape = RectangleShape,
                             blurRadius = 25f,
-                            colors = blurColors,
+                            colors = BlurDefaults.blurColors(
+                                blendColors = listOf(BlendColorEntry(color = surfaceColor.copy(alpha = 0.8f))),
+                            ),
                         )
                     } else {
                         Modifier
@@ -283,7 +225,7 @@ private fun MiuixDockedNavScaffold(
                     MiuixNavigationBar(color = barColor) {
                         navItems.forEachIndexed { index, item ->
                             MiuixNavigationBarItem(
-                                selected = index == selectedIndex,
+                                selected = index == pagerState.currentPage,
                                 onClick = { mainVm.handleClickTab(item) },
                                 icon = item.icon,
                                 label = item.label,
@@ -300,9 +242,8 @@ private fun MiuixDockedNavScaffold(
                 ) {
                     HomePagerContent(
                         pages = pages,
-                        homePager = homePager,
+                        pagerState = pagerState,
                         contentPadding = padding,
-                        lightPager = lightPager,
                     )
                 }
             },
@@ -310,15 +251,13 @@ private fun MiuixDockedNavScaffold(
     }
 }
 
+/** 悬浮式底栏：官方 [FloatingNavigationBar] + textureBlur。 */
 @Composable
-private fun MiuixFloatingNavScaffold(
-    pages: Array<ScaffoldExt?>,
+private fun FloatingNavShell(
+    pages: Array<ScaffoldExt>,
     navItems: Array<BottomNavItem>,
-    homePager: HomePagerState,
+    pagerState: PagerState,
     blurActive: Boolean,
-    liquidGlass: Boolean,
-    lightPager: Boolean,
-    offscreenLayer: Boolean,
 ) {
     val mainVm = MainViewModel.requireCurrent()
     val surfaceColor = MiuixTheme.colorScheme.surface
@@ -333,33 +272,22 @@ private fun MiuixFloatingNavScaffold(
         drawRect(surfaceColor)
         drawContent()
     }
-    val glassActive = blurActive
-    val floatingBarColor = if (glassActive) Color.Transparent else surfaceContainer
     val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val floatingBarBody = if (liquidGlass) 72.dp + 40.dp else 52.dp + 40.dp
     val contentBottomSpace = 112.dp + navInset
-    val settled = homePager.pagerState.settledPage
+    val settled = pagerState.settledPage
     val hasFab = navItems.getOrNull(settled)?.key == BottomNavItem.AppList.key
     val listBottomSpace = if (hasFab) contentBottomSpace + 72.dp else contentBottomSpace
-    val selectedIndex = homePager.selectedPage
+    val floatingBarColor = if (blurActive) Color.Transparent else surfaceContainer
 
     CompositionLocalProvider(LocalLayerBackdrop provides backdrop) {
         MiuixScaffold(
-            modifier = Modifier.graphicsLayer {
-                if (offscreenLayer) {
-                    compositingStrategy = CompositingStrategy.Offscreen
-                }
-            },
             topBar = {
-                MiuixBlurredTopBar(
-                    backdrop = backdrop,
-                    blurActive = blurActive,
-                ) {
+                BlurredBar(backdrop = backdrop, blurActive = blurActive) {
                     pages.getOrNull(settled)?.topBar?.invoke()
                 }
             },
             floatingActionButton = {
-                Box(modifier = Modifier.padding(bottom = floatingBarBody)) {
+                Box(modifier = Modifier.padding(bottom = 112.dp)) {
                     pages.getOrNull(settled)?.floatingActionButton?.invoke()
                 }
             },
@@ -373,12 +301,11 @@ private fun MiuixFloatingNavScaffold(
                     ) {
                         HomePagerContent(
                             pages = pages,
-                            homePager = homePager,
+                            pagerState = pagerState,
                             contentPadding = PaddingValues(
                                 top = padding.calculateTopPadding(),
                                 bottom = listBottomSpace,
                             ),
-                            lightPager = lightPager,
                         )
                     }
                     Box(
@@ -386,43 +313,28 @@ private fun MiuixFloatingNavScaffold(
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth(),
                     ) {
-                        val barItems = remember(navItems) {
-                            navItems.map { NavigationItem(label = it.label, icon = it.icon) }
-                        }
-                        if (liquidGlass) {
-                            IosLiquidGlassNavigationBar(
-                                items = barItems,
-                                selectedIndex = selectedIndex.coerceIn(0, navItems.lastIndex),
-                                onItemClick = { index ->
-                                    navItems.getOrNull(index)?.let { mainVm.handleClickTab(it) }
-                                },
-                                backdrop = backdrop,
-                                isBlurActive = glassActive,
-                            )
-                        } else {
-                            FloatingNavigationBar(
-                                modifier = if (glassActive) {
-                                    Modifier.textureBlur(
-                                        backdrop = backdrop,
-                                        shape = floatingBarShape,
-                                        blurRadius = 25f,
-                                        colors = blurColors,
-                                        highlight = null,
-                                    )
-                                } else {
-                                    Modifier
-                                },
-                                color = floatingBarColor,
-                                defaultWindowInsetsPadding = true,
-                            ) {
-                                navItems.forEachIndexed { index, item ->
-                                    FloatingNavigationBarItem(
-                                        selected = index == selectedIndex,
-                                        onClick = { mainVm.handleClickTab(item) },
-                                        icon = item.icon,
-                                        label = item.label,
-                                    )
-                                }
+                        FloatingNavigationBar(
+                            modifier = if (blurActive) {
+                                Modifier.textureBlur(
+                                    backdrop = backdrop,
+                                    shape = floatingBarShape,
+                                    blurRadius = 25f,
+                                    colors = blurColors,
+                                    highlight = null,
+                                )
+                            } else {
+                                Modifier
+                            },
+                            color = floatingBarColor,
+                            defaultWindowInsetsPadding = true,
+                        ) {
+                            navItems.forEachIndexed { index, item ->
+                                FloatingNavigationBarItem(
+                                    selected = index == pagerState.currentPage,
+                                    onClick = { mainVm.handleClickTab(item) },
+                                    icon = item.icon,
+                                    label = item.label,
+                                )
                             }
                         }
                     }
@@ -432,9 +344,11 @@ private fun MiuixFloatingNavScaffold(
     }
 }
 
-/** Mishka BlurredBar：textureBlur + 透明 TopAppBar（经 LocalMiuixBlurActive）。 */
+/**
+ * 顶栏毛玻璃容器：miuix 的 textureBlur + 透明 TopAppBar（经 [LocalMiuixBlurActive] 通知页面）。
+ */
 @Composable
-private fun MiuixBlurredTopBar(
+private fun BlurredBar(
     backdrop: LayerBackdrop,
     blurActive: Boolean,
     content: @Composable () -> Unit,

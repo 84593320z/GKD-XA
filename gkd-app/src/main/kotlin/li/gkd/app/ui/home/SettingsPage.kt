@@ -536,13 +536,6 @@ fun useSettingsPage(): ScaffoldExt {
                     checked = store.useFloatingNavBar,
                     onCheckedChange = { vm.setFloatingNavBar(it) },
                 )
-                TextSwitch(
-                    title = "液态玻璃",
-                    subtitle = "悬浮底栏与右下角加号按钮使用液态玻璃效果",
-                    checked = store.enableLiquidGlass && store.enableMiuixBlur && shaderOk,
-                    enabled = store.enableMiuixBlur && shaderOk,
-                    onCheckedChange = { vm.setLiquidGlass(it) },
-                )
                 if (AndroidTarget.TIRAMISU) {
                     TextSwitch(
                         title = "预测式返回",

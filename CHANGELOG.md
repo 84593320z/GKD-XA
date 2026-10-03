@@ -1,5 +1,17 @@
 # 更新内容
 
+## 未发布
+
+**修复 + 界面回归原版 miuix**
+
+- 修复首页「应用」数量不准确：该卡片误用订阅快照表的 `size`（等于订阅条数），改为与「应用」Tab 同源的已安装应用列表
+- 修复应用列表点击后闪退：miuix 的 `TextStyle`（`body1` / `body2` …）默认只声明 `fontSize`，`lineHeight` 为 `TextUnit.Unspecified`，而 Compose 的 `Placeholder` 不接受 Unspecified。含全局规则组的应用、以及系统应用，进入应用配置页必崩；现已在标题/规则组名称的内联图标占位符处统一兜底
+- 修复订阅卡片点按后按压高亮露出四个尖角：点击反馈曾挂在卡片外层的 `combinedClickable` 上，涟漪绘制在卡片背景之下且不受 squircle 裁剪，只从四个圆角溢出；现已移入卡片内部
+- 弃用早期移植自 gkd-miuix 的界面方案，改为直接使用原版 miuix 组件：
+  - 首页外壳简化为「一个 `Scaffold` + 一个 `LayerBackdrop`」，模糊统一走 miuix 官方 `Modifier.textureBlur`
+  - 删除自研液态玻璃底栏（`ui/liquid` 整包）与配套的分页采样互斥、离屏栅格化 hack，设置页同步移除「液态玻璃」开关
+  - 删除 `GkTriStateSwitch`（691 行自绘开关）、`GkSubsItemCard`、`GkAuthCard`、`GkAuthButtonGroup`、`EmptyText` 等无人引用的残留组件
+
 ## v1.3.0（重构版）
 
 **架构重构 + 全界面回归 MIUIX**
