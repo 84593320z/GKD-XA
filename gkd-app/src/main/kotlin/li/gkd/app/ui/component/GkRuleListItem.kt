@@ -52,14 +52,13 @@ fun GkRuleListItem(
         animationSpec = tween(durationMillis = 300),
         label = "Rule card background",
     )
-    // 卡片之间留出间距，避免相邻卡片圆角并成一整块
-    val cardModifier = modifier
-        .padding(horizontal = GkRowDefaults.SidePadding)
-        .padding(bottom = 8.dp)
-        .fillMaxWidth()
+    val cardModifier = if (legacyStyle) {
+        modifier.padding(horizontal = 12.dp).fillMaxWidth()
+    } else {
+        modifier.padding(horizontal = 8.dp, vertical = 3.dp).fillMaxWidth()
+    }
     Card(
         modifier = cardModifier,
-        cornerRadius = GkRowDefaults.CardCornerRadius,
         colors = CardDefaults.defaultColors(color = containerColor),
     ) {
         Row(

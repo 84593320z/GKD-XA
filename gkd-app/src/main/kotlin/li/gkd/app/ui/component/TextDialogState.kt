@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -90,15 +90,13 @@ class TextDialogState {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
                     ) {
-                        TextButton(
-                            text = UiStrings.action_close,
-                            onClick = throttle(::dismiss),
-                        )
+                        TextButton(onClick = throttle(::dismiss)) {
+                            Text(text = UiStrings.action_close)
+                        }
                         if (currentRequest.openable) {
-                            TextButton(
-                                text = UiStrings.action_open,
-                                onClick = throttle { open(currentRequest) },
-                            )
+                            TextButton(onClick = throttle { open(currentRequest) }) {
+                                Text(text = UiStrings.action_open)
+                            }
                         }
                     }
                 },

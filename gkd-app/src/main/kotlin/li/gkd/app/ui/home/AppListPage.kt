@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import top.yukonga.miuix.kmp.theme.LocalContentColor
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -47,9 +47,6 @@ import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
 import li.gkd.app.ui.icon.GkSearchCloseIconButton
-import li.gkd.app.ui.component.GkRow
-import li.gkd.app.ui.component.GkRowDefaults
-import li.gkd.app.ui.component.GkRowText
 import li.gkd.app.ui.component.GkRuleStatsData
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkIcons
@@ -58,7 +55,7 @@ import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfTopAppBar
 import li.gkd.app.ui.component.PerfIconButton
 import li.gkd.app.ui.component.PerfDropdownMenu
-import li.gkd.app.ui.component.GkCheckbox
+import li.gkd.app.ui.component.PerfCheckbox
 import li.gkd.app.ui.component.AppIcon
 import androidx.compose.foundation.layout.fillMaxWidth
 import li.gkd.app.ui.component.AppBarTextField
@@ -208,11 +205,11 @@ fun useAppListPage(): ScaffoldExt {
             )
         }
     ) { contentPadding ->
-        PullToRefresh(
+        PullToRefreshBox(
             // 不在此处 padding：会压缩整个容器高度，导致列表提前结束、底部出现死白且吃不到底栏模糊。
             // 改由 LazyColumn 的 contentPadding 承担，容器继续铺满全屏，内容延伸到底栏下方。
             modifier = Modifier.fillMaxSize(),
-            pullToRefreshState = pullToRefreshState,
+            state = pullToRefreshState,
             isRefreshing = refreshing,
             onRefresh = vm::refresh,
         ) {
@@ -272,8 +269,7 @@ private fun AppItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = GkRowDefaults.SidePadding)
-            .padding(bottom = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
             .clearAndSetSemantics {
                 contentDescription = if (editWhiteListMode) {
                     appInfo.name
@@ -290,17 +286,18 @@ private fun AppItemCard(
                     action = null
                 )
             },
-        cornerRadius = GkRowDefaults.CardCornerRadius,
         insideMargin = PaddingValues(0.dp),
     ) {
-        GkRow(
+        BasicComponent(
+            title = appInfo.name,
+            summary = summary,
             onClick = throttle(onClick),
             startAction = {
-                AppIcon(appId = appInfo.id, size = 34.dp)
+                AppIcon(appId = appInfo.id)
             },
             endActions = {
                 if (editWhiteListMode) {
-                    GkCheckbox(
+                    PerfCheckbox(
                         key = appInfo.id,
                         checked = inWhiteList,
                     )
@@ -314,8 +311,6 @@ private fun AppItemCard(
                     )
                 }
             },
-        ) {
-            GkRowText(title = appInfo.name, summary = summary)
-        }
+        )
     }
 }

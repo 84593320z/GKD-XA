@@ -27,7 +27,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
@@ -146,7 +147,7 @@ fun ImagePreviewPage(route: ImagePreviewRoute) {
                 GkIconButton(
                     imageVector = GkIcons.OpenInNew,
                     onClick = throttle(fn = { mainVm.openUrl(currentUri) }),
-                    tint = Color.White,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
                 )
             }
         },
@@ -267,7 +268,7 @@ fun GkImagePreviewContent(
                         GkIconButton(
                             imageVector = GkIcons.ArrowBack,
                             onClick = onBack,
-                            tint = Color.White
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
                         )
                     },
                     titleText = run {

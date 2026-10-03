@@ -17,9 +17,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,7 +40,6 @@ import kotlinx.serialization.encodeToString
 import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.CategoryPolicy
 import li.gkd.app.text.UiStrings
-import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
@@ -115,10 +115,13 @@ private fun CategoryEditorContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                GkTextField(
+                OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = nameError ?: UiStrings.category_name_prefix,
+                    label = {
+                        Text(nameError ?: UiStrings.category_name_prefix,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    },
                     isError = nameError != null,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -127,10 +130,10 @@ private fun CategoryEditorContent(
                     ),
                     modifier = Modifier.fillMaxWidth().autoFocus(immediateFocus = true),
                 )
-                GkTextField(
+                OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = UiStrings.category_description,
+                    label = { Text(UiStrings.category_description) },
                     minLines = 1,
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth().focusRequester(descriptionFocusRequester),
@@ -142,16 +145,13 @@ private fun CategoryEditorContent(
                         Text(UiStrings.category_edit_conflict,
                             color = MiuixTheme.colorScheme.onErrorContainer)
                         if (category != null) {
-                            TextButton(
-                                text = UiStrings.action_reload_latest,
-                                onClick = {
+                            TextButton(onClick = {
                                 originalCategory = categorySnapshot
                                 name = category.name
                                 description = category.desc.orEmpty()
                                 originalName = name
                                 originalDescription = description
-                            },
-                            )
+                            }) { Text(UiStrings.action_reload_latest) }
                         }
                     }
                 }

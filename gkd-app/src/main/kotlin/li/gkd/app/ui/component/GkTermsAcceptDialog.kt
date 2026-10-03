@@ -6,8 +6,8 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -81,20 +81,18 @@ fun GkTermsAcceptDialog() {
         },
         text = stepDataList[step].second,
         confirmButton = {
-            TextButton(
-                text = UiStrings.action_agree,
-                onClick = throttle {
+            TextButton(onClick = throttle {
                 mainVm.acceptTermsStep(stepDataList.lastIndex)
-            },
-            )
+            }) {
+                Text(text = UiStrings.action_agree)
+            }
         },
         dismissButton = {
-            TextButton(
-                text = UiStrings.action_disagree,
-                onClick = throttle {
+            TextButton(onClick = throttle {
                 context.finish()
-            },
-            )
+            }) {
+                Text(text = UiStrings.action_disagree)
+            }
         }
     )
 }

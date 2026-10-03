@@ -6,10 +6,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,17 +36,26 @@ fun GkMultiTextField(
     placeholderText: String? = null,
 ) {
     Box(modifier = modifier) {
-        val modifier = Modifier
-            .autoFocus(immediateFocus = immediateFocus)
-            .fillMaxSize()
-            .optimizedImePadding()
-        GkTextField(
-            value = text,
-            onValueChange = onTextChange,
-            placeholder = placeholderText,
-            modifier = modifier,
-            shape = RectangleShape,
+        val textColors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
         )
+        CompositionLocalProvider(LocalTextStyle provides MiuixTheme.textStyles.body1) {
+            val modifier = Modifier
+                .autoFocus(immediateFocus = immediateFocus)
+                .fillMaxSize()
+                .optimizedImePadding()
+            TextField(
+                value = text,
+                onValueChange = onTextChange,
+                placeholder = if (placeholderText != null) ({ Text(text = placeholderText) }) else null,
+                modifier = modifier,
+                shape = RectangleShape,
+                colors = textColors,
+            )
+        }
         val actualSize = indicatorSize ?: text.length
         if (actualSize > 0 && text.isNotEmpty()) {
             Text(
@@ -50,7 +63,7 @@ fun GkMultiTextField(
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.TopEnd)
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(MaterialTheme.shapes.extraSmall)
                     .background(MiuixTheme.colorScheme.surfaceContainer)
                     .padding(horizontal = 2.dp),
                 style = MiuixTheme.textStyles.body2,

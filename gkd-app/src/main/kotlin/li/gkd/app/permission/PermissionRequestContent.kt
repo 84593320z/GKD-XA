@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
-import top.yukonga.miuix.kmp.basic.Surface
+import androidx.compose.material3.Surface
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -94,20 +94,18 @@ class PermissionRequestContent(
                     coordinator.dismissDialog(state.id)
                 },
                 confirmButton = {
-                    TextButton(
-                        text = state.confirmText,
-                        onClick = {
+                    TextButton(onClick = {
                         coordinator.confirmDialog(state.id)
-                    },
-                    )
+                    }) {
+                        Text(text = state.confirmText)
+                    }
                 },
                 dismissButton = {
-                    TextButton(
-                        text = state.dismissText,
-                        onClick = {
+                    TextButton(onClick = {
                         coordinator.dismissDialog(state.id)
-                    },
-                    )
+                    }) {
+                        Text(text = state.dismissText)
+                    }
                 },
             )
         }
@@ -174,6 +172,7 @@ class PermissionRequestContent(
             shape = MaterialTheme.shapes.medium,
             color = MiuixTheme.colorScheme.surfaceContainerHighest,
             contentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
+            tonalElevation = 6.dp,
             shadowElevation = 6.dp,
         ) {
             Column(

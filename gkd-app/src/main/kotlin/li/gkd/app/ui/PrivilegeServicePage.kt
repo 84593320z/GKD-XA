@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -118,10 +118,9 @@ private fun PrivilegeServiceInfoDialog(onDismissRequest: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(
-                text = UiStrings.action_understood,
-                onClick = onDismissRequest,
-            )
+            TextButton(onClick = onDismissRequest) {
+                Text(text = UiStrings.action_understood)
+            }
         },
     )
 }

@@ -1,11 +1,11 @@
 package li.gkd.app.ui.component
 
-import top.yukonga.miuix.kmp.basic.PlainTooltip
+import androidx.compose.material3.PlainTooltip
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
-import top.yukonga.miuix.kmp.basic.TooltipBox
-import top.yukonga.miuix.kmp.basic.TooltipDefaults
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import li.gkd.app.ui.share.LocalIsTalkbackEnabled
 

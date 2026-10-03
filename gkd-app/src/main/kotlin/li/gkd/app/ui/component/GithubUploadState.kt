@@ -1,6 +1,5 @@
 package li.gkd.app.ui.component
 
-import li.gkd.app.ui.component.GkTextField
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,11 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -289,26 +289,24 @@ class GithubUploadState(
                     }
                 },
                 text = {
-                    GkTextField(
+                    OutlinedTextField(
                         value = cookieDraft,
                         onValueChange = ::updateCookieDraft,
-                        placeholder = UiStrings.github_cookie_input_hint,
+                        placeholder = { Text(text = UiStrings.github_cookie_input_hint) },
                         modifier = Modifier.fillMaxWidth().autoFocus(),
                         maxLines = 10,
                     )
                 },
                 confirmButton = {
                     TextButton(
-                        text = UiStrings.action_confirm,
                         enabled = activeRequest == null || cookieDraft.isNotBlank(),
                         onClick = ::saveCookie,
-                    )
+                    ) { Text(text = UiStrings.action_confirm) }
                 },
                 dismissButton = {
-                    TextButton(
-                        text = UiStrings.action_cancel,
-                        onClick = ::dismissCookieEditor,
-                    )
+                    TextButton(onClick = ::dismissCookieEditor) {
+                        Text(text = UiStrings.action_cancel)
+                    }
                 },
             )
         }
@@ -333,10 +331,7 @@ class GithubUploadState(
                     },
                     onDismissRequest = {},
                     confirmButton = {
-                        TextButton(
-                            text = UiStrings.upload_abort,
-                            onClick = ::stopTask,
-                        )
+                        TextButton(onClick = ::stopTask) { Text(UiStrings.upload_abort) }
                     },
                 )
             }
@@ -380,17 +375,13 @@ class GithubUploadState(
                     onDismissRequest = ::closeUploadStatus,
                     dismissButton = if (visibleStatus.cookieExpired) {
                         {
-                            TextButton(
-                                text = UiStrings.cookie_change,
-                                onClick = ::showCookieEditor,
-                            )
+                            TextButton(onClick = ::showCookieEditor) {
+                                Text(UiStrings.cookie_change)
+                            }
                         }
                     } else null,
                     confirmButton = {
-                        TextButton(
-                            text = UiStrings.action_close,
-                            onClick = ::closeUploadStatus,
-                        )
+                        TextButton(onClick = ::closeUploadStatus) { Text(UiStrings.action_close) }
                     },
                 )
             }
@@ -403,7 +394,7 @@ private fun UploadProgress(progress: Float) {
     val showExactProgress = progress > 0f && progress < 1f
     AnimatedContent(showExactProgress) { showExact ->
         if (showExact) {
-            LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
         } else {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }

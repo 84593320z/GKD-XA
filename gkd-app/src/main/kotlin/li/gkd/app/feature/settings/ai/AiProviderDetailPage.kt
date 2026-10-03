@@ -1,6 +1,7 @@
 package li.gkd.app.feature.settings.ai
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,11 +10,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,57 +25,75 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import li.gkd.app.MainViewModel
 import li.gkd.app.data.settings.AiConfig
 import li.gkd.app.data.settings.AiEndpointMode
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.component.GkIcon
+import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageBottomSpace
+import li.gkd.app.ui.component.GkSizedIconButton
+import li.gkd.app.ui.component.GkTextSwitch
+import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.LabeledField
+import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.ui.component.TextSearchListDialog
 import li.gkd.app.util.AiProtocolOption
 import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.util.TimeUtils.throttle
-import li.gkd.app.util.findOption
 import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.util.findOption
 import li.gkd.app.util.launchLogged
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TabRow
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
-/**
- * 服务商详情：配置 / 模型两个页签。
- *
- * 配置页分层与列表页一致：连接配置（输入项 + 端点模式 + 测试连接）→ 自定义请求头 →
- * 偏好与提示词 → 生成参数 → 主操作按钮 → 危险操作卡片。
- */
 @Composable
 fun AiProviderDetailPage(route: AiProviderDetailRoute) {
     val mainVm = MainViewModel.requireCurrent()
+    val scope = rememberCoroutineScope()
     val store by storeFlow.collectAsStateWithLifecycle()
     var createdId by remember { mutableStateOf<String?>(null) }
 
     val providerId = route.id ?: createdId
     val provider = providerId?.let { id -> store.aiProviders.firstOrNull { it.id == id } }
 
-    val isNew = provider == null
     if (providerId != null && provider == null) {
         MissingProviderPage(onBack = { mainVm.popPage() })
         return
     }
 
+    val isNew = provider == null
     var tab by remember { mutableIntStateOf(0) }
     var draft by remember(providerId) {
         mutableStateOf(provider?.let(AiProviderDraft::of) ?: AiProviderDraft.new(route.protocol))
     }
 
-    AiPageScaffold(
-        title = if (isNew) "新建服务商" else draft.name.ifBlank { "服务商" },
-        onBack = { mainVm.popPage() },
+    Scaffold(
+        topBar = {
+            GkTopAppBar(
+                titleText = if (isNew) "新建服务商" else draft.name.ifBlank { "服务商" },
+                navigationIcon = {
+                    GkIconButton(
+                        imageVector = GkIcons.ArrowBack,
+                        onClick = { mainVm.popPage() },
+                    )
+                },
+            )
+        },
     ) { contentPadding ->
         Column(
             modifier = Modifier
@@ -88,24 +107,22 @@ fun AiProviderDetailPage(route: AiProviderDetailRoute) {
                     onTabSelected = { tab = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            horizontal = AiUiDefaults.SidePadding + 12.dp,
-                            vertical = 8.dp,
-                        ),
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
                 )
             }
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Box(modifier = Modifier.weight(1f)) {
                 if (isNew || tab == 0) {
                     AiProviderConfigTab(
                         provider = provider ?: AiConfig(),
                         draft = draft,
                         isNew = isNew,
+                        scope = scope,
                         onDraftChange = { draft = it },
                         onCreated = { createdId = it },
                         onRemoved = { mainVm.popPage() },
                     )
                 } else {
-                    AiProviderModelsTab(provider!!)
+                    AiProviderModelsTab(provider)
                 }
             }
         }
@@ -114,7 +131,16 @@ fun AiProviderDetailPage(route: AiProviderDetailRoute) {
 
 @Composable
 private fun MissingProviderPage(onBack: () -> Unit) {
-    AiPageScaffold(title = "AI 服务商", onBack = onBack) { contentPadding ->
+    Scaffold(
+        topBar = {
+            GkTopAppBar(
+                titleText = "AI 服务商",
+                navigationIcon = {
+                    GkIconButton(imageVector = GkIcons.ArrowBack, onClick = throttle(fn = onBack))
+                },
+            )
+        },
+    ) { contentPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -125,10 +151,10 @@ private fun MissingProviderPage(onBack: () -> Unit) {
             Text(
                 text = "该服务商已被移除",
                 style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                color = colorScheme.onSurfaceVariantSummary,
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            AiTextButton(text = "返回", onClick = throttle(fn = onBack))
+            Spacer(modifier = Modifier.height(12.dp))
+            TextButton(text = "返回", onClick = throttle(fn = onBack))
         }
     }
 }
@@ -138,20 +164,18 @@ private fun AiProviderConfigTab(
     provider: AiConfig,
     draft: AiProviderDraft,
     isNew: Boolean,
+    scope: CoroutineScope,
     onDraftChange: (AiProviderDraft) -> Unit,
     onCreated: (String) -> Unit,
     onRemoved: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
+    val mainVm = MainViewModel.requireCurrent()
     var apiKeyVisible by remember { mutableStateOf(false) }
     var headersExpanded by remember { mutableStateOf(false) }
     var showEndpointDlg by remember { mutableStateOf(false) }
     var testing by remember { mutableStateOf(false) }
-    var saving by remember { mutableStateOf(false) }
     var testResult by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf<String?>(null) }
-    var createdAt by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val protocolOption = AiProtocolOption.objects.findOption(draft.protocol)
     val baseUrl = draft.apiUrl.ifBlank { protocolOption.placeholder }
@@ -175,59 +199,73 @@ private fun AiProviderConfigTab(
         )
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().imePadding(),
-    ) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         item(key = "connection") {
-            AiGroup(title = "连接配置") {
-                AiFieldBlock {
-                    AiTextField(
+            AiSection(title = "连接配置") {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    FieldLabel("名称")
+                    TextField(
                         value = draft.name,
                         onValueChange = { v -> update { it.copy(name = v) } },
-                        label = "名称",
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "例如 DeepSeek 官方",
+                        useLabelAsPlaceholder = true,
+                        singleLine = true,
                     )
-                    AiTextField(
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FieldLabel("Base URL")
+                    TextField(
                         value = draft.apiUrl,
                         onValueChange = { v -> update { it.copy(apiUrl = v) } },
+                        modifier = Modifier.fillMaxWidth(),
                         label = protocolOption.placeholder,
-                        keyboardType = KeyboardType.Uri,
+                        useLabelAsPlaceholder = true,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     )
-                    AiTextField(
-                        value = draft.apiKey,
-                        onValueChange = { v -> update { it.copy(apiKey = v) } },
-                        label = "API Key",
-                        keyboardType = KeyboardType.Password,
-                        visualTransformation = if (apiKeyVisible) {
-                            VisualTransformation.None
-                        } else {
-                            PasswordVisualTransformation()
-                        },
-                        trailingIcon = {
-                            top.yukonga.miuix.kmp.basic.IconButton(
-                                onClick = { apiKeyVisible = !apiKeyVisible },
-                            ) {
-                                GkIcon(
-                                    imageVector = if (apiKeyVisible) {
-                                        GkIcons.ToggleOn
-                                    } else {
-                                        GkIcons.ToggleOff
-                                    },
-                                    contentDescription = if (apiKeyVisible) "隐藏 API Key" else "显示 API Key",
-                                )
-                            }
-                        },
-                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FieldLabel("API Key")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextField(
+                            value = draft.apiKey,
+                            onValueChange = { v -> update { it.copy(apiKey = v) } },
+                            modifier = Modifier.weight(1f),
+                            label = "请输入 API Key",
+                            useLabelAsPlaceholder = true,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            visualTransformation = if (apiKeyVisible) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        GkSizedIconButton(
+                            size = 36.dp,
+                            iconSize = 19.dp,
+                            onClickLabel = if (apiKeyVisible) "隐藏 API Key" else "显示 API Key",
+                            onClick = { apiKeyVisible = !apiKeyVisible },
+                            imageVector = if (apiKeyVisible) GkIcons.ToggleOff else GkIcons.ToggleOn,
+                            contentDescription = "显示/隐藏 API Key",
+                        )
+                    }
                     if (draft.isAnthropic) {
-                        AiTextField(
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FieldLabel("anthropic-version")
+                        TextField(
                             value = draft.anthropicVersion,
                             onValueChange = { v -> update { it.copy(anthropicVersion = v) } },
-                            label = "anthropic-version",
+                            modifier = Modifier.fillMaxWidth(),
+                            label = AiConfig.DEFAULT_ANTHROPIC_VERSION,
+                            useLabelAsPlaceholder = true,
+                            singleLine = true,
                         )
                     }
                 }
                 if (!draft.isAnthropic) {
-                    AiDivider()
-                    AiDropdownRow(
+                    AiRowDivider(hasLeading = false)
+                    AiPickerRow(
                         title = "端点模式",
                         value = AiEndpointMode.labels[draft.endpointMode] ?: draft.endpointMode,
                         summary = if (draft.endpointMode == AiEndpointMode.RESPONSES) {
@@ -238,18 +276,16 @@ private fun AiProviderConfigTab(
                         onClick = { showEndpointDlg = true },
                     )
                 }
-                AiDivider()
-                AiPreferenceRow(
+                AiRowDivider(hasLeading = false)
+                BasicComponent(
                     title = if (testing) "测试连接中…" else "测试连接",
-                    summary = testResult
-                        ?: "读取 $baseUrl/models，并把返回的模型合并进模型列表",
+                    summary = testResult ?: "读取 $baseUrl/models，并把返回的模型合并进模型列表",
                     enabled = !testing,
-                    startAction = { AiRowIcon(imageVector = GkIcons.Autorenew) },
-                    onClick = {
+                    onClick = throttle {
                         val error = draft.validationError()
                         if (error != null) {
                             testResult = "校验未通过：$error"
-                            return@AiPreferenceRow
+                            return@throttle
                         }
                         testing = true
                         testResult = null
@@ -277,23 +313,23 @@ private fun AiProviderConfigTab(
         }
 
         item(key = "headers") {
-            AiGroup(title = "自定义请求头") {
+            AiSection(title = "自定义请求头") {
                 val rotation by animateFloatAsState(if (headersExpanded) 180f else 0f)
-                AiPreferenceRow(
+                BasicComponent(
                     title = if (draft.headers.isEmpty()) "未设置" else "已设置 ${draft.headers.size} 项",
                     summary = "会先于认证头写入，因此 Authorization / x-api-key 仍以 API Key 为准。",
+                    onClick = throttle { headersExpanded = !headersExpanded },
                     endActions = {
                         GkIcon(
                             imageVector = GkIcons.ExpandMore,
                             modifier = Modifier.rotate(rotation),
-                            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            tint = colorScheme.onSurfaceVariantSummary,
                         )
                     },
-                    onClick = throttle { headersExpanded = !headersExpanded },
                 )
                 if (headersExpanded) {
                     draft.headers.forEach { header ->
-                        AiDivider()
+                        AiRowDivider(hasLeading = false)
                         HeaderRow(
                             header = header,
                             onNameChange = { name ->
@@ -319,8 +355,8 @@ private fun AiProviderConfigTab(
                             },
                         )
                     }
-                    AiDivider()
-                    AiPreferenceRow(
+                    AiRowDivider(hasLeading = false)
+                    BasicComponent(
                         title = "添加请求头",
                         startAction = { AiRowIcon(imageVector = GkIcons.Add) },
                         endActions = { GkIcon(imageVector = GkIcons.Add) },
@@ -331,49 +367,61 @@ private fun AiProviderConfigTab(
         }
 
         item(key = "preferences") {
-            AiGroup(title = "偏好与提示词") {
-                AiSwitchRow(
+            AiSection(title = "偏好与提示词") {
+                GkTextSwitch(
                     title = "启用此服务商",
-                    summary = "停用后不参与快照自动生成",
+                    subtitle = "停用后不参与快照自动生成",
                     checked = draft.enabled,
                     onCheckedChange = { v -> update { it.copy(enabled = v) } },
                 )
-                AiDivider()
-                AiFieldBlock {
-                    AiTextField(
+                AiRowDivider(hasLeading = false)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    FieldLabel("系统提示词")
+                    TextField(
                         value = draft.systemPrompt,
                         onValueChange = { v -> update { it.copy(systemPrompt = v) } },
-                        label = "系统提示词（追加在内置提示词之前）",
-                        singleLine = false,
-                        modifier = Modifier.height(120.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        label = "追加在内置提示词之前",
+                        useLabelAsPlaceholder = true,
                     )
-                    AiHint(text = "留空则只使用内置的 gkd-rule-generator-prompt.md。")
+                    AiHint(
+                        text = "留空则只使用内置的 gkd-rule-generator-prompt.md。",
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
                 }
             }
         }
 
         item(key = "params") {
-            AiGroup(title = "生成参数") {
-                AiFieldBlock {
-                    AiTextField(
+            AiSection(title = "生成参数") {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    LabeledField(
+                        label = "Temperature",
                         value = draft.temperature,
                         onValueChange = { v -> update { it.copy(temperature = v) } },
-                        label = "Temperature（0 ~ 2，越大输出越随机）",
+                        placeholder = "0 ~ 2，越大输出越随机",
                         keyboardType = KeyboardType.Decimal,
                     )
-                    AiTextField(
+                    LabeledField(
+                        label = "Top P",
                         value = draft.topP,
                         onValueChange = { v -> update { it.copy(topP = v) } },
-                        label = "Top P（0 ~ 1，通常与 Temperature 二选一）",
+                        placeholder = "0 ~ 1，通常与 Temperature 二选一",
                         keyboardType = KeyboardType.Decimal,
                     )
-                    AiTextField(
+                    LabeledField(
+                        label = "Max Tokens",
                         value = draft.maxTokens,
                         onValueChange = { v -> update { it.copy(maxTokens = v) } },
-                        label = "Max Tokens（1 ~ ${AiProviderDraft.MAX_TOKENS_LIMIT}，规则 JSON 建议 4096）",
+                        placeholder = "1 ~ ${AiProviderDraft.MAX_TOKENS_LIMIT}，规则 JSON 建议 4096",
                         keyboardType = KeyboardType.Number,
                     )
-                    AiHint(text = "快照规则输出是结构化 JSON，Temperature 建议保持 0，可减少选择器漂移。")
+                    AiHint(
+                        text = "快照规则输出是结构化 JSON，Temperature 建议保持 0，可减少选择器漂移。",
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    )
                 }
             }
         }
@@ -382,33 +430,30 @@ private fun AiProviderConfigTab(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = AiUiDefaults.SidePadding)
+                    .padding(horizontal = 12.dp)
                     .padding(top = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                AiTextButton(
+                TextButton(
                     text = when {
-                        saving -> "保存中…"
-                        createdAt -> "已创建"
+                        testing -> "处理中…"
                         isNew -> "创建服务商"
                         else -> "保存配置"
                     },
-                    enabled = !saving && !createdAt,
-                    primary = true,
+                    enabled = !testing,
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = {
+                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                    onClick = throttle {
                         val error = draft.validationError()
                         if (error != null) {
                             status = "保存失败：$error"
-                            return@AiTextButton
+                            return@throttle
                         }
                         val config = buildDraftProvider()
-                        saving = true
                         if (isNew) {
                             onCreated(AiProviders.add(config))
                             status = "已创建，切到「模型」页签拉取模型"
-                            createdAt = true
-                            toast("已创建服务商 ${config.displayName}")
+                            toast("已创建服务商 ${config.name}")
                         } else {
                             AiProviders.save(config)
                             status = if (config.enabled) {
@@ -418,7 +463,6 @@ private fun AiProviderConfigTab(
                             }
                             toast("AI 配置已保存")
                         }
-                        saving = false
                     },
                 )
                 status?.let { message ->
@@ -426,11 +470,10 @@ private fun AiProviderConfigTab(
                         text = message,
                         style = MiuixTheme.textStyles.footnote2,
                         color = if (message.startsWith("保存失败")) {
-                            MiuixTheme.colorScheme.error
+                            colorScheme.error
                         } else {
-                            MiuixTheme.colorScheme.primary
+                            colorScheme.primary
                         },
-                        textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
@@ -439,57 +482,43 @@ private fun AiProviderConfigTab(
 
         if (!isNew) {
             item(key = "danger") {
-                AiCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AiUiDefaults.SidePadding)
-                        .padding(top = 12.dp),
-                    showIndication = true,
-                    onClick = if (saving) null else ({ showDeleteDialog = true }),
-                ) {
+                PreferenceGroup {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clickable(enabled = !testing) {
+                                scope.launch {
+                                    if (!mainVm.dialogRequests.confirm(
+                                            title = "移除服务商",
+                                            text = "确定移除「${provider.name.ifBlank { "未命名" }}」？它的模型列表会一并删除。",
+                                            confirmText = "移除",
+                                            error = true,
+                                        )
+                                    ) return@launch
+                                    AiProviders.remove(provider.id)
+                                    toast("已移除 ${provider.name.ifBlank { "未命名" }}")
+                                    onRemoved()
+                                }
+                            }
                             .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "移除服务商",
                             style = MiuixTheme.textStyles.subtitle,
-                            color = MiuixTheme.colorScheme.error,
+                            color = colorScheme.error,
                         )
                     }
                 }
             }
         }
 
-        item(key = "bottom_spacer") {
-            AiPageBottomSpacer()
+        item(key = "bottom") {
+            GkPageBottomSpace()
         }
-    }
-
-    AiDialog(
-        show = showDeleteDialog,
-        title = "移除服务商",
-        summary = "确定移除「${provider.displayName}」？它的模型列表会一并删除。",
-        onDismissRequest = { if (!saving) showDeleteDialog = false },
-    ) {
-        AiDialogActions(
-            confirmText = "移除",
-            destructive = true,
-            confirmEnabled = !saving,
-            onCancel = { showDeleteDialog = false },
-            onConfirm = {
-                AiProviders.remove(provider.id)
-                toast("已移除 ${provider.displayName}")
-                showDeleteDialog = false
-                onRemoved()
-            },
-        )
     }
 }
 
-/** 单条自定义请求头：名称 + 值 + 删除。 */
 @Composable
 private fun HeaderRow(
     header: AiHeaderDraft,
@@ -497,32 +526,65 @@ private fun HeaderRow(
     onValueChange: (String) -> Unit,
     onRemove: () -> Unit,
 ) {
+    var visible by remember(header.key) { mutableStateOf(false) }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = AiUiDefaults.SidePadding, vertical = 12.dp),
+        modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            AiTextField(
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            TextField(
                 value = header.name,
                 onValueChange = onNameChange,
-                label = "请求头名称",
+                modifier = Modifier.fillMaxWidth(),
+                label = "名称，如 X-User-Agent",
+                useLabelAsPlaceholder = true,
+                singleLine = true,
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            AiTextField(
+            TextField(
                 value = header.value,
                 onValueChange = onValueChange,
-                label = "请求头值",
+                modifier = Modifier.fillMaxWidth(),
+                label = "值",
+                useLabelAsPlaceholder = true,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = if (visible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
             )
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        top.yukonga.miuix.kmp.basic.IconButton(onClick = onRemove) {
-            GkIcon(
-                imageVector = GkIcons.Delete,
-                contentDescription = "删除该请求头",
-                tint = MiuixTheme.colorScheme.error,
-            )
-        }
+        GkSizedIconButton(
+            size = 36.dp,
+            iconSize = 19.dp,
+            onClickLabel = "显示或隐藏取值",
+            onClick = { visible = !visible },
+            imageVector = if (visible) GkIcons.ToggleOff else GkIcons.ToggleOn,
+            contentDescription = "显示/隐藏取值",
+        )
+        GkSizedIconButton(
+            size = 36.dp,
+            iconSize = 19.dp,
+            onClickLabel = "删除该请求头",
+            onClick = throttle(fn = onRemove),
+            imageVector = GkIcons.Delete,
+            contentDescription = "删除",
+            tint = colorScheme.error,
+        )
     }
+}
+
+/** 卡片内的字段小标题，和 [LabeledField] 的排版保持一致。 */
+@Composable
+fun FieldLabel(text: String) {
+    Text(
+        text = text,
+        style = MiuixTheme.textStyles.footnote1,
+        color = colorScheme.onSurfaceVariantSummary,
+        modifier = Modifier.padding(bottom = 4.dp),
+    )
 }

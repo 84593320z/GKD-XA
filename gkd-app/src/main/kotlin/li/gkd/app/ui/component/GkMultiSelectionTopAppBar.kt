@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
-import top.yukonga.miuix.kmp.theme.LocalContentColor
+import androidx.compose.material3.LocalContentColor
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.TopAppBarDefaults
@@ -76,16 +76,13 @@ fun GkMultiSelectionTopAppBar(
     val titleContentColor = MiuixTheme.colorScheme.onSurface
     val navigationIconContentColor = MiuixTheme.colorScheme.onSurface
     val actionIconContentColor = MiuixTheme.colorScheme.onSurface
-    // 二级页（有返回按钮）只把标题放在 bottomContent 里，图标行是独立的一行，
-    // 标题居中于整条顶栏；订阅页那种「行内 + 关闭按钮」的固定顶栏保持左对齐。
-    val centeredTitle = onNavigateBack != null
 
     val animatedTitle: @Composable () -> Unit = {
         transition.AnimatedContent(
             modifier = Modifier.fillMaxWidth()
                 .heightIn(min = with(density) { normalTitleHeight.toDp() }),
             transitionSpec = { selectionTransform(travel) },
-            contentAlignment = if (centeredTitle) Alignment.Center else Alignment.CenterStart,
+            contentAlignment = Alignment.CenterStart,
         ) { contentSelectedMode ->
             val currentContent = contentSelectedMode == selectedMode
             // Each state owns its complete layout. Adding the close button cannot
@@ -126,7 +123,6 @@ fun GkMultiSelectionTopAppBar(
                                 Modifier.onSizeChanged { normalTitleHeight = it.height }
                             } else Modifier,
                         ),
-                    contentAlignment = if (centeredTitle) Alignment.Center else Alignment.CenterStart,
                 ) {
                     if (contentSelectedMode) {
                         Text(UiStrings.selection_count(displayedCount), maxLines = 1, overflow = TextOverflow.Ellipsis)

@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import top.yukonga.miuix.kmp.theme.MiuixTheme

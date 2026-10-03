@@ -18,15 +18,16 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
+import androidx.compose.material3.IconButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -183,16 +184,18 @@ private fun useLoadedSubsManagePage(
             onDismissRequest = {},
             confirmButton = {
                 TextButton(
-                    text = UiStrings.enable_anyway,
                     onClick = throttle(vm::confirmPowerWarning),
-                    colors = ButtonDefaults.textButtonColorsPrimary(color = MiuixTheme.colorScheme.error),
-                )
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MiuixTheme.colorScheme.error,
+                    ),
+                ) {
+                    Text(text = UiStrings.enable_anyway)
+                }
             },
             dismissButton = {
-                TextButton(
-                    text = UiStrings.action_cancel,
-                    onClick = vm::dismissPowerWarning,
-                )
+                TextButton(onClick = vm::dismissPowerWarning) {
+                    Text(text = UiStrings.action_cancel)
+                }
             },
         )
     }
@@ -403,17 +406,19 @@ private fun useLoadedSubsManagePage(
                         GkIconButton(
                             imageVector = GkIcons.FlashOn,
                             contentDescription = UiStrings.rule_matching_enable,
-                            containerColor = MiuixTheme.colorScheme.primaryContainer,
-                            tint = MiuixTheme.colorScheme.onPrimaryContainer,
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MiuixTheme.colorScheme.primaryContainer,
+                                contentColor = MiuixTheme.colorScheme.onPrimaryContainer,
+                            ),
                             onClickLabel = UiStrings.rule_matching_enable,
                             onClick = vm::enableMatching,
                         )
                     }
                 }
             }
-            PullToRefresh(
+            PullToRefreshBox(
                 modifier = Modifier.weight(1f),
-                pullToRefreshState = pullToRefreshState,
+                state = pullToRefreshState,
                 isRefreshing = refreshing,
                 onRefresh = vm::refresh,
             ) {

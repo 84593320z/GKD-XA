@@ -64,6 +64,10 @@ class SettingsVm : BaseViewModel() {
         AppStore.updateSettings { it.copy(useFloatingNavBar = enabled) }
     }
 
+    fun setLiquidGlass(enabled: Boolean) {
+        AppStore.updateSettings { it.copy(enableLiquidGlass = enabled) }
+    }
+
     fun setPredictiveBack(enabled: Boolean) {
         AppStore.updateSettings { it.copy(enablePredictiveBack = enabled) }
         app.applyPredictiveBackEnabled(enabled)

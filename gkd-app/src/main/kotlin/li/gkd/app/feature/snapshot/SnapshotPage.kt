@@ -24,19 +24,21 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.CheckboxDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.IconButtonDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.PlainTooltip
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
-import top.yukonga.miuix.kmp.basic.TooltipBox
-import top.yukonga.miuix.kmp.basic.TooltipDefaults
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
+import androidx.compose.material3.TriStateCheckbox
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -482,7 +484,7 @@ private fun SnapshotGroupHeader(
         }
         Box(modifier = Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
             if (selectedMode) {
-                Checkbox(
+                TriStateCheckbox(
                     state = groupSelectionState,
                     onClick = onToggleSelection,
                     modifier = Modifier.semantics {
@@ -581,16 +583,16 @@ private fun SnapshotCard(
                 ) {
                     if (selectedMode) {
                         Checkbox(
-                            state = if (selected) ToggleableState.On else ToggleableState.Off,
-                            onClick = null,
+                            checked = selected,
+                            onCheckedChange = null,
                             modifier = Modifier.clearAndSetSemantics {},
-                            colors = CheckboxDefaults.checkboxColors(uncheckedForegroundColor = Color.White),
+                            colors = CheckboxDefaults.colors(uncheckedColor = Color.White),
                         )
                     } else {
                         GkIconButton(
                             imageVector = GkIcons.MoreVert,
                             contentDescription = UiStrings.more_label,
-                            tint = Color.White,
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
                             onClick = onMore,
                         )
                     }

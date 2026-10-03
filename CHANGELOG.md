@@ -1,5 +1,20 @@
 # 更新内容
 
+## v1.3.2（2026-10-03）
+
+**界面层整体回退到 v1.2.7 观感**
+
+- 底座与业务能力保持 v1.3.1 不变，界面层整体恢复为 v1.2.7 那套 MIUIX 渲染层（即 v1.3.0 移植到新底座后的版本）：
+  - 恢复自研液态玻璃悬浮底栏（`ui/liquid` 整包）与配套设置开关
+  - 恢复 `GkTriStateSwitch`、`GkSubsItemCard`、`GkAuthCard`、`GkAuthButtonGroup` 等自绘组件
+  - 恢复旧版设置分组 / 卡片 / 对话框 / 输入框样式（撤销 1.3.1 的 GkRowDefaults 排版统一与 M3→miuix 组件替换）
+  - 恢复应用配置页「本地订阅」分组入口与订阅分组标题
+- 保留 v1.3.1 的全部修复（在恢复后的界面上重新应用）：
+  - 首页「应用」数量与「应用」Tab 同源（`AppInfoRepository.visibleAppInfosFlow`）
+  - 应用列表点击闪退（TextStyle placeholder 的 lineHeight/width 兜底）
+  - 订阅卡片按压高亮露出尖角
+  - 二级页顶栏（多选顶栏）上方大片留白（改用 SmallTopAppBar）
+
 ## v1.3.1（2026-10-03）
 
 **全 App 统一分组与行排版**

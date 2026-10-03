@@ -3,7 +3,6 @@ package li.gkd.app.feature.subscription
 import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -19,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkEditorScaffold
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,6 +78,12 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                 }
             },
         ) { paddingValues ->
+            val textColors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+            )
             Box(
                 modifier = Modifier
                     .scaffoldPadding(paddingValues)
@@ -95,13 +101,16 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                                 imePadding()
                             }
                         }
-                    GkTextField(
+                    TextField(
                         value = text,
                         onValueChange = vm::setText,
                         modifier = modifier,
                         shape = RectangleShape,
+                        colors = textColors,
                         visualTransformation = getJson5Transformation(LocalDarkTheme.current),
-                        placeholder = if (vm.isApp) UiStrings.app_rule_input_hint else UiStrings.global_rule_input_hint,
+                        placeholder = {
+                            Text(text = if (vm.isApp) UiStrings.app_rule_input_hint else UiStrings.global_rule_input_hint)
+                        },
                     )
                 }
                 if (text.isNotEmpty()) {
@@ -110,7 +119,7 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                         modifier = Modifier
                             .padding(8.dp)
                             .align(Alignment.TopEnd)
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(MaterialTheme.shapes.extraSmall)
                             .background(MiuixTheme.colorScheme.surfaceContainer)
                             .padding(horizontal = 2.dp),
                         style = MiuixTheme.textStyles.body2,

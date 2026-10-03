@@ -4,8 +4,9 @@ import android.webkit.URLUtil
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.OutlinedTextField
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -25,7 +26,6 @@ import li.gkd.app.util.NetworkUtils
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
 import kotlin.coroutines.resume
-import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
@@ -138,14 +138,16 @@ class SubsLinkDialogState(
                     }
                 },
                 text = {
-                    GkTextField(
+                    OutlinedTextField(
                         value = currentRequest.value,
                         onValueChange = ::updateValue,
                         maxLines = 8,
                         modifier = Modifier
                             .fillMaxWidth()
                             .autoFocus(),
-                        placeholder = UiStrings.subscription_link_input_hint,
+                        placeholder = {
+                            Text(text = UiStrings.subscription_link_input_hint)
+                        },
                         isError = currentRequest.value.isNotEmpty() &&
                                 !URLUtil.isNetworkUrl(currentRequest.value),
                     )
@@ -153,18 +155,18 @@ class SubsLinkDialogState(
                 onDismissRequest = ::cancel,
                 confirmButton = {
                     TextButton(
-                        text = UiStrings.action_ok,
                         enabled = currentRequest.value.isNotEmpty(),
                         onClick = throttle {
                             submit(currentRequest)
                         },
-                    )
+                    ) {
+                        Text(text = UiStrings.action_ok)
+                    }
                 },
                 dismissButton = {
-                    TextButton(
-                        text = UiStrings.action_cancel,
-                        onClick = ::cancel,
-                    )
+                    TextButton(onClick = ::cancel) {
+                        Text(text = UiStrings.action_cancel)
+                    }
                 },
             )
         }

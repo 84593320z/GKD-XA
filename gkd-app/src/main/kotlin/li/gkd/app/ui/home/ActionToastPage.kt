@@ -16,8 +16,9 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import top.yukonga.miuix.kmp.basic.RadioButton
-import top.yukonga.miuix.kmp.basic.Surface
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +38,6 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.text.UiStrings
-import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkEditorScaffold
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSwitch
@@ -111,10 +111,11 @@ fun ActionToastPage() {
                     style = MiuixTheme.textStyles.footnote1,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
             }
-            GkTextField(
+            OutlinedTextField(
                 value = text,
                 onValueChange = { text = it.take(64) },
-                label = UiStrings.action_toast_text,
+                label = { Text(UiStrings.action_toast_text) },
+                placeholder = { Text(UiStrings.toast_text_input_hint) },
                 minLines = 2,
                 maxLines = 4,
                 supportingText = {

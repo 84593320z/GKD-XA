@@ -81,8 +81,8 @@ fun AiProviderModelsTab(provider: AiConfig) {
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(modifier = Modifier.weight(1f)) {
             item(key = "actions") {
-                AiGroup(title = "模型管理") {
-                    AiPreferenceRow(
+                AiSection(title = "模型管理") {
+                    BasicComponent(
                         title = if (fetching) "拉取中…" else "从远端拉取模型",
                         summary = "读取 ${provider.apiUrl.ifBlank { "（未填写地址）" }}/models",
                         enabled = !fetching,
@@ -111,8 +111,8 @@ fun AiProviderModelsTab(provider: AiConfig) {
                             }
                         },
                     )
-                    AiDivider()
-                    AiPreferenceRow(
+                    AiRowDivider(hasLeading = false)
+                    BasicComponent(
                         title = "添加自定义模型",
                         summary = "手动填写 Model ID，用于接口不开放模型列表的服务商",
                         enabled = !fetching,
@@ -122,8 +122,8 @@ fun AiProviderModelsTab(provider: AiConfig) {
                             editing = AiModel(modelId = "", displayName = "")
                         },
                     )
-                    AiDivider()
-                    AiPreferenceRow(
+                    AiRowDivider(hasLeading = false)
+                    BasicComponent(
                         title = if (selectionMode) "退出多选" else "批量管理模型",
                         summary = "多选后可一次删除；退出多选可用左侧关闭按钮",
                         enabled = !fetching,
@@ -134,7 +134,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
                         },
                     )
                     message?.let { text ->
-                        AiDivider()
+                        AiRowDivider(hasLeading = false)
                         AiHint(
                             text = text,
                             error = text.startsWith("拉取失败"),
@@ -165,7 +165,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
 
             if (filtered.isEmpty()) {
                 item(key = "models_empty") {
-                    AiGroup(title = listTitle) {
+                    AiSection(title = listTitle) {
                         AiHint(
                             text = if (provider.models.isEmpty()) {
                                 "还没有模型，先「从远端拉取模型」或手动添加"
@@ -179,10 +179,10 @@ fun AiProviderModelsTab(provider: AiConfig) {
             } else {
                 val visible = if (selectionMode) provider.models else filtered
                 item(key = "models") {
-                    AiGroup(title = listTitle) {
+                    AiSection(title = listTitle) {
                         visible.forEachIndexed { index, model ->
                             if (index > 0) {
-                                AiDivider()
+                                AiRowDivider(hasLeading = false)
                             }
                             ModelRow(
                                 provider = provider,
@@ -437,9 +437,9 @@ private fun ModelEditDialog(
                     AiHint(text = "上下文长度需为正整数", error = true)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                AiSwitchRow(
+                GkTextSwitch(
                     title = "支持思考",
-                    summary = "仅用于列表标记，生成时仍按服务商参数请求",
+                    subtitle = "仅用于列表标记，生成时仍按服务商参数请求",
                     checked = reasoning,
                     onCheckedChange = { reasoning = it },
                 )

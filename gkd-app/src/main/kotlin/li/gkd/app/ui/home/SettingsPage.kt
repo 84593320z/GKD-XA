@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import top.yukonga.miuix.kmp.theme.LocalContentColor
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -535,6 +535,13 @@ fun useSettingsPage(): ScaffoldExt {
                     subtitle = "使用类 Apple 风格的悬浮底栏",
                     checked = store.useFloatingNavBar,
                     onCheckedChange = { vm.setFloatingNavBar(it) },
+                )
+                TextSwitch(
+                    title = "液态玻璃",
+                    subtitle = "悬浮底栏与右下角加号按钮使用液态玻璃效果",
+                    checked = store.enableLiquidGlass && store.enableMiuixBlur && shaderOk,
+                    enabled = store.enableMiuixBlur && shaderOk,
+                    onCheckedChange = { vm.setLiquidGlass(it) },
                 )
                 if (AndroidTarget.TIRAMISU) {
                     TextSwitch(

@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -45,11 +45,12 @@ fun GkQueryPkgAuthCard(
             textAlign = TextAlign.Center,
         )
         TextButton(
-            text = UiStrings.permission_request,
             enabled = !AppInfoRepository.updating.collectAsStateWithLifecycle().value,
             onClick = throttle(fn = mainVm.scope.launchUiAction {
                 mainVm.permissionRequests.ensurePermissions(PermissionStates.queryPackages)
-            }),
-        )
+            })
+        ) {
+            Text(text = UiStrings.permission_request)
+        }
     }
 }

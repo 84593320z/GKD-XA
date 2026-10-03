@@ -3,6 +3,8 @@ package li.gkd.app.ui.component
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationConstants.DefaultDurationMillis
 import androidx.compose.animation.core.tween
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,7 +20,6 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import li.gkd.app.util.TimeUtils.throttle
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
 
 private const val elevationDurationMillis = 50
 
@@ -78,7 +79,7 @@ fun GkAnimatedFloatingActionButton(
                             this.onClick(label = onClickLabel, action = null)
                         }
                     },
-                shadowElevation = (defaultElevation.value * 6f).dp,
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = (defaultElevation.value * 6f).dp),
                 onClick = throttle(onClick),
                 content = {
                     GkIcon(imageVector = imageVector, contentDescription = null)

@@ -1,6 +1,5 @@
 package li.gkd.app.feature.snapshot
 
-import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
 
@@ -16,11 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import top.yukonga.miuix.kmp.basic.Scaffold
+import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +49,7 @@ import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkOutlinedTextField
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
 import li.gkd.app.ui.component.GkTopAppBar
@@ -227,19 +227,19 @@ private fun CaptureScreenshotConfigDialog(
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                GkTextField(
-                    label = UiStrings.app_id,
+                GkOutlinedTextField(
+                    label = { Text(UiStrings.app_id) },
                     value = appIdValue,
-                    placeholder = UiStrings.target_app_id_hint,
+                    placeholder = { Text(text = UiStrings.target_app_id_hint) },
                     onValueChange = { appIdValue = it },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                GkTextField(
-                    label = UiStrings.snapshot_event_selector,
+                GkOutlinedTextField(
+                    label = { Text(UiStrings.snapshot_event_selector) },
                     value = eventSelectorValue,
-                    placeholder = UiStrings.snapshot_event_selector_hint,
+                    placeholder = { Text(text = UiStrings.snapshot_event_selector_hint) },
                     onValueChange = { eventSelectorValue = it },
                     maxLines = 4,
                     modifier = Modifier
@@ -251,15 +251,15 @@ private fun CaptureScreenshotConfigDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(
-                text = UiStrings.action_confirm,
                 onClick = throttle { onConfirm(appIdValue, eventSelectorValue) },
-            )
+            ) {
+                Text(text = UiStrings.action_confirm)
+            }
         },
         dismissButton = {
-            TextButton(
-                text = UiStrings.action_cancel,
-                onClick = onDismissRequest,
-            )
+            TextButton(onClick = onDismissRequest) {
+                Text(text = UiStrings.action_cancel)
+            }
         },
     )
 }

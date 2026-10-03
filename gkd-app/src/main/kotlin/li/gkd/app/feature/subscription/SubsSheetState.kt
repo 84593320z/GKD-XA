@@ -15,16 +15,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import top.yukonga.miuix.kmp.basic.PlainTooltip
+import androidx.compose.material3.PlainTooltip
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
-import top.yukonga.miuix.kmp.basic.TooltipBox
-import top.yukonga.miuix.kmp.basic.TooltipDefaults
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -361,14 +361,13 @@ class SubsSheetState {
                                     style = MiuixTheme.textStyles.button,
                                     color = MiuixTheme.colorScheme.error,
                                 )
-                                TextButton(
-                                    text = UiStrings.action_reload,
-                                    onClick = throttle {
+                                TextButton(onClick = throttle {
                                     scope.launchUi {
                                         SubscriptionRepository.refresh().message?.let { toast(it) }
                                     }
-                                },
-                                )
+                                }) {
+                                    Text(text = UiStrings.action_reload)
+                                }
                             }
                         }
                     }

@@ -15,7 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldState
-import top.yukonga.miuix.kmp.theme.LocalContentColor
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -111,7 +112,9 @@ fun GkCopyIconOverlay(
             GkIconButton(
                 imageVector = GkIcons.ContentCopy,
                 onClick = throttle { copyText(textToCopy) },
-                tint = contentColor.copy(alpha = 0.5f),
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = contentColor.copy(alpha = 0.5f),
+                ),
             )
         }
     }

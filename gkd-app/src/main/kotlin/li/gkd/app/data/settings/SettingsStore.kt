@@ -97,6 +97,8 @@ data class SettingsStore(
     val enableMiuixBlur: Boolean = true,
     /** MIUIX：悬浮底栏（类 Apple / FloatingNavigationBar） */
     val useFloatingNavBar: Boolean = true,
+    /** MIUIX：悬浮底栏液态玻璃高光（依赖模糊） */
+    val enableLiquidGlass: Boolean = true,
     /** 系统预测式返回手势（Android 13+，切换后需重建 Activity） */
     val enablePredictiveBack: Boolean = false,
     val useSystemToast: Boolean = false,

@@ -59,7 +59,6 @@ import li.gkd.app.feature.log.ActivityLogRoute
 import li.gkd.app.ui.AppConfigRoute
 import li.gkd.app.ui.PrivilegeServiceRoute
 import li.gkd.app.ui.WebViewRoute
-import li.gkd.app.ui.component.GkRowDefaults
 import li.gkd.app.ui.component.GroupNameText
 import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfIconButton
@@ -134,8 +133,7 @@ fun useControlPage(): ScaffoldExt {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = GkRowDefaults.SidePadding)
-                        .padding(bottom = 8.dp)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                         .semantics(mergeDescendants = true) {
                             this.onClick(label = "前往解除限制页面", action = null)
                         },

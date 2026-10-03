@@ -12,7 +12,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import top.yukonga.miuix.kmp.basic.Surface
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +36,6 @@ import li.gkd.app.notif.replaceNotificationTemplate
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.store.AppStore.actionCountFlow
 import li.gkd.app.text.UiStrings
-import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkEditorScaffold
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSwitch
@@ -92,10 +92,11 @@ fun NotificationTextPage() {
                     }
                 }
             }
-            GkTextField(
+            OutlinedTextField(
                 value = title,
                 onValueChange = { title = it.filter { c -> c !in "\n\r" }.take(32) },
-                label = UiStrings.notification_title_label,
+                label = { Text(UiStrings.notification_title_label) },
+                placeholder = { Text(UiStrings.template_text_input_hint) },
                 singleLine = true,
                 supportingText = {
                     Text(UiStrings.progress_fraction(title.length, 32),
@@ -103,10 +104,11 @@ fun NotificationTextPage() {
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
-            GkTextField(
+            OutlinedTextField(
                 value = text,
                 onValueChange = { text = it.take(64) },
-                label = UiStrings.notification_body_label,
+                label = { Text(UiStrings.notification_body_label) },
+                placeholder = { Text(UiStrings.template_text_input_hint) },
                 minLines = 2,
                 maxLines = 4,
                 supportingText = {
