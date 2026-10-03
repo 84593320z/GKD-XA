@@ -53,7 +53,8 @@ fun GkRuleListItem(
         label = "Rule card background",
     )
     val cardModifier = if (legacyStyle) {
-        modifier.padding(horizontal = 12.dp).fillMaxWidth()
+        // 卡片之间留一点空隙：否则相邻卡片贴在一起，圆角并成一大块，看不出是独立规则
+        modifier.padding(horizontal = 12.dp, vertical = 4.dp).fillMaxWidth()
     } else {
         modifier.padding(horizontal = 8.dp, vertical = 3.dp).fillMaxWidth()
     }
