@@ -55,7 +55,7 @@ import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfTopAppBar
 import li.gkd.app.ui.component.PerfIconButton
 import li.gkd.app.ui.component.PerfDropdownMenu
-import li.gkd.app.ui.component.PerfCheckbox
+import li.gkd.app.ui.component.GkCheckbox
 import li.gkd.app.ui.component.AppIcon
 import androidx.compose.foundation.layout.fillMaxWidth
 import li.gkd.app.ui.component.AppBarTextField
@@ -297,7 +297,7 @@ private fun AppItemCard(
             },
             endActions = {
                 if (editWhiteListMode) {
-                    PerfCheckbox(
+                    GkCheckbox(
                         key = appInfo.id,
                         checked = inWhiteList,
                     )

@@ -241,7 +241,7 @@ fun SubsItemCard(
                     this
                 }
             }
-            PerfSwitch(
+            GkSwitch(
                 key = subsItem.id,
                 modifier = switchModifier,
                 checked = subsItem.enable,

@@ -60,7 +60,7 @@ fun TextSwitch(
             role = Role.Switch,
             endActions = {
                 suffixIcon?.invoke()
-                PerfSwitch(
+                GkSwitch(
                     checked = checked,
                     enabled = enabled,
                     onCheckedChange = throttledChange,
@@ -79,11 +79,11 @@ fun TextSwitch(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         MiuixText(
-                            text = suffix!!,
+                            text = suffix,
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.primary,
                             modifier = Modifier.clickable(
-                                onClick = throttle(fn = onSuffixClick!!),
+                                onClick = throttle(fn = onSuffixClick),
                             ),
                         )
                     }
