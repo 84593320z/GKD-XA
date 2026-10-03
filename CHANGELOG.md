@@ -18,6 +18,7 @@
   - 加载指示：`CircularProgressIndicator` / `LinearProgressIndicator` 改用 miuix 版本
   - 容器与分割线：`Surface`、`HorizontalDivider` 改用 miuix 版本
   - 应用配置页顶栏标题改为居中显示
+  - 图标按钮：`GkIconButton` / `GkSizedIconButton` / `GkBlockCloseIconButton` / `GkSearchCloseIconButton` 与三处直用的 `IconButton` 全部改用 miuix `IconButton`（miuix 无 `colors` 参数，配色改为 `backgroundColor` + 图标 `tint`）；自绘的 `CustomIconButton`（Box + Material ripple）删除
 - 应用配置页整理：
   - 去掉「本地订阅 >」分组入口（它指向的二级订阅页功能与本页重复）；单订阅时整行不再显示，仅当同一应用被多份订阅覆盖时才保留一个不可点的分组标签以便区分来源
   - 规则卡片之间补 4dp 垂直间距，不再首尾相连糊成一整块
