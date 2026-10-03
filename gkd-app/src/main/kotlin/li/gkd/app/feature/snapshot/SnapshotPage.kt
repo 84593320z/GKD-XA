@@ -28,7 +28,6 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.IconButtonDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -592,7 +591,7 @@ private fun SnapshotCard(
                         GkIconButton(
                             imageVector = GkIcons.MoreVert,
                             contentDescription = UiStrings.more_label,
-                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+                            tint = Color.White,
                             onClick = onMore,
                         )
                     }

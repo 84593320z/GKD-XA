@@ -1,58 +1,22 @@
 package li.gkd.app.ui.component
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconButtonDefaults
-import top.yukonga.miuix.kmp.theme.LocalContentColor
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 
-@Composable
-private fun CustomIconButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    onClickLabel: String? = null,
-    size: Dp = 40.dp,
-    enabled: Boolean = true,
-    colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
-    interactionSource: MutableInteractionSource? = null,
-    content: @Composable () -> Unit
-) {
-    Box(
-        modifier =
-            modifier
-                .size(size)
-                .clip(CircleShape)
-                .background(color = colors.run { if (enabled) containerColor else disabledContainerColor })
-                .clickable(
-                    onClick = onClick,
-                    onClickLabel = onClickLabel,
-                    enabled = enabled,
-                    role = Role.Button,
-                    interactionSource = interactionSource,
-                    indication = ripple(bounded = false, radius = size / 2)
-                ),
-        contentAlignment = Alignment.Center
-    ) {
-        val contentColor = colors.run { if (enabled) contentColor else disabledContentColor }
-        CompositionLocalProvider(LocalContentColor provides contentColor, content = content)
-    }
-}
-
+/**
+ * 固定尺寸的圆形图标按钮，直接使用官方 miuix [MiuixIconButton]。
+ *
+ * 旧实现是自绘 Box + Material ripple + M3 [androidx.compose.material3.IconButtonColors]，
+ * 与 miuix 的按压反馈/命中区域不一致；现在只保留「尺寸可指定」这一点差异。
+ */
 @Composable
 fun GkSizedIconButton(
     onClick: () -> Unit,
@@ -62,13 +26,25 @@ fun GkSizedIconButton(
     imageVector: ImageVector,
     contentDescription: String? = null,
     tint: Color = LocalContentColor.current,
+    enabled: Boolean = true,
+    containerColor: Color = Color.Unspecified,
 ) = GkTooltipIconButtonBox(
     contentDescription = contentDescription,
 ) {
-    CustomIconButton(
-        size = size,
-        onClickLabel = onClickLabel,
+    MiuixIconButton(
         onClick = onClick,
+        modifier = Modifier
+            .size(size)
+            .semantics {
+                if (onClickLabel != null) {
+                    onClick(label = onClickLabel, action = null)
+                }
+            },
+        enabled = enabled,
+        backgroundColor = containerColor,
+        cornerRadius = size / 2,
+        minWidth = size,
+        minHeight = size,
     ) {
         GkIcon(
             modifier = Modifier.size(iconSize),

@@ -18,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.SheetState
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -112,9 +111,7 @@ fun GkRuleSettingsContent(
                 GkIconButton(
                     imageVector = GkIcons.Flowchart,
                     contentDescription = UiStrings.rule_control_view,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    ),
+                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     onClick = onViewControl,
                 )
             }
@@ -122,9 +119,7 @@ fun GkRuleSettingsContent(
                 imageVector = ResetSettings,
                 contentDescription = UiStrings.settings_reset_default,
                 enabled = state.hasCustomSetting,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                ),
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 onClick = { onSettingChange(RuleSetting.FollowDefault) },
             )
             GkRuleEnableControl(state, onSettingChange,

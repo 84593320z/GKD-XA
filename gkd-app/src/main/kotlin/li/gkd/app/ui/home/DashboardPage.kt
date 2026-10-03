@@ -22,7 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import androidx.compose.material3.IconButton
+import top.yukonga.miuix.kmp.basic.IconButton
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkTooltipIconButtonBox
 import li.gkd.app.ui.icon.GkAnimatedRocketIcon

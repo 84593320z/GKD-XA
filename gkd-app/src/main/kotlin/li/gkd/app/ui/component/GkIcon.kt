@@ -54,9 +54,7 @@ import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material.icons.outlined.ToggleOff
 import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material.icons.outlined.VerifiedUser
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconButtonDefaults
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.basic.Icon
 import androidx.compose.runtime.Composable
@@ -97,26 +95,30 @@ fun GkIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
+    /** 背景色，Unspecified 表示不画底色（与 miuix IconButton 默认一致） */
+    containerColor: Color = Color.Unspecified,
+    /** 图标色，Unspecified 表示跟随 [LocalContentColor] */
+    tint: Color = Color.Unspecified,
     contentDescription: String? = getIconDefaultDesc(imageVector),
     onClickLabel: String? = null,
     animateMorph: Boolean = false,
 ) = GkTooltipIconButtonBox(
     contentDescription = contentDescription,
 ) {
-    IconButton(
+    MiuixIconButton(
         modifier = modifier.semantics {
             if (onClickLabel != null) {
                 this.onClick(label = onClickLabel, action = null)
             }
         },
         enabled = enabled,
+        backgroundColor = containerColor,
         onClick = onClick,
-        colors = colors,
     ) {
         GkIcon(
             imageVector = imageVector,
             contentDescription = contentDescription,
+            tint = if (tint == Color.Unspecified) LocalContentColor.current else tint,
             animateMorph = animateMorph,
         )
     }

@@ -2,8 +2,6 @@ package li.gkd.app.ui.icon
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -26,7 +24,7 @@ fun GkBlockCloseIconButton(
     contentDescription: String,
     modifier: Modifier = Modifier,
     onClickLabel: String? = null,
-    colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
+    tint: Color = Color.Unspecified,
 ) {
     // One continuous progress value also allows an interrupted transition to reverse.
     val progress by animateFloatAsState(
@@ -90,6 +88,6 @@ fun GkBlockCloseIconButton(
         modifier = modifier,
         contentDescription = contentDescription,
         onClickLabel = onClickLabel,
-        colors = colors,
+        tint = tint,
     )
 }

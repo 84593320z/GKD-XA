@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
@@ -107,7 +106,7 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                         GkIconButton(
                             imageVector = GkIcons.MoreVert,
                             contentDescription = UiStrings.more_label,
-                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+                            tint = Color.White,
                             onClick = { actionRequest = SheetRequest(item.id) },
                         )
                     }

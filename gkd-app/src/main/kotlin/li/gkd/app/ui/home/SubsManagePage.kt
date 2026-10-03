@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.IconButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -404,10 +403,8 @@ private fun useLoadedSubsManagePage(
                         GkIconButton(
                             imageVector = GkIcons.FlashOn,
                             contentDescription = UiStrings.rule_matching_enable,
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MiuixTheme.colorScheme.primaryContainer,
-                                contentColor = MiuixTheme.colorScheme.onPrimaryContainer,
-                            ),
+                            containerColor = MiuixTheme.colorScheme.primaryContainer,
+                            tint = MiuixTheme.colorScheme.onPrimaryContainer,
                             onClickLabel = UiStrings.rule_matching_enable,
                             onClick = vm::enableMatching,
                         )
