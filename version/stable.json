@@ -3,7 +3,7 @@
   "versionName": "1.3.1",
   "changelog": "v1.3.1\n\n- 修复首页应用数不准、应用列表点击闪退、订阅卡按压尖角、二级页顶栏留白\n- 应用配置页顶栏标题居中，去掉重复的本地订阅入口，规则卡片之间加间距\n- AI 配置界面重排；全 App 统一圆角 24 / 外边距 16 / 分组小标题 / 行高 52 的排版规格\n- 界面层继续以原版 miuix 替换 Material3（对话框 / Scaffold / 输入框 / 下拉刷新等）",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.3.1/GKD-XA-v1.3.1.apk",
-  "fileSize": 5706435,
+  "fileSize": 5706419,
   "versionLogs": [
     {
       "name": "1.3.1",
