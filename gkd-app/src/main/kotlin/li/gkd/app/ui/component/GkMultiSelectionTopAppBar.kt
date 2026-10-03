@@ -150,6 +150,8 @@ fun GkMultiSelectionTopAppBar(
     }
 
     if (onNavigateBack != null) {
+        // 标题自带渲染（应用名/已选 N 项）走 bottomContent，顶栏本身不需要大标题；
+        // 用 SmallTopAppBar 固定高度，避免空的大标题行把标题顶下去留出大片空白。
         GkTopAppBar(
             modifier = modifier,
             scrollBehavior = scrollBehavior,
@@ -167,6 +169,7 @@ fun GkMultiSelectionTopAppBar(
             titleColor = titleContentColor,
             bottomContent = { animatedTitle() },
             actions = animatedActions,
+            small = true,
         )
     } else {
         PinnedSelectionTopAppBar(modifier, scrollBehavior, canScroll, barColor) {
@@ -204,7 +207,7 @@ private fun PinnedSelectionTopAppBar(
     Layout(
         modifier = modifier.semantics { isTraversalGroup = true },
         contents = listOf(
-            { GkTopAppBar(titleText = "", scrollBehavior = scrollBehavior, canScroll = canScroll, color = barColor ?: MiuixTheme.colorScheme.surface) },
+            { GkTopAppBar(titleText = "", scrollBehavior = scrollBehavior, canScroll = canScroll, color = barColor ?: MiuixTheme.colorScheme.surface, small = true) },
             {
                 Box(Modifier.clipToBounds()) {
                     Row(
