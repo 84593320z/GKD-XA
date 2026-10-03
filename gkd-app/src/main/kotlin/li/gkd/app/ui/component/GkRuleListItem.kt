@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +41,7 @@ fun GkRuleListItem(
     selectionEnabled: Boolean = true,
     onLongClick: (() -> Unit)? = null,
     onSelect: () -> Unit = {},
+    legacyStyle: Boolean = false,
     leading: (@Composable () -> Unit)? = null,
     trailing: @Composable (Modifier) -> Unit,
     content: @Composable ColumnScope.() -> Unit,
@@ -52,10 +52,14 @@ fun GkRuleListItem(
         animationSpec = tween(durationMillis = 300),
         label = "Rule card background",
     )
+    val cardModifier = if (legacyStyle) {
+        modifier.padding(horizontal = 12.dp).fillMaxWidth()
+    } else {
+        modifier.padding(horizontal = 8.dp, vertical = 3.dp).fillMaxWidth()
+    }
     Card(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 3.dp).fillMaxWidth(),
-        colors = CardDefaults.defaultColors(color = containerColor,
-        ),
+        modifier = cardModifier,
+        colors = CardDefaults.defaultColors(color = containerColor),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)
@@ -78,9 +82,15 @@ fun GkRuleListItem(
                 }.heightIn(min = 64.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(Modifier.weight(1f).padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
+            Row(
+                Modifier.weight(1f)
+                    .then(
+                        if (legacyStyle) Modifier.padding(8.dp)
+                        else Modifier.padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 leading?.invoke()
                 Column(Modifier.weight(1f), content = content)
             }

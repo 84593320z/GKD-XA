@@ -4,13 +4,10 @@ import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import li.gkd.app.ui.component.GkAppRuleRestrictionCard
@@ -55,12 +52,14 @@ import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkRuleListHeader
 import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkEmptyState
-import li.gkd.app.ui.component.GkIconButton
-import li.gkd.app.ui.component.GkFilterIconButton
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkMenuGroupCard
-import li.gkd.app.ui.component.GkMenuItemCheckbox
-import li.gkd.app.ui.component.GkMenuItemRadioButton
+import li.gkd.app.ui.component.MenuGroupCard
+import li.gkd.app.ui.component.MenuItemCheckbox
+import li.gkd.app.ui.component.MenuItemRadioButton
+import li.gkd.app.ui.component.PerfDropdownMenu
+import li.gkd.app.ui.component.PerfIcon
+import li.gkd.app.ui.component.PerfIconButton
+import li.gkd.app.ui.component.perfDefaultIconTint
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
 import li.gkd.app.ui.component.GkRuleBatchMenuItems
@@ -248,39 +247,48 @@ fun AppConfigPage(route: AppConfigRoute) {
                         }
                     } else {
                         var expanded by remember { mutableStateOf(false) }
-                        Box {
-                            GkFilterIconButton(
-                                filtered = state != null && groupSize < state.subsPairs.sumOf { it.second.size },
-                                onClick = { expanded = true },
-                            )
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                            ) {
-                                GkMenuGroupCard(inTop = true, title = UiStrings.sort_title) {
-                                    val handleItem: (RuleSortOption) -> Unit = throttle(vm::setRuleSortType)
-                                    RuleSortOption.objects.forEach { option ->
-                                        GkMenuItemRadioButton(
-                                            text = option.label,
-                                            selected = RuleSortOption.objects.findOption(store.appRuleSort) == option,
-                                            onClick = { handleItem(option) },
-                                        )
-                                    }
-                                }
-                                GkMenuGroupCard(title = UiStrings.filter_title) {
-                                    GkMenuItemCheckbox(
-                                        text = UiStrings.not_enabled,
-                                        checked = showDisabledRules,
+                        PerfDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            anchor = {
+                                PerfIconButton(
+                                    imageVector = PerfIcon.Sort,
+                                    contentDescription = UiStrings.sort_filter,
+                                    tint = if (state != null && groupSize < state.subsPairs.sumOf { it.second.size }) {
+                                        MiuixTheme.colorScheme.primary
+                                    } else {
+                                        perfDefaultIconTint()
+                                    },
+                                    onClick = { expanded = true },
+                                )
+                            },
+                        ) {
+                            MenuGroupCard(inTop = true, title = UiStrings.sort_title) {
+                                RuleSortOption.objects.forEach { option ->
+                                    MenuItemRadioButton(
+                                        text = option.label,
+                                        selected = RuleSortOption.objects.findOption(store.appRuleSort) == option,
                                         onClick = {
-                                            vm.setShowDisabledRules(!showDisabledRules)
-                                            revealDisabledRules = false
+                                            vm.setRuleSortType(option)
+                                            expanded = false
                                         },
                                     )
                                 }
                             }
+                            MenuGroupCard(title = UiStrings.filter_title) {
+                                MenuItemCheckbox(
+                                    text = UiStrings.not_enabled,
+                                    checked = showDisabledRules,
+                                    onClick = {
+                                        vm.setShowDisabledRules(!showDisabledRules)
+                                        revealDisabledRules = false
+                                        expanded = false
+                                    },
+                                )
+                            }
                         }
-                        GkIconButton(
-                            imageVector = GkIcons.History,
+                        PerfIconButton(
+                            imageVector = PerfIcon.History,
                             onClick = throttle {
                                 mainVm.navigatePage(ActionLogRoute(appId = appId))
                             },
@@ -339,6 +347,7 @@ fun AppConfigPage(route: AppConfigRoute) {
                     val subsId = entry.subsItem.id
                     stickyHeader(entry.subsItem.id) {
                         GkRuleListHeader(
+                            legacyStyle = true,
                             onClick = throttle {
                                 mainVm.navigatePage(if (entry.subscription.apps.any { it.id == appId })
                                     SubsAppGroupListRoute(subsId, appId) else li.gkd.app.feature.subscription.SubsGlobalGroupListRoute(subsId))
@@ -400,6 +409,7 @@ fun AppConfigPage(route: AppConfigRoute) {
                             isSelected = isSelected,
                             onSelectedChange = onSelectedChange,
                             highlighted = !isSelectedMode && focus.highlightedKey == Triple(subsId, group.groupType, group.key),
+                            legacyStyle = true,
                         )
                     }
                 }

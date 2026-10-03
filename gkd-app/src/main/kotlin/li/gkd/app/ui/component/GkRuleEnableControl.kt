@@ -72,7 +72,7 @@ fun GkRuleEnableControl(
     identity: RuleSwitchTarget? = null,
     showCustomSettingIcon: Boolean = true,
 ) = key(identity) {
-    // Lazy layouts can reuse M3's thumb node with its previous animation state.
+    // Lazy layouts can reuse the MIUIX switch thumb node after a target changes.
     // Reset only when its business target changes, never when checked changes.
     var showReason by remember { mutableStateOf(false) }
     val reasonAction = if (state.canEnable) {
@@ -85,7 +85,7 @@ fun GkRuleEnableControl(
             onClickLabel = UiStrings.rule_unavailable_reason_view,
         ) { showReason = true }
     }
-    // M3 keeps its track centered at its native size inside this expanded touch target.
+    // The MIUIX switch keeps its track at its native size inside the expanded touch target.
     // Its own interaction source draws press feedback on the thumb, not the whole target.
     Switch(
         modifier = modifier.then(reasonAction).semantics {
@@ -105,8 +105,8 @@ fun GkRuleEnableControl(
             { onSettingChange(RuleSetting.from(it)) }
         } else null,
         enabled = state.canEnable,
-        // 说明：MIUIX 的 Switch 不支持 thumbContent（M3 的 thumb 内图标特性），
-        // 此处省略该装饰；自定义设置状态已由外层 GkRulePropertyIcon 呈现。
+        // Keep the switch itself MIUIX-native; custom overrides remain discoverable through
+        // the rule-details panel, while the legacy Switch implementation ignored thumbContent.
     )
     if (showReason) {
         GkAlertDialog(

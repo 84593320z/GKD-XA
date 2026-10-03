@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.IconButton
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import androidx.compose.material3.LocalContentColor
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
@@ -156,7 +156,7 @@ fun GkMultiSelectionTopAppBar(
             canScroll = canScroll,
             color = barColor ?: MiuixTheme.colorScheme.surface,
             navigationIcon = {
-                IconButton(
+                MiuixIconButton(
                     onClick = {
                         if (selectedMode) onExitSelection() else onNavigateBack()
                     },
