@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -52,6 +51,7 @@ import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkOutlinedTextField
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.autoFocus
 
@@ -104,10 +104,11 @@ fun SnapshotSettingsPage() {
     }
 
     val scrollBehavior = MiuixScrollBehavior()
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    GkPageScaffold(
+        externalScrollBehavior = scrollBehavior,
         topBar = {
             GkTopAppBar(
+                color = barColor,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     GkIconButton(

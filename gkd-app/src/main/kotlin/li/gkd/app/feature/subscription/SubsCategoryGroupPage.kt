@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +39,7 @@ import li.gkd.app.ui.component.GkFilterIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleGroupCard
 import li.gkd.app.ui.component.GkRuleListHeader
 import li.gkd.app.ui.component.GkSubscriptionPageContent
@@ -131,15 +131,15 @@ fun SubsCategoryGroupPage(route: SubsCategoryGroupRoute) {
                 }
             }
         }
-        Scaffold(
-            modifier = Modifier.nestedScroll(scroll.scrollBehavior.nestedScrollConnection),
+        GkPageScaffold(
+            externalScrollBehavior = scroll.scrollBehavior,
             topBar = {
                 GkMultiSelectionTopAppBar(
                     selectedMode = selection.active,
                     selectedCount = selected.size,
                     onExitSelection = selection::clear,
                     onNavigateBack = mainVm::popPage,
-                    scrollBehavior = scroll.scrollBehavior,
+                    scrollBehavior = scrollBehavior, barColor = barColor,
                     onTitleClick = scroll::resetScroll,
                     title = { GkTwoLineText(title = subs.name, subtitle = category.name) },
                     actions = { selectedMode ->

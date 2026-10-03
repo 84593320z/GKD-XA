@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.CircleShape
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +46,7 @@ import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkRuleSettingsContent
 import li.gkd.app.ui.component.GkRuleSettingsSheet
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.GkTwoLineText
 import li.gkd.app.ui.component.animateListItem
@@ -82,8 +82,9 @@ fun ActionLogPage(route: ActionLogRoute) {
     val scrollBehavior = pageScrollState.scrollBehavior
     val listState = pageScrollState.listState
     pageScrollState.ResetOnChange(list.itemCount > 0)
-    Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
+    GkPageScaffold(externalScrollBehavior = scrollBehavior, topBar = {
         GkTopAppBar(
+                color = barColor,
             scrollBehavior = scrollBehavior,
             navigationIcon = {
                 GkIconButton(

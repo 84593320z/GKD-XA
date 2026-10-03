@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +34,7 @@ import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleBatchMenuItems
 import li.gkd.app.ui.component.GkRuleFocusNotice
 import li.gkd.app.ui.component.GkRuleGroupCard
@@ -113,14 +113,14 @@ fun SubsGlobalGroupListPage(route: SubsGlobalGroupListRoute) {
             targetExists = subs.globalGroups.any { it.key == focusGroupKey },
         )
         pageScrollState.ResetOnChange(globalGroups.isEmpty(), enabled = !focus.pending)
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        GkPageScaffold(
+            externalScrollBehavior = scrollBehavior,
             topBar = {
                 GkMultiSelectionTopAppBar(
                     selectedMode = isSelectedMode,
                     selectedCount = selectedKeys.size,
                     onExitSelection = selectionState::clear,
-                    scrollBehavior = scrollBehavior,
+                    scrollBehavior = scrollBehavior, barColor = barColor,
                     onNavigateBack = { mainVm.popPage() },
                     onTitleClick = pageScrollState::resetScroll,
                     title = {

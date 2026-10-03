@@ -31,7 +31,6 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.IconButtonDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
@@ -92,6 +91,7 @@ import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkRetainedSheet
 import li.gkd.app.ui.component.SheetRequest
@@ -213,8 +213,8 @@ fun SnapshotPage() {
     }
     BackHandler(selectionState.active) { selectionState.clear() }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    GkPageScaffold(
+        externalScrollBehavior = scrollBehavior,
         topBar = {
             GkMultiSelectionTopAppBar(
                 selectedMode = selectionState.active,
@@ -222,7 +222,7 @@ fun SnapshotPage() {
                 onExitSelection = selectionState::clear,
                 onNavigateBack = mainVm::popPage,
                 onTitleClick = resetScroll,
-                scrollBehavior = scrollBehavior,
+                scrollBehavior = scrollBehavior, barColor = barColor,
                 title = { Text(UiStrings.snapshot_records) },
                 actions = { selectedMode ->
                     if (selectedMode) {

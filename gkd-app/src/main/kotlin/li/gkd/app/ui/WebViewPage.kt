@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,6 +48,7 @@ import li.gkd.app.util.IntentUtils
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 
 @Serializable
@@ -61,8 +61,9 @@ fun WebViewPage(route: WebViewRoute) {
     val webViewState = rememberWebViewState(url = initUrl)
     val webViewClient = remember { GkdWebViewClient() }
     var webView by remember { mutableStateOf<WebView?>(null) }
-    Scaffold(modifier = Modifier, topBar = {
+    GkPageScaffold(enableContentBlur = false, topBar = {
         GkTopAppBar(
+            color = barColor,
             modifier = Modifier.fillMaxWidth(),
             navigationIcon = {
                 GkIconButton(

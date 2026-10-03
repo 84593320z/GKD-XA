@@ -13,7 +13,6 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -50,6 +49,7 @@ import li.gkd.app.ui.component.GkRuleExclusionsCard
 import li.gkd.app.ui.component.GkRuleSettingsContent
 import li.gkd.app.ui.component.GkRuleSettingsSheet
 import li.gkd.app.ui.component.GkGroupNameText
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.GkTwoLineText
 import li.gkd.app.ui.component.removeRuleCategoryPrefix
@@ -207,10 +207,12 @@ private fun RuleSourceDialog(group: RawSubscription.RawGroupProps, onDismissRequ
     val darkTheme = LocalDarkTheme.current
     val annotatedText = remember(source, darkTheme) { getJson5AnnotatedString(source, darkTheme) }
     GkFullscreenDialog(onDismissRequest = onDismissRequest) {
-        Scaffold(topBar = {
+        GkPageScaffold(topBar = {
             GkTopAppBar(
                 titleText = UiStrings.rule_source,
                 subtitle = group.name,
+                color = barColor,
+                scrollBehavior = scrollBehavior,
                 actions = {
                     GkIconButton(GkIcons.Close, onClick = onDismissRequest,
                         contentDescription = UiStrings.dialog_close)

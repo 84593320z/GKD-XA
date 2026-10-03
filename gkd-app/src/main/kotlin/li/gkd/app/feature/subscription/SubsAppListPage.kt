@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,6 +52,7 @@ import li.gkd.app.ui.component.GkFilterIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleBatchMenuItems
 import li.gkd.app.ui.component.GkSubsAppCard
 import li.gkd.app.ui.component.GkTwoLineText
@@ -127,15 +127,15 @@ fun SubsAppListPage(route: SubsAppListRoute) {
     pageScrollState.ResetOnListChange(apps, key = { it.id })
     var expanded by remember { mutableStateOf(false) }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    GkPageScaffold(
+        externalScrollBehavior = scrollBehavior,
         topBar = {
             GkMultiSelectionTopAppBar(
                 selectedMode = selection.active, selectedCount = selected.size,
                 onExitSelection = selection::clear,
                 onNavigateBack = { if (showSearchBar) closeSearch() else mainVm.popPage() },
                 onTitleClick = if (showSearchBar) null else pageScrollState::resetScroll,
-                scrollBehavior = scrollBehavior, title = {
+                scrollBehavior = scrollBehavior, barColor = barColor, title = {
                     val firstShowSearchBar = remember { showSearchBar }
                     if (showSearchBar) {
                         GkAppBarTextField(

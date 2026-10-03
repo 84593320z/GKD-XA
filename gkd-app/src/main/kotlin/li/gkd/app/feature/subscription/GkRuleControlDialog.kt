@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
@@ -39,6 +38,7 @@ import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.icon.ToggleMid
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.db.SubscriptionConfigSnapshot
 
@@ -111,10 +111,12 @@ fun GkRuleControlDialog(
         else -> control.defaultSource
     }
     GkFullscreenDialog(onDismissRequest) {
-        Scaffold(
+        GkPageScaffold(
             topBar = {
                 Column {
                     GkTopAppBar(
+                        color = barColor,
+                        scrollBehavior = scrollBehavior,
                         titleText = UiStrings.rule_control_title,
                         actions = {
                             GkIconButton(GkIcons.Close, onClick = onDismissRequest,

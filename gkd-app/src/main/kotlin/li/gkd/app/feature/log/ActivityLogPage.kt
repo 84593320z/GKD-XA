@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +31,7 @@ import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkLogTimeline
 import li.gkd.app.ui.component.GkLogTimeText
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.gkLogTimelineRail
 import li.gkd.app.ui.component.rememberListScrollState
@@ -52,10 +52,11 @@ fun ActivityLogPage() {
     val pageScrollState = rememberListScrollState()
     val scrollBehavior = pageScrollState.scrollBehavior
     pageScrollState.ResetOnChange(list.itemCount > 0)
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    GkPageScaffold(
+        externalScrollBehavior = scrollBehavior,
         topBar = {
             GkTopAppBar(
+                color = barColor,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     GkIconButton(imageVector = GkIcons.ArrowBack, onClick = mainVm::popPage)

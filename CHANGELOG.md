@@ -31,6 +31,15 @@
   1.3.0 移植时这三个页面用了 material3 Scaffold + GkTopAppBar（顶栏恒为实色 surface、
   页面体为 background 色，与 1.2.7 毛玻璃壳的 surface 容器形成色差）。现统一换回
   GkPageScaffold 毛玻璃二级页壳（顶栏滚动透出毛玻璃、落定转实色），与 1.2.7 一致
+- 全 App 二级页壳统一：其余 20 处仍使用 material3 Scaffold 的页面全部换回
+  GkPageScaffold 毛玻璃壳，彻底消除顶栏/页面体的 surface–background 色差：
+  - 订阅流 6 页（应用列表、应用规则组、分类、分类规则组、全局规则组、全局排除，
+    多选顶栏接壳的 externalScrollBehavior + barColor）
+  - 日志 3 页（活动记录、触发记录、无障碍事件）
+  - 编辑器壳 GkEditorScaffold（覆盖规则组/分类/规则排除/屏蔽列表编辑、
+    触发提示文案、通知文案 6 个编辑页）
+  - 应用作用域 2 页、快照页、快照设置页、局部关闭引导页、崩溃报告页（新增 bottomBar 槽）、
+    内置浏览器（关闭内容采样避免重绘闪烁）、规则源查看与规则控制关系全屏弹窗
 
 ## v1.3.1（2026-10-03）
 

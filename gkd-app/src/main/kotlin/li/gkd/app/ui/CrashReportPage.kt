@@ -21,7 +21,6 @@ import androidx.compose.material3.BottomAppBar
 import top.yukonga.miuix.kmp.basic.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -55,6 +54,7 @@ import li.gkd.app.ui.component.GkExpandableSection
 import li.gkd.app.ui.component.GkFixedTimeText
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.rememberListScrollState
 
@@ -74,10 +74,11 @@ fun CrashReportPage() {
     val listState = pageScrollState.listState
     pageScrollState.ResetOnChange(crashDataList.isNotEmpty())
     val expandedCrashId = vm.expandedCrashId
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    GkPageScaffold(
+        externalScrollBehavior = scrollBehavior,
         topBar = {
             GkTopAppBar(
+                color = barColor,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     GkIconButton(

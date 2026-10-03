@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -58,6 +57,7 @@ import li.gkd.app.ui.component.GkCopyableText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.rememberListScrollState
 
@@ -76,8 +76,9 @@ fun A11yEventLogPage() {
     val listState = pageScrollState.listState
     pageScrollState.ResetOnChange(list.itemCount > 0)
 
-    Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
+    GkPageScaffold(externalScrollBehavior = scrollBehavior, topBar = {
         GkTopAppBar(
+                color = barColor,
             scrollBehavior = scrollBehavior,
             navigationIcon = {
                 GkIconButton(imageVector = GkIcons.ArrowBack, onClick = {

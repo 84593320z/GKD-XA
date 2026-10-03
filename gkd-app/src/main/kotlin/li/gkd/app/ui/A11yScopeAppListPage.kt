@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +53,7 @@ import li.gkd.app.ui.component.GkMenuGroupCard
 import li.gkd.app.ui.component.GkMenuItemCheckbox
 import li.gkd.app.ui.component.GkMenuItemRadioButton
 import li.gkd.app.ui.component.GkMultiTextField
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.ui.component.isFullVisible
@@ -88,10 +88,11 @@ fun A11yScopeAppListPage() {
         }
         vm.setEditable(false)
     })
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    GkPageScaffold(
+        externalScrollBehavior = scrollBehavior,
         topBar = {
             GkTopAppBar(
+                color = barColor,
                 scrollBehavior = scrollBehavior,
                 canScroll = !editable && !store.blockA11yAppListFollowMatch,
                 navigationIcon = {

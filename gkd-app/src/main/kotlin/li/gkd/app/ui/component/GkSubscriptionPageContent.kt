@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -52,16 +51,12 @@ fun <T : Any> GkSubscriptionPageContent(
 @Composable
 private fun SubscriptionStatePage(message: String? = null) {
     val mainVm = MainViewModel.requireCurrent()
-    Scaffold(
-        topBar = {
-            GkTopAppBar(
-                navigationIcon = {
-                    GkIconButton(
-                        imageVector = GkIcons.ArrowBack,
-                        onClick = mainVm::popPage,
-                    )
-                },
-                titleText = UiStrings.subscription_title,
+    GkPageScaffold(
+        title = UiStrings.subscription_title,
+        navigationIcon = {
+            GkIconButton(
+                imageVector = GkIcons.ArrowBack,
+                onClick = mainVm::popPage,
             )
         },
     ) { contentPadding ->

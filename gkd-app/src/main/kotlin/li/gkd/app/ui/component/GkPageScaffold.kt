@@ -89,6 +89,7 @@ fun GkPageScaffold(
     enableContentBlur: Boolean = true,
     externalScrollBehavior: ScrollBehavior? = null,
     floatingActionButton: @Composable GkPageBarScope.() -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
     topBar: @Composable GkPageBarScope.() -> Unit,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -131,6 +132,7 @@ fun GkPageScaffold(
                 }
             },
             floatingActionButton = { barScope.floatingActionButton() },
+            bottomBar = bottomBar,
             content = { padding ->
                 if (blurActive) {
                     Box(

@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.rememberMultiSelectionState
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -75,8 +75,8 @@ fun SubsCategoryPage(route: SubsCategoryRoute) {
                 }
             }
         }
-        Scaffold(
-            modifier = Modifier.nestedScroll(scroll.scrollBehavior.nestedScrollConnection),
+        GkPageScaffold(
+            externalScrollBehavior = scroll.scrollBehavior,
             topBar = {
                 GkMultiSelectionTopAppBar(
                     selectedMode = selection.active,
@@ -84,7 +84,7 @@ fun SubsCategoryPage(route: SubsCategoryRoute) {
                     onExitSelection = selection::clear,
                     onNavigateBack = mainVm::popPage,
                     onTitleClick = scroll::resetScroll,
-                    scrollBehavior = scroll.scrollBehavior,
+                    scrollBehavior = scrollBehavior, barColor = barColor,
                     title = {
                         GkTwoLineText(
                             title = subs.name,

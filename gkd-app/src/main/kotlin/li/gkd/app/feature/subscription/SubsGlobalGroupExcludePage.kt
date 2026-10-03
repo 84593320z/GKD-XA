@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +59,7 @@ import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkAppFilterContent
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleBatchMenuItems
 import li.gkd.app.ui.component.GkRuleEnableControl
 import li.gkd.app.ui.component.GkRuleListItem
@@ -147,8 +147,8 @@ fun SubsGlobalGroupExcludePage(route: SubsGlobalGroupExcludeRoute) {
                 }
             }
         }
-        Scaffold(
-            modifier = Modifier.nestedScroll(scroll.scrollBehavior.nestedScrollConnection),
+        GkPageScaffold(
+            externalScrollBehavior = scroll.scrollBehavior,
             topBar = {
                 GkMultiSelectionTopAppBar(
                     selectedMode = selection.active,
@@ -161,7 +161,7 @@ fun SubsGlobalGroupExcludePage(route: SubsGlobalGroupExcludeRoute) {
                         }
                     },
                     onTitleClick = if (showSearchBar) null else scroll::resetScroll,
-                    scrollBehavior = scroll.scrollBehavior,
+                    scrollBehavior = scrollBehavior, barColor = barColor,
                     title = {
                         val firstShowSearchBar = remember { showSearchBar }
                         if (showSearchBar) {
