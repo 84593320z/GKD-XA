@@ -30,9 +30,8 @@ import li.gkd.app.ui.component.GkCheckbox
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
-import androidx.compose.material3.Scaffold
 import li.gkd.app.ui.component.GkSizedIconButton
-import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.AiProtocolOption
 import li.gkd.app.util.TimeUtils.throttle
@@ -86,16 +85,12 @@ fun AiProvidersPage() {
         toast("已移除 ${provider.name.ifBlank { "未命名" }}")
     }
 
-    Scaffold(
-        topBar = {
-            GkTopAppBar(
-                titleText = "AI 服务商",
-                navigationIcon = {
-                    GkIconButton(
-                        imageVector = GkIcons.ArrowBack,
-                        onClick = { mainVm.popPage() },
-                    )
-                },
+    GkPageScaffold(
+        title = "AI 服务商",
+        navigationIcon = {
+            GkIconButton(
+                imageVector = GkIcons.ArrowBack,
+                onClick = { mainVm.popPage() },
             )
         },
     ) { contentPadding ->

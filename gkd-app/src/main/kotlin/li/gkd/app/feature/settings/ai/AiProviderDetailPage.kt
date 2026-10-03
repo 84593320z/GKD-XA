@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,7 +41,7 @@ import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
-import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.LabeledField
 import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.ui.component.TextSearchListDialog
@@ -82,16 +81,12 @@ fun AiProviderDetailPage(route: AiProviderDetailRoute) {
         mutableStateOf(provider?.let(AiProviderDraft::of) ?: AiProviderDraft.new(route.protocol))
     }
 
-    Scaffold(
-        topBar = {
-            GkTopAppBar(
-                titleText = if (isNew) "新建服务商" else draft.name.ifBlank { "服务商" },
-                navigationIcon = {
-                    GkIconButton(
-                        imageVector = GkIcons.ArrowBack,
-                        onClick = { mainVm.popPage() },
-                    )
-                },
+    GkPageScaffold(
+        title = if (isNew) "新建服务商" else draft.name.ifBlank { "服务商" },
+        navigationIcon = {
+            GkIconButton(
+                imageVector = GkIcons.ArrowBack,
+                onClick = { mainVm.popPage() },
             )
         },
     ) { contentPadding ->
@@ -131,14 +126,10 @@ fun AiProviderDetailPage(route: AiProviderDetailRoute) {
 
 @Composable
 private fun MissingProviderPage(onBack: () -> Unit) {
-    Scaffold(
-        topBar = {
-            GkTopAppBar(
-                titleText = "AI 服务商",
-                navigationIcon = {
-                    GkIconButton(imageVector = GkIcons.ArrowBack, onClick = throttle(fn = onBack))
-                },
-            )
+    GkPageScaffold(
+        title = "AI 服务商",
+        navigationIcon = {
+            GkIconButton(imageVector = GkIcons.ArrowBack, onClick = throttle(fn = onBack))
         },
     ) { contentPadding ->
         Column(

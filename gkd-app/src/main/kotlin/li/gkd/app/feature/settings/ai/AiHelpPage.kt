@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,7 +17,7 @@ import li.gkd.app.MainViewModel
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.util.TimeUtils.throttle
 import top.yukonga.miuix.kmp.basic.Text
@@ -52,16 +51,12 @@ private val HelpParagraphs = listOf(
 fun AiHelpPage() {
     val mainVm = MainViewModel.requireCurrent()
 
-    Scaffold(
-        topBar = {
-            GkTopAppBar(
-                titleText = "使用说明",
-                navigationIcon = {
-                    GkIconButton(
-                        imageVector = GkIcons.ArrowBack,
-                        onClick = { mainVm.popPage() },
-                    )
-                },
+    GkPageScaffold(
+        title = "使用说明",
+        navigationIcon = {
+            GkIconButton(
+                imageVector = GkIcons.ArrowBack,
+                onClick = { mainVm.popPage() },
             )
         },
     ) { contentPadding ->

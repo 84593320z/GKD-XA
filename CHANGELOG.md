@@ -27,6 +27,10 @@
     「发送测试通知」按当前样式分发并在需要时先请求通知权限
   - store 新增 actionTipStyle / actionTipLiveDurationSec（带默认值，旧配置兼容）；
     resolveActionTipStyle 兼容旧版 useSystemToast 开关
+- 修复 AI 服务商三个页面（列表 / 详情 / 使用说明）顶栏与页签底色异常：
+  1.3.0 移植时这三个页面用了 material3 Scaffold + GkTopAppBar（顶栏恒为实色 surface、
+  页面体为 background 色，与 1.2.7 毛玻璃壳的 surface 容器形成色差）。现统一换回
+  GkPageScaffold 毛玻璃二级页壳（顶栏滚动透出毛玻璃、落定转实色），与 1.2.7 一致
 
 ## v1.3.1（2026-10-03）
 
