@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -80,12 +78,6 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                 }
             },
         ) { paddingValues ->
-            val textColors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-            )
             Box(
                 modifier = Modifier
                     .scaffoldPadding(paddingValues)
