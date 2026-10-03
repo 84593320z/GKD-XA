@@ -510,11 +510,13 @@ fun AboutPage() {
                                         val selected = it
                                         if (it.value == UpdateChannelOption.Beta.value) {
                                             mainVm.viewModelScope.launch {
-                                                mainVm.dialogRequests.showMessage(
-                                                    title = "版本渠道",
-                                                    text = "测试版本渠道更新快\n但不稳定可能存在较多BUG\n请谨慎使用",
-                                                )
-                                                AppStore.updateSettings { s -> s.copy(updateChannel = selected.value) }
+                                                if (mainVm.dialogRequests.confirm(
+                                                        title = "版本渠道",
+                                                        text = "测试版本渠道更新快\n但不稳定可能存在较多BUG\n请谨慎使用",
+                                                    )
+                                                ) {
+                                                    AppStore.updateSettings { s -> s.copy(updateChannel = selected.value) }
+                                                }
                                             }
                                         } else {
                                             AppStore.updateSettings { s -> s.copy(updateChannel = selected.value) }
@@ -558,10 +560,12 @@ fun AboutPage() {
                 "分享到其他应用" to {
                     mainVm.viewModelScope.launch(Dispatchers.IO) {
                         if (!META.isGkdChannel) {
-                            mainVm.dialogRequests.showMessage(
+                            val ok = mainVm.dialogRequests.confirm(
                                 title = "分享提示",
                                 text = exportPlayTipTemplate(primaryColor),
+                                confirmText = "继续",
                             )
+                            if (!ok) return@launch
                         }
                         context.shareFile(getShareApkFile(), "分享安装文件")
                     }
@@ -569,10 +573,12 @@ fun AboutPage() {
                 "保存到下载" to {
                     mainVm.viewModelScope.launch(Dispatchers.IO) {
                         if (!META.isGkdChannel) {
-                            mainVm.dialogRequests.showMessage(
+                            val ok = mainVm.dialogRequests.confirm(
                                 title = "保存提示",
                                 text = exportPlayTipTemplate(primaryColor),
+                                confirmText = "继续",
                             )
+                            if (!ok) return@launch
                         }
                         context.saveFileToDownloads(getShareApkFile())
                     }
