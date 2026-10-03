@@ -36,6 +36,7 @@ import li.gkd.app.notif.replaceNotificationTemplate
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.store.AppStore.actionCountFlow
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkEditorScaffold
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSwitch
@@ -92,11 +93,10 @@ fun NotificationTextPage() {
                     }
                 }
             }
-            OutlinedTextField(
+            GkTextField(
                 value = title,
                 onValueChange = { title = it.filter { c -> c !in "\n\r" }.take(32) },
-                label = { Text(UiStrings.notification_title_label) },
-                placeholder = { Text(UiStrings.template_text_input_hint) },
+                label = UiStrings.notification_title_label,
                 singleLine = true,
                 supportingText = {
                     Text(UiStrings.progress_fraction(title.length, 32),
@@ -104,11 +104,10 @@ fun NotificationTextPage() {
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(
+            GkTextField(
                 value = text,
                 onValueChange = { text = it.take(64) },
-                label = { Text(UiStrings.notification_body_label) },
-                placeholder = { Text(UiStrings.template_text_input_hint) },
+                label = UiStrings.notification_body_label,
                 minLines = 2,
                 maxLines = 4,
                 supportingText = {

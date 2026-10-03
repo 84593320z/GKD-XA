@@ -38,6 +38,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkEditorScaffold
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSwitch
@@ -111,11 +112,10 @@ fun ActionToastPage() {
                     style = MiuixTheme.textStyles.footnote1,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
             }
-            OutlinedTextField(
+            GkTextField(
                 value = text,
                 onValueChange = { text = it.take(64) },
-                label = { Text(UiStrings.action_toast_text) },
-                placeholder = { Text(UiStrings.toast_text_input_hint) },
+                label = UiStrings.action_toast_text,
                 minLines = 2,
                 maxLines = 4,
                 supportingText = {

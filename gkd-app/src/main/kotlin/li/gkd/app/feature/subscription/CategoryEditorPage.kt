@@ -40,6 +40,7 @@ import kotlinx.serialization.encodeToString
 import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.CategoryPolicy
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
@@ -115,13 +116,10 @@ private fun CategoryEditorContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
+                GkTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = {
-                        Text(nameError ?: UiStrings.category_name_prefix,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    },
+                    label = nameError ?: UiStrings.category_name_prefix,
                     isError = nameError != null,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -130,10 +128,10 @@ private fun CategoryEditorContent(
                     ),
                     modifier = Modifier.fillMaxWidth().autoFocus(immediateFocus = true),
                 )
-                OutlinedTextField(
+                GkTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text(UiStrings.category_description) },
+                    label = UiStrings.category_description,
                     minLines = 1,
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth().focusRequester(descriptionFocusRequester),

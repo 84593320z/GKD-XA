@@ -1,5 +1,6 @@
 package li.gkd.app.ui.component
 
+import li.gkd.app.ui.component.GkTextField
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -289,10 +290,10 @@ class GithubUploadState(
                     }
                 },
                 text = {
-                    OutlinedTextField(
+                    GkTextField(
                         value = cookieDraft,
                         onValueChange = ::updateCookieDraft,
-                        placeholder = { Text(text = UiStrings.github_cookie_input_hint) },
+                        placeholder = UiStrings.github_cookie_input_hint,
                         modifier = Modifier.fillMaxWidth().autoFocus(),
                         maxLines = 10,
                     )

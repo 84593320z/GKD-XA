@@ -26,6 +26,7 @@ import li.gkd.app.util.NetworkUtils
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
 import kotlin.coroutines.resume
+import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
@@ -138,16 +139,14 @@ class SubsLinkDialogState(
                     }
                 },
                 text = {
-                    OutlinedTextField(
+                    GkTextField(
                         value = currentRequest.value,
                         onValueChange = ::updateValue,
                         maxLines = 8,
                         modifier = Modifier
                             .fillMaxWidth()
                             .autoFocus(),
-                        placeholder = {
-                            Text(text = UiStrings.subscription_link_input_hint)
-                        },
+                        placeholder = UiStrings.subscription_link_input_hint,
                         isError = currentRequest.value.isNotEmpty() &&
                                 !URLUtil.isNetworkUrl(currentRequest.value),
                     )

@@ -1,5 +1,6 @@
 package li.gkd.app.feature.snapshot
 
+import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
 
@@ -49,7 +50,6 @@ import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkOutlinedTextField
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
 import li.gkd.app.ui.component.GkTopAppBar
@@ -227,19 +227,19 @@ private fun CaptureScreenshotConfigDialog(
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                GkOutlinedTextField(
-                    label = { Text(UiStrings.app_id) },
+                GkTextField(
+                    label = UiStrings.app_id,
                     value = appIdValue,
-                    placeholder = { Text(text = UiStrings.target_app_id_hint) },
+                    placeholder = UiStrings.target_app_id_hint,
                     onValueChange = { appIdValue = it },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                GkOutlinedTextField(
-                    label = { Text(UiStrings.snapshot_event_selector) },
+                GkTextField(
+                    label = UiStrings.snapshot_event_selector,
                     value = eventSelectorValue,
-                    placeholder = { Text(text = UiStrings.snapshot_event_selector_hint) },
+                    placeholder = UiStrings.snapshot_event_selector_hint,
                     onValueChange = { eventSelectorValue = it },
                     maxLines = 4,
                     modifier = Modifier

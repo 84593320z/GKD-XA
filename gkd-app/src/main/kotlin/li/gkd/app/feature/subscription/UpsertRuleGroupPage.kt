@@ -3,6 +3,7 @@ package li.gkd.app.feature.subscription
 import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import li.gkd.app.ui.component.GkTextField
 import li.gkd.app.ui.component.GkEditorScaffold
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,16 +103,13 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                                 imePadding()
                             }
                         }
-                    TextField(
+                    GkTextField(
                         value = text,
                         onValueChange = vm::setText,
                         modifier = modifier,
                         shape = RectangleShape,
-                        colors = textColors,
                         visualTransformation = getJson5Transformation(LocalDarkTheme.current),
-                        placeholder = {
-                            Text(text = if (vm.isApp) UiStrings.app_rule_input_hint else UiStrings.global_rule_input_hint)
-                        },
+                        placeholder = if (vm.isApp) UiStrings.app_rule_input_hint else UiStrings.global_rule_input_hint,
                     )
                 }
                 if (text.isNotEmpty()) {
@@ -119,7 +118,7 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                         modifier = Modifier
                             .padding(8.dp)
                             .align(Alignment.TopEnd)
-                            .clip(MaterialTheme.shapes.extraSmall)
+                            .clip(RoundedCornerShape(6.dp))
                             .background(MiuixTheme.colorScheme.surfaceContainer)
                             .padding(horizontal = 2.dp),
                         style = MiuixTheme.textStyles.body2,
