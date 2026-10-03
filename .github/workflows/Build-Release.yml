@@ -97,8 +97,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/app-gkd-release.apk
-          asset_name: gkd-x-${{ github.ref_name }}.apk
+          asset_path: release/gkd-app-gkd-release.apk
+          asset_name: GKD-XA-${{ github.ref_name }}.apk
           asset_content_type: application/vnd.android.package-archive
 
       # gradle 构建不是字节可复现的，fileSize 只能取这个附件自己的真实字节数；
@@ -110,7 +110,7 @@ jobs:
           TARGET_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
         run: |
           set -u
-          SIZE=$(wc -c < release/app-gkd-release.apk | tr -d ' ')
+          SIZE=$(wc -c < release/gkd-app-gkd-release.apk | tr -d ' ')
           echo "本次附件真实大小: $SIZE 字节"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
