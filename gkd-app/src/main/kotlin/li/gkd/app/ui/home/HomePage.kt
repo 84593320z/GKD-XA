@@ -1,7 +1,5 @@
 package li.gkd.app.ui.home
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -263,15 +261,9 @@ private fun MiuixDockedNavScaffold(
                     backdrop = backdrop,
                     blurActive = blurActive,
                 ) {
-                    // 顶栏跟随 selectedPage（点击即变）并淡入淡出，与内容滑动同步；
-                    // 若用 settledPage 会在翻页落定瞬间整条瞬切，观感割裂
-                    Crossfade(
-                        targetState = homePager.selectedPage,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "homeTopBar",
-                    ) { page ->
-                        pages.getOrNull(page)?.topBar?.invoke()
-                    }
+                    // 顶栏随点击立即切换（selectedPage 在点击当帧更新）：
+                    // 任何淡入淡出/落定瞬切在掉帧时都会被感知为「顶栏延迟才切」
+                    pages.getOrNull(homePager.selectedPage)?.topBar?.invoke()
                 }
             },
             floatingActionButton = {
@@ -365,14 +357,8 @@ private fun MiuixFloatingNavScaffold(
                     backdrop = backdrop,
                     blurActive = blurActive,
                 ) {
-                    // 同 docked：顶栏随点击淡切，与内容滑动同步
-                    Crossfade(
-                        targetState = homePager.selectedPage,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "homeTopBar",
-                    ) { page ->
-                        pages.getOrNull(page)?.topBar?.invoke()
-                    }
+                    // 同 docked：顶栏随点击立即切换
+                    pages.getOrNull(homePager.selectedPage)?.topBar?.invoke()
                 }
             },
             floatingActionButton = {
