@@ -7,20 +7,22 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import li.gkd.app.util.TimeUtils.throttle
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 开关设置项：标题 + 摘要 + 行尾开关，可带行尾图标与摘要下方链接。
+ *
+ * 排版与其他设置项一致（[GkRowDefaults]），按压整行叠浅色、无涟漪；
+ * 整行可点即切换开关，语义角色为 Switch。
+ */
 @Composable
 fun TextSwitch(
-    modifier: Modifier = Modifier,
     title: String,
-    paddingDisabled: Boolean = false,
+    modifier: Modifier = Modifier,
+    @Suppress("UNUSED_PARAMETER") paddingDisabled: Boolean = false,
     subtitle: String? = null,
     suffix: String? = null,
     suffixUnderline: Boolean = false,
@@ -33,64 +35,49 @@ fun TextSwitch(
     onClickLabel: String? = "切换${title}状态",
 ) {
     val throttledChange = onCheckedChange?.let { throttle(fn = it) }
-    val simpleToggle = onClickLabel == "切换${title}状态" && suffixIcon == null
-    val hasSuffixLink = suffix != null && onSuffixClick != null
+    val hasSuffixLink = subtitle != null && suffix != null && onSuffixClick != null
     val summaryText = when {
         hasSuffixLink -> null
         subtitle != null && suffix != null -> "$subtitle $suffix"
         else -> subtitle
     }
-    if (simpleToggle && !hasSuffixLink) {
-        SwitchPreference(
-            modifier = modifier,
-            title = title,
-            summary = summaryText,
-            checked = checked,
-            enabled = enabled,
-            onCheckedChange = { throttledChange?.invoke(it) },
-        )
-    } else {
-        BasicComponent(
-            modifier = modifier,
-            title = title,
-            summary = summaryText,
-            enabled = enabled,
-            onClick = onClick,
-            onClickLabel = onClickLabel,
-            role = Role.Switch,
-            endActions = {
-                suffixIcon?.invoke()
-                GkSwitch(
-                    checked = checked,
-                    enabled = enabled,
-                    onCheckedChange = throttledChange,
-                    modifier = Modifier.semantics {
-                        this.stateDescription = title + if (checked) "已开启" else "已关闭"
-                    },
+    val bottomAction: (@Composable () -> Unit)? = if (hasSuffixLink && subtitle != null) {
+        {
+            Row {
+                MiuixText(
+                    text = subtitle,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
-            },
-            bottomAction = if (hasSuffixLink && subtitle != null) {
-                {
-                    Row {
-                        MiuixText(
-                            text = subtitle,
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        MiuixText(
-                            text = suffix,
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.primary,
-                            modifier = Modifier.clickable(
-                                onClick = throttle(fn = onSuffixClick),
-                            ),
-                        )
-                    }
-                }
-            } else {
-                null
-            },
-        )
+                Spacer(modifier = Modifier.width(4.dp))
+                MiuixText(
+                    text = suffix.orEmpty(),
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.primary,
+                    modifier = Modifier.clickable(onClick = throttle(fn = onSuffixClick)),
+                )
+            }
+        }
+    } else {
+        null
+    }
+
+    GkRow(
+        modifier = modifier,
+        enabled = enabled,
+        onClick = onClick,
+        onClickLabel = onClickLabel,
+        role = Role.Switch,
+        bottomAction = bottomAction,
+        endActions = {
+            suffixIcon?.invoke()
+            GkSwitch(
+                checked = checked,
+                onCheckedChange = throttledChange,
+                enabled = enabled,
+            )
+        },
+    ) {
+        GkRowText(title = title, summary = summaryText)
     }
 }

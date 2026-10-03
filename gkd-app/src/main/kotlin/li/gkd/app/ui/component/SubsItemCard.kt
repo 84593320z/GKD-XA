@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -29,6 +32,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import li.gkd.app.text.UiStrings
@@ -75,6 +79,7 @@ fun SubsItemCard(
             }
         }
     }
+    val pressed by interactionSource.collectIsPressedAsState()
     val containerColor = animateColorAsState(
         if (isSelected) {
             MiuixTheme.colorScheme.primaryContainer
@@ -88,7 +93,9 @@ fun SubsItemCard(
     // 只在四个圆角外溢出，表现为「按压后颜色加深区域露出四个尖角」。
     Card(
         modifier = modifier
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = GkRowDefaults.SidePadding)
+            .padding(bottom = 8.dp),
+        cornerRadius = GkRowDefaults.CardCornerRadius,
         colors = CardDefaults.defaultColors(
             color = containerColor.value
         ),
@@ -97,9 +104,14 @@ fun SubsItemCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = GkRowDefaults.RowMinHeight)
+                .background(
+                    if (pressed) MiuixTheme.colorScheme.onBackground.copy(alpha = 0.06f)
+                    else Color.Transparent,
+                )
                 .combinedClickable(
                     interactionSource = interactionSource,
-                    indication = LocalIndication.current,
+                    indication = null,
                     enabled = !isSelectedMode || selectionEnabled,
                     onClick = onClick,
                     onLongClick = if (handlesLongPress && selectionEnabled) {
@@ -139,7 +151,7 @@ fun SubsItemCard(
                         }
                     }
                 }
-                .padding(8.dp),
+                .padding(horizontal = GkRowDefaults.SidePadding, vertical = 12.dp),
         ) {
             Column(
                 modifier = Modifier.weight(1f),
@@ -155,6 +167,7 @@ fun SubsItemCard(
                         softWrap = false,
                         overflow = TextOverflow.Ellipsis,
                         style = MiuixTheme.textStyles.body1,
+                        fontWeight = FontWeight.Medium,
                     )
                     Text(
                         text = subscription.numText,

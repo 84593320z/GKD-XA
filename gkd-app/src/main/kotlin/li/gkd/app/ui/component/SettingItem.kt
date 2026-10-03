@@ -9,11 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import li.gkd.app.util.TimeUtils.throttle
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 设置项：标题 + 摘要 + 可选行尾图标 / 右箭头。
+ *
+ * 排版走全 App 统一的 [GkRowDefaults]：行高 ≥52、内边距 16/12、
+ * 标题 body1 Medium、摘要 body2；按压时整行叠浅色（不用涟漪）。
+ */
 @Composable
 fun SettingItem(
     title: String,
@@ -32,51 +36,36 @@ fun SettingItem(
         else -> subtitle
     }
     val click = onClick?.let { throttle(fn = it) }
-    when {
-        imageVector == null -> {
-            BasicComponent(
-                title = title,
-                summary = summaryText,
-                onClick = click,
-                onClickLabel = onClickLabel,
-                bottomAction = if (hasSuffixLink) {
-                    {
-                        SettingSuffixRow(
-                            subtitle = subtitle,
-                            suffix = suffix,
-                            onSuffixClick = onSuffixClick,
-                        )
-                    }
-                } else null,
+    val bottomAction: (@Composable () -> Unit)? = if (hasSuffixLink) {
+        {
+            SettingSuffixRow(
+                subtitle = subtitle,
+                suffix = suffix,
+                onSuffixClick = onSuffixClick,
             )
         }
-        imageVector == PerfIcon.KeyboardArrowRight -> {
-            ArrowPreference(
-                title = title,
-                summary = summaryText,
-                onClick = click,
-                bottomAction = if (hasSuffixLink) {
-                    {
-                        SettingSuffixRow(
-                            subtitle = subtitle,
-                            suffix = suffix,
-                            onSuffixClick = onSuffixClick,
-                        )
-                    }
-                } else null,
-            )
-        }
-        else -> {
-            BasicComponent(
-                title = title,
-                summary = summaryText,
-                onClick = click,
-                onClickLabel = onClickLabel ?: "进入${title}页面",
-                endActions = {
-                    PerfIcon(imageVector = imageVector, contentDescription = null)
-                },
-            )
-        }
+    } else {
+        null
+    }
+    val showArrow = imageVector == PerfIcon.KeyboardArrowRight
+
+    GkRow(
+        bottomAction = bottomAction,
+        onClick = click,
+        onClickLabel = onClickLabel,
+        endActions = when {
+            showArrow -> ({ GkRowArrow() })
+            imageVector != null -> ({
+                GkIcon(
+                    imageVector = imageVector,
+                    contentDescription = null,
+                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+            })
+            else -> null
+        },
+    ) {
+        GkRowText(title = title, summary = summaryText)
     }
 }
 

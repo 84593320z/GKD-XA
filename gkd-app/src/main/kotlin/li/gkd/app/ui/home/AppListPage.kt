@@ -47,6 +47,9 @@ import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
 import li.gkd.app.ui.icon.GkSearchCloseIconButton
+import li.gkd.app.ui.component.GkRow
+import li.gkd.app.ui.component.GkRowDefaults
+import li.gkd.app.ui.component.GkRowText
 import li.gkd.app.ui.component.GkRuleStatsData
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkIcons
@@ -269,7 +272,8 @@ private fun AppItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = GkRowDefaults.SidePadding)
+            .padding(bottom = 8.dp)
             .clearAndSetSemantics {
                 contentDescription = if (editWhiteListMode) {
                     appInfo.name
@@ -286,14 +290,13 @@ private fun AppItemCard(
                     action = null
                 )
             },
+        cornerRadius = GkRowDefaults.CardCornerRadius,
         insideMargin = PaddingValues(0.dp),
     ) {
-        BasicComponent(
-            title = appInfo.name,
-            summary = summary,
+        GkRow(
             onClick = throttle(onClick),
             startAction = {
-                AppIcon(appId = appInfo.id)
+                AppIcon(appId = appInfo.id, size = 34.dp)
             },
             endActions = {
                 if (editWhiteListMode) {
@@ -311,6 +314,8 @@ private fun AppItemCard(
                     )
                 }
             },
-        )
+        ) {
+            GkRowText(title = appInfo.name, summary = summary)
+        }
     }
 }
