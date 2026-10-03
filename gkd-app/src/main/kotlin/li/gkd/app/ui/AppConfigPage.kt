@@ -5,6 +5,7 @@ import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
@@ -33,7 +35,6 @@ import li.gkd.app.domain.rule.RuleGroupTarget
 import li.gkd.app.domain.rule.RuleSetting
 import li.gkd.app.domain.rule.toRuleGroupTarget
 import li.gkd.app.feature.log.ActionLogRoute
-import li.gkd.app.feature.subscription.SubsAppGroupListRoute
 import li.gkd.app.feature.subscription.UpsertRuleGroupRoute
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.share.ListPlaceholder
@@ -49,7 +50,6 @@ import li.gkd.db.ActionLog
 import li.gkd.db.LOCAL_SUBS_ID
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
 import li.gkd.app.ui.component.GkAppNameText
-import li.gkd.app.ui.component.GkRuleListHeader
 import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkIcons
@@ -165,10 +165,11 @@ fun AppConfigPage(route: AppConfigRoute) {
     val scrollBehavior = pageScrollState.scrollBehavior
     val listState = pageScrollState.listState
     val focusKey = remember(focusLog) { focusLog?.let { Triple(it.subsId, it.groupType, it.groupKey) } }
-    val itemKeys = remember(subsPairs, showAppRestriction) { buildList {
+    val showSubscriptionHeader = subsPairs.size > 1
+    val itemKeys = remember(subsPairs, showAppRestriction, showSubscriptionHeader) { buildList {
         if (showAppRestriction) add("app-restrictions")
         subsPairs.forEach { (entry, groups) ->
-            add(entry.subsItem.id)
+            if (showSubscriptionHeader) add(entry.subsItem.id)
             groups.forEach { add(Triple(entry.subsItem.id, it.groupType, it.key)) }
         }
     } }
@@ -180,7 +181,13 @@ fun AppConfigPage(route: AppConfigRoute) {
         targetExists = state?.subsPairs.orEmpty().any { (entry, groups) ->
             groups.any { Triple(entry.subsItem.id, it.groupType, it.key) == focusKey }
         },
-        stickyHeaderKeys = remember(subsPairs) { subsPairs.mapTo(mutableSetOf()) { it.first.subsItem.id } },
+        stickyHeaderKeys = remember(subsPairs, showSubscriptionHeader) {
+            if (showSubscriptionHeader) {
+                subsPairs.mapTo(mutableSetOf()) { it.first.subsItem.id }
+            } else {
+                emptySet()
+            }
+        },
         onRevealTarget = { revealDisabledRules = true },
     )
     pageScrollState.ResetOnChange(
@@ -345,16 +352,12 @@ fun AppConfigPage(route: AppConfigRoute) {
                 }
                 subsPairs.forEach { (entry, groups) ->
                     val subsId = entry.subsItem.id
-                    stickyHeader(entry.subsItem.id) {
-                        GkRuleListHeader(
-                            legacyStyle = true,
-                            onClick = throttle {
-                                mainVm.navigatePage(if (entry.subscription.apps.any { it.id == appId })
-                                    SubsAppGroupListRoute(subsId, appId) else li.gkd.app.feature.subscription.SubsGlobalGroupListRoute(subsId))
-                            },
-                        ) {
+                    // 单订阅时不再显示分组标题：「本地订阅」这行指向的二级页功能与本页重复。
+                    // 只有同一应用被多份订阅覆盖时，才保留一个不可点的分组标签用于区分来源。
+                    if (showSubscriptionHeader) {
+                        stickyHeader(subsId) {
                             Text(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                                 text = entry.subscription.name,
                                 style = MiuixTheme.textStyles.subtitle,
                                 color = MiuixTheme.colorScheme.primary,
