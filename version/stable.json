@@ -1,14 +1,14 @@
 {
-  "versionCode": 101,
-  "versionName": "1.2.7",
-  "changelog": "v1.2.7\n\n- 更新弹窗的确认按钮改为「更新」，四个字不再折成两行\n- 下载失败时弹窗新增「复制链接 / 浏览器打开」，GitHub 直连不通可交给带代理的浏览器下载",
-  "downloadUrl": "https://github.com/84593320z/gkd-/releases/download/v1.2.7/gkd-x-v1.2.7.apk",
-  "fileSize": 3559584,
+  "versionCode": 130,
+  "versionName": "1.3.0",
+  "changelog": "v1.3.0\n\n- 重构底座跟随上游新架构，界面恢复并统一为旧版 MIUIX 风格\n- 新增多 AI 服务商、模型管理、通知模板、规则控制关系等能力\n- 修复火箭入口闪退、应用页留白与模糊断档，并恢复应用配置页旧版卡片和菜单观感",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.3.0/GKD-XA-v1.3.0.apk",
+  "fileSize": 0,
   "versionLogs": [
     {
-      "name": "1.2.7",
-      "code": 101,
-      "desc": "- 更新弹窗的确认按钮改为「更新」，四个字不再折成两行\n- 下载失败时弹窗新增「复制链接 / 浏览器打开」，GitHub 直连不通可交给带代理的浏览器下载"
+      "name": "1.3.0",
+      "code": 130,
+      "desc": "- 新底座架构，MIUIX 界面回归统一\n- 多 AI 服务商与模型管理，通知模板和规则控制关系\n- 修复工作模式闪退、应用页留白/模糊断档；恢复应用配置页旧版样式"
     },
     {
       "name": "1.2.6",
