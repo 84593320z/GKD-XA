@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
@@ -263,27 +263,30 @@ class UpdateStatus(val scope: CoroutineScope) {
                 },
                 onDismissRequest = { },
                 confirmButton = {
-                    TextButton(onClick = {
+                    TextButton(
+                        text = UiStrings.update_download,
+                        onClick = {
                         newVersionFlow.value = null
                         startDownload(newVersionVal)
-                    }) {
-                        Text(text = UiStrings.update_download)
-                    }
+                    },
+                    )
                 },
                 dismissButton = {
-                    TextButton(onClick = { newVersionFlow.value = null }) {
-                        Text(text = UiStrings.action_cancel)
-                    }
+                    TextButton(
+                        text = UiStrings.action_cancel,
+                        onClick = { newVersionFlow.value = null },
+                    )
                     if (!lastManual) {
-                        TextButton(onClick = {
+                        TextButton(
+                            text = UiStrings.action_ignore,
+                            onClick = {
                             newVersionFlow.value = null
                             ignoreVersionListFlow.update {
                                 it + newVersionVal.versionCode
                             }
                             toast(UiStrings.update_version_ignored)
-                        }) {
-                            Text(text = UiStrings.action_ignore)
-                        }
+                        },
+                        )
                     }
                 },
             )
@@ -296,18 +299,19 @@ class UpdateStatus(val scope: CoroutineScope) {
                         title = { Text(text = UiStrings.image_downloading) },
                         text = {
                             LinearProgressIndicator(
-                                progress = { downloadStatusVal.progress },
+                                progress = downloadStatusVal.progress,
                             )
                         },
                         onDismissRequest = {},
                         confirmButton = {
-                            TextButton(onClick = {
+                            TextButton(
+                                text = UiStrings.download_abort,
+                                onClick = {
                                 downloadStatusFlow.value = LoadStatus.Failure(
                                     Exception(UiStrings.download_abort)
                                 )
-                            }) {
-                                Text(text = UiStrings.download_abort)
-                            }
+                            },
+                            )
                         },
                     )
                 }
@@ -322,11 +326,12 @@ class UpdateStatus(val scope: CoroutineScope) {
                         },
                         onDismissRequest = { downloadStatusFlow.value = null },
                         confirmButton = {
-                            TextButton(onClick = {
+                            TextButton(
+                                text = UiStrings.action_close,
+                                onClick = {
                                 downloadStatusFlow.value = null
-                            }) {
-                                Text(text = UiStrings.action_close)
-                            }
+                            },
+                            )
                         },
                     )
                 }
@@ -339,18 +344,20 @@ class UpdateStatus(val scope: CoroutineScope) {
                         },
                         onDismissRequest = {},
                         dismissButton = {
-                            TextButton(onClick = {
+                            TextButton(
+                                text = UiStrings.action_close,
+                                onClick = {
                                 downloadStatusFlow.value = null
-                            }) {
-                                Text(text = UiStrings.action_close)
-                            }
+                            },
+                            )
                         },
                         confirmButton = {
-                            TextButton(onClick = throttle {
+                            TextButton(
+                                text = UiStrings.action_install,
+                                onClick = throttle {
                                 installApk(downloadStatusVal.result)
-                            }) {
-                                Text(text = UiStrings.action_install)
-                            }
+                            },
+                            )
                         })
                 }
             }

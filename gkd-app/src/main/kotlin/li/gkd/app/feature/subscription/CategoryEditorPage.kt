@@ -19,8 +19,8 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -145,13 +145,16 @@ private fun CategoryEditorContent(
                         Text(UiStrings.category_edit_conflict,
                             color = MiuixTheme.colorScheme.onErrorContainer)
                         if (category != null) {
-                            TextButton(onClick = {
+                            TextButton(
+                                text = UiStrings.action_reload_latest,
+                                onClick = {
                                 originalCategory = categorySnapshot
                                 name = category.name
                                 description = category.desc.orEmpty()
                                 originalName = name
                                 originalDescription = description
-                            }) { Text(UiStrings.action_reload_latest) }
+                            },
+                            )
                         }
                     }
                 }

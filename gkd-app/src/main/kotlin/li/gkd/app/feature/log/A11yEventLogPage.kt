@@ -15,8 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -184,9 +184,10 @@ fun A11yEventLogPage() {
                 }
             },
             confirmButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = UiStrings.action_close)
-                }
+                TextButton(
+                    text = UiStrings.action_close,
+                    onClick = onDismissRequest,
+                )
             },
         )
     }

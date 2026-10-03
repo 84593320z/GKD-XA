@@ -21,15 +21,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import androidx.compose.material3.IconButton
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkTooltipIconButtonBox
 import li.gkd.app.ui.icon.GkAnimatedRocketIcon
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -308,20 +308,22 @@ private fun ManualUpdateDialog(
             title = { Text(text = "手动更新 APP") },
             text = { Text(text = "无加速器从此处手动更新最新版") },
             confirmButton = {
-                TextButton(onClick = throttle {
+                TextButton(
+                    text = "夸克网盘",
+                    onClick = throttle {
                     onDismissRequest()
                     onOpenUrl(QUARK_MANUAL_UPDATE_URL)
-                }) {
-                    Text(text = "夸克网盘")
-                }
+                },
+                )
             },
             dismissButton = {
-                TextButton(onClick = throttle {
+                TextButton(
+                    text = "百度网盘",
+                    onClick = throttle {
                     onDismissRequest()
                     onOpenUrl(BAIDU_MANUAL_UPDATE_URL)
-                }) {
-                    Text(text = "百度网盘")
-                }
+                },
+                )
             },
         )
     }

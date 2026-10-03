@@ -12,6 +12,12 @@
   - 首页外壳简化为「一个 `Scaffold` + 一个 `LayerBackdrop`」，模糊统一走 miuix 官方 `Modifier.textureBlur`
   - 删除自研液态玻璃底栏（`ui/liquid` 整包）与配套的分页采样互斥、离屏栅格化 hack，设置页同步移除「液态玻璃」开关
   - 删除 `GkTriStateSwitch`（691 行自绘开关）、`GkSubsItemCard`、`GkAuthCard`、`GkAuthButtonGroup`、`EmptyText` 等无人引用的残留组件
+- 界面层继续把残留的 Material3 组件换成原版 miuix：
+  - 对话框/操作按钮：`TextButton` 39 处（19 个文件）改用 miuix `TextButton`，确认类按钮统一为 `textButtonColorsPrimary()`，破坏性操作沿用红色
+  - 图标按钮配色来源统一（`LocalContentColor` 20 个文件改读 miuix 主题值，与 miuix `Card` / `BasicComponent` 的内容色对齐）
+  - 加载指示：`CircularProgressIndicator` / `LinearProgressIndicator` 改用 miuix 版本
+  - 容器与分割线：`Surface`、`HorizontalDivider` 改用 miuix 版本
+  - 应用配置页顶栏标题改为居中显示
 
 ## v1.3.0（重构版）
 

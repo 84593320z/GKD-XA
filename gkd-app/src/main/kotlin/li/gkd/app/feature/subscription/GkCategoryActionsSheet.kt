@@ -20,8 +20,8 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,13 +84,12 @@ fun GkCategoryActionsSheet(
                                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                             }
                             TextButton(
+                                text = UiStrings.action_clear,
                                 enabled = !busy,
                                 onClick = onClearOverrides,
                                 modifier = Modifier.defaultMinSize(minWidth = 1.dp),
-                                contentPadding = PaddingValues(0.dp),
-                            ) {
-                                Text(UiStrings.action_clear)
-                            }
+                                insideMargin = PaddingValues(0.dp),
+                            )
                         }
                     }
                 }

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.OutlinedTextField
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -155,18 +155,18 @@ class SubsLinkDialogState(
                 onDismissRequest = ::cancel,
                 confirmButton = {
                     TextButton(
+                        text = UiStrings.action_ok,
                         enabled = currentRequest.value.isNotEmpty(),
                         onClick = throttle {
                             submit(currentRequest)
                         },
-                    ) {
-                        Text(text = UiStrings.action_ok)
-                    }
+                    )
                 },
                 dismissButton = {
-                    TextButton(onClick = ::cancel) {
-                        Text(text = UiStrings.action_cancel)
-                    }
+                    TextButton(
+                        text = UiStrings.action_cancel,
+                        onClick = ::cancel,
+                    )
                 },
             )
         }

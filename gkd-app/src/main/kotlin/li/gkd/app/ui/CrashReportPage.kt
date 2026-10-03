@@ -19,12 +19,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.BottomAppBar
 import top.yukonga.miuix.kmp.basic.Card
-import androidx.compose.material3.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -112,16 +112,14 @@ fun CrashReportPage() {
                 BottomAppBar {
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(
+                        text = UiStrings.feedback_report,
                         onClick = throttle { mainVm.openUrl(ISSUES_URL) },
-                    ) {
-                        Text(text = UiStrings.feedback_report)
-                    }
+                    )
                     Spacer(modifier = Modifier.width(itemHorizontalPadding))
                     TextButton(
+                        text = UiStrings.logs_export,
                         onClick = { mainVm.shareLog.show() },
-                    ) {
-                        Text(text = UiStrings.logs_export)
-                    }
+                    )
                     Spacer(modifier = Modifier.width(itemHorizontalPadding))
                 }
             }

@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
@@ -86,9 +86,10 @@ private fun VersionInfoDialog(
                 }
             },
             confirmButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = UiStrings.action_close)
-                }
+                TextButton(
+                    text = UiStrings.action_close,
+                    onClick = onDismissRequest,
+                )
             },
         )
     }

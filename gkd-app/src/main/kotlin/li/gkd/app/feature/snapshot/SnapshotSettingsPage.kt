@@ -17,9 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -251,15 +251,15 @@ private fun CaptureScreenshotConfigDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(
+                text = UiStrings.action_confirm,
                 onClick = throttle { onConfirm(appIdValue, eventSelectorValue) },
-            ) {
-                Text(text = UiStrings.action_confirm)
-            }
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = UiStrings.action_cancel)
-            }
+            TextButton(
+                text = UiStrings.action_cancel,
+                onClick = onDismissRequest,
+            )
         },
     )
 }

@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
+import top.yukonga.miuix.kmp.basic.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -114,14 +114,20 @@ fun GkRuleEnableControl(
             title = { Text(if (state.canEnable) UiStrings.rule_status else UiStrings.rule_unavailable) },
             text = { Text(RulePropertyText.restrictionSummary(state) ?: UiStrings.rule_now_available) },
             confirmButton = {
-                TextButton(onClick = { showReason = false }) { Text(UiStrings.action_got_it) }
+                TextButton(
+                    text = UiStrings.action_got_it,
+                    onClick = { showReason = false },
+                )
             },
             dismissButton = {
                 if (state.configuredEnabled) {
-                    TextButton(onClick = {
+                    TextButton(
+                        text = UiStrings.rule_close,
+                        onClick = {
                         showReason = false
                         onSettingChange(RuleSetting.Disabled)
-                    }) { Text(UiStrings.rule_close) }
+                    },
+                    )
                 }
             },
         )
