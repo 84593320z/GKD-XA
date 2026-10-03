@@ -41,6 +41,7 @@ import li.gkd.app.MainActivity
 import li.gkd.app.MainViewModel
 import li.gkd.app.R
 import li.gkd.app.data.subscription.SubscriptionState
+import li.gkd.app.data.appinfo.AppInfoRepository
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.priv.privilegeContextFlow
 import li.gkd.app.priv.uiAutomationFlow
@@ -285,7 +286,10 @@ private fun StatusOverviewSection() {
     val appOpsRestricted by PermissionStates.appOpsRestrictedFlow.collectAsStateWithLifecycle()
     val colorScheme = MiuixTheme.colorScheme
     val subsCount = SubscriptionState.subsItemsFlow.collectAsStateWithLifecycle().value.size
-    val appCount = SubscriptionState.subsMapFlow.collectAsStateWithLifecycle().value.size
+    // 口径必须与「应用」Tab 一致：AppListPage 用 visibleAppInfosFlow 建列表。
+    // 旧代码误用 SubscriptionState.subsMapFlow（该表以 subsId 为键、存的是订阅快照），
+    // size 等于订阅数量，所以「应用」卡片显示的一直是订阅数。
+    val appCount = AppInfoRepository.visibleAppInfosFlow.collectAsStateWithLifecycle().value.size
 
     val useA11y = store.useA11y || actualA11yScopeAppList.contains(topAppIdFlow.collectAsStateWithLifecycle().value)
     val uiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()

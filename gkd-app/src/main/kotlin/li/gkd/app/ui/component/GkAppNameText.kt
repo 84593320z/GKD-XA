@@ -27,6 +27,8 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.data.AppInfo
 import li.gkd.app.priv.currentUserId
 import li.gkd.app.data.appinfo.AppInfoRepository
+import li.gkd.app.ui.style.placeholderHeight
+import li.gkd.app.ui.style.placeholderWidth
 
 @Composable
 fun GkAppNameText(
@@ -85,8 +87,8 @@ fun GkAppNameText(
                 mapOf(
                     "icon" to InlineTextContent(
                         placeholder = Placeholder(
-                            width = style.fontSize,
-                            height = style.lineHeight,
+                            width = style.placeholderWidth(),
+                            height = style.placeholderHeight(),
                             placeholderVerticalAlign = PlaceholderVerticalAlign.Center
                         )
                     ) {

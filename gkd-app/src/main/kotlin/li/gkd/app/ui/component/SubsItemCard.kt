@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -82,58 +83,63 @@ fun SubsItemCard(
         },
         tween()
     )
+    // 点击与按压反馈必须挂在卡片**内部**：MIUIX 的 Card 用 squircleSurface 把子树裁成胶囊形，
+    // 挂在卡片外层 Modifier 上的 combinedClickable，其涟漪绘制在卡片背景之下、且不受裁剪，
+    // 只在四个圆角外溢出，表现为「按压后颜色加深区域露出四个尖角」。
     Card(
         modifier = modifier
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .combinedClickable(
-                interactionSource = interactionSource,
-                indication = LocalIndication.current,
-                enabled = !isSelectedMode || selectionEnabled,
-                onClick = onClick,
-                onLongClick = if (handlesLongPress && selectionEnabled) {
-                    { (onSelect ?: onSelectedChange)?.invoke() }
-                } else {
-                    null
-                },
-            )
-            .semantics {
-                stateDescription = when {
-                    isSelectedMode -> if (isSelected) UiStrings.selected else UiStrings.not_selected
-                    !matchingEnabled -> UiStrings.subscription_switch_paused_description
-                    else -> if (subsItem.enable) UiStrings.enabled else UiStrings.disabled
-                }
-                if (isSelectedMode) {
-                    selected = isSelected
-                    role = Role.Checkbox
-                }
-                this.onClick(
-                    label = if (isSelectedMode) {
-                        if (isSelected) UiStrings.selection_deselect else UiStrings.selection_select
-                    } else {
-                        UiStrings.subscription_details_view
-                    },
-                    action = null,
-                )
-                if (selectionEnabled) {
-                    this.onLongClick(
-                        label = if (isSelectedMode) {
-                            UiStrings.selection_select
-                        } else {
-                            UiStrings.selection_mode_enter
-                        },
-                    ) {
-                        (onSelect ?: onSelectedChange)?.invoke()
-                        true
-                    }
-                }
-            },
+            .padding(horizontal = 12.dp, vertical = 4.dp),
         colors = CardDefaults.defaultColors(
             color = containerColor.value
         ),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    enabled = !isSelectedMode || selectionEnabled,
+                    onClick = onClick,
+                    onLongClick = if (handlesLongPress && selectionEnabled) {
+                        { (onSelect ?: onSelectedChange)?.invoke() }
+                    } else {
+                        null
+                    },
+                )
+                .semantics {
+                    stateDescription = when {
+                        isSelectedMode -> if (isSelected) UiStrings.selected else UiStrings.not_selected
+                        !matchingEnabled -> UiStrings.subscription_switch_paused_description
+                        else -> if (subsItem.enable) UiStrings.enabled else UiStrings.disabled
+                    }
+                    if (isSelectedMode) {
+                        selected = isSelected
+                        role = Role.Checkbox
+                    }
+                    this.onClick(
+                        label = if (isSelectedMode) {
+                            if (isSelected) UiStrings.selection_deselect else UiStrings.selection_select
+                        } else {
+                            UiStrings.subscription_details_view
+                        },
+                        action = null,
+                    )
+                    if (selectionEnabled) {
+                        this.onLongClick(
+                            label = if (isSelectedMode) {
+                                UiStrings.selection_select
+                            } else {
+                                UiStrings.selection_mode_enter
+                            },
+                        ) {
+                            (onSelect ?: onSelectedChange)?.invoke()
+                            true
+                        }
+                    }
+                }
+                .padding(8.dp),
         ) {
             Column(
                 modifier = Modifier.weight(1f),

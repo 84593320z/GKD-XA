@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import li.gkd.app.ui.icon.SportsBasketball
+import li.gkd.app.ui.style.placeholderHeight
+import li.gkd.app.ui.style.placeholderWidth
 
 @Composable
 fun GkGroupNameText(
@@ -50,13 +52,13 @@ fun GkGroupNameText(
         val textColor = color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } }
         val inlineContent = remember(style, textColor) {
             mapOf(
-                "icon" to InlineTextContent(
-                    placeholder = Placeholder(
-                        width = style.fontSize,
-                        height = style.lineHeight,
-                        placeholderVerticalAlign = PlaceholderVerticalAlign.Center
-                    )
-                ) {
+                    "icon" to InlineTextContent(
+                        placeholder = Placeholder(
+                            width = style.placeholderWidth(),
+                            height = style.placeholderHeight(),
+                            placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                        )
+                    ) {
                     GkIcon(
                         imageVector = SportsBasketball,
                         modifier = Modifier.fillMaxSize(),

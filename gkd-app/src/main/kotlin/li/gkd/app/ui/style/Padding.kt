@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isUnspecified
+import androidx.compose.ui.unit.sp
 
 val itemHorizontalPadding = 16.dp
 val itemVerticalPadding = 12.dp
@@ -25,6 +27,24 @@ fun TextUnit.toSpDpOr(density: Density, fallback: Dp): Dp = with(density) {
 
 fun TextStyle.lineHeightDp(density: Density, fallback: Dp = 20.dp): Dp =
     lineHeight.toSpDpOr(density, fontSize.toSpDpOr(density, fallback))
+
+/**
+ * MIUIX 的多数 [TextStyle]（body1 / body2 / footnote2 …）只声明了 fontSize，**lineHeight 是
+ * [TextUnit.Unspecified]**；而 `TextStyle.Default`（Material 的 LocalTextStyle 默认值）两个都是
+ * Unspecified。Compose 的 `Placeholder` 构造器会直接 require 失败：
+ * `IllegalArgumentException: height cannot be TextUnit.Unspecified`。
+ *
+ * 内联图标（appendInlineContent）必须给出合法的 Placeholder 尺寸，这里统一按
+ * 「有 lineHeight 用 lineHeight，否则退回 fontSize，再否则用 fallback」兜底，
+ * 与旧版 `GroupNameText` 的处理保持一致。
+ */
+fun TextStyle.placeholderWidth(fallback: TextUnit = 16.sp): TextUnit =
+    fontSize.takeUnless { it.isUnspecified } ?: fallback
+
+fun TextStyle.placeholderHeight(fallback: TextUnit = 16.sp): TextUnit =
+    lineHeight.takeUnless { it.isUnspecified }
+        ?: fontSize.takeUnless { it.isUnspecified }
+        ?: fallback
 
 fun Modifier.itemPadding() = this.padding(itemHorizontalPadding, itemVerticalPadding)
 
