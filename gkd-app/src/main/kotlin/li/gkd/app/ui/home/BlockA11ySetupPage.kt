@@ -19,11 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
@@ -47,6 +46,7 @@ import li.gkd.app.priv.privilegeContextFlow
 import li.gkd.app.service.StatusService
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.PrivilegeServiceRoute
+import li.gkd.app.ui.component.GkBottomBar
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
@@ -88,7 +88,7 @@ fun BlockA11ySetupPage() {
             )
         },
         bottomBar = {
-            BottomAppBar {
+            GkBottomBar {
                 Text(
                     text = if (remainingRequirements == 0) UiStrings.partial_disable_ready
                     else UiStrings.partial_disable_remaining(remainingRequirements),

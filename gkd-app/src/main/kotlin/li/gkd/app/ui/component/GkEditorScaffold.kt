@@ -1,11 +1,11 @@
 package li.gkd.app.ui.component
 
+import top.yukonga.miuix.kmp.basic.Scaffold
 import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import li.gkd.app.MainActivity
@@ -65,3 +65,4 @@ fun GkEditorScaffold(
         content = content,
     )
 }
+

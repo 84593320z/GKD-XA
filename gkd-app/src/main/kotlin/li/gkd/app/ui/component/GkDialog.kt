@@ -1,19 +1,19 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.AlertDialog as MaterialAlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog as PlatformDialog
 import androidx.compose.ui.window.DialogProperties
 
@@ -103,32 +103,27 @@ fun GkAlertDialog(
     confirmButton: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     dismissButton: @Composable (() -> Unit)? = null,
-    icon: @Composable (() -> Unit)? = null,
+    @Suppress("UNUSED_PARAMETER") icon: @Composable (() -> Unit)? = null,
     title: @Composable (() -> Unit)? = null,
     text: @Composable (() -> Unit)? = null,
-    shape: Shape = AlertDialogDefaults.shape,
-    containerColor: Color = AlertDialogDefaults.containerColor,
-    iconContentColor: Color = AlertDialogDefaults.iconContentColor,
-    titleContentColor: Color = AlertDialogDefaults.titleContentColor,
-    textContentColor: Color = AlertDialogDefaults.textContentColor,
-    tonalElevation: Dp = AlertDialogDefaults.TonalElevation,
+    @Suppress("UNUSED_PARAMETER") shape: Shape = RoundedCornerShape(28.dp),
+    @Suppress("UNUSED_PARAMETER") containerColor: Color = Color.Unspecified,
+    @Suppress("UNUSED_PARAMETER") iconContentColor: Color = Color.Unspecified,
+    @Suppress("UNUSED_PARAMETER") titleContentColor: Color = Color.Unspecified,
+    @Suppress("UNUSED_PARAMETER") textContentColor: Color = Color.Unspecified,
+    @Suppress("UNUSED_PARAMETER") tonalElevation: Dp = 0.dp,
     properties: DialogProperties = DialogProperties(),
 ) {
+    // 与 PerfAlertDialog 共用同一套 miuix 弹窗外观（WindowDialog），
+    // 保留这些参数只为兼容既有调用点，值不再生效。
     DialogLayer {
-        MaterialAlertDialog(
+        PerfAlertDialog(
             onDismissRequest = onDismissRequest,
-            confirmButton = confirmButton,
+            confirmButton = { confirmButton() },
             modifier = modifier,
-            dismissButton = dismissButton,
-            icon = icon,
+            dismissButton = dismissButton?.let { { it() } },
             title = title,
             text = text,
-            shape = shape,
-            containerColor = containerColor,
-            iconContentColor = iconContentColor,
-            titleContentColor = titleContentColor,
-            textContentColor = textContentColor,
-            tonalElevation = tonalElevation,
             properties = properties,
         )
     }

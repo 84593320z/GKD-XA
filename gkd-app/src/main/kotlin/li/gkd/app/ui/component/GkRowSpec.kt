@@ -42,6 +42,7 @@ import top.yukonga.miuix.kmp.basic.CardColors
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -375,6 +376,29 @@ fun GkPlainRow(
     endActions = endActions,
 ) {
     GkRowText(title = title, summary = summary)
+}
+
+/**
+ * 页面底部操作条：替代 Material3 的 BottomAppBar（miuix 没有对应组件）。
+ * 只是「一条底色 + 横向操作行」，外观跟随 [GkRowDefaults]。
+ */
+@Composable
+fun GkBottomBar(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MiuixTheme.colorScheme.surfaceContainer,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = GkRowDefaults.SidePadding, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
+    }
 }
 
 /** 行首图标占位（固定 24dp，保证所有行文字与分割线对齐）。 */

@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import top.yukonga.miuix.kmp.theme.LocalContentColor
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.basic.PullToRefresh
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -208,11 +208,11 @@ fun useAppListPage(): ScaffoldExt {
             )
         }
     ) { contentPadding ->
-        PullToRefreshBox(
+        PullToRefresh(
             // 不在此处 padding：会压缩整个容器高度，导致列表提前结束、底部出现死白且吃不到底栏模糊。
             // 改由 LazyColumn 的 contentPadding 承担，容器继续铺满全屏，内容延伸到底栏下方。
             modifier = Modifier.fillMaxSize(),
-            state = pullToRefreshState,
+            pullToRefreshState = pullToRefreshState,
             isRefreshing = refreshing,
             onRefresh = vm::refresh,
         ) {

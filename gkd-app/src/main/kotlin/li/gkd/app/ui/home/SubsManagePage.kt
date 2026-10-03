@@ -21,8 +21,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.basic.PullToRefresh
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -411,9 +411,9 @@ private fun useLoadedSubsManagePage(
                     }
                 }
             }
-            PullToRefreshBox(
+            PullToRefresh(
                 modifier = Modifier.weight(1f),
-                state = pullToRefreshState,
+                pullToRefreshState = pullToRefreshState,
                 isRefreshing = refreshing,
                 onRefresh = vm::refresh,
             ) {

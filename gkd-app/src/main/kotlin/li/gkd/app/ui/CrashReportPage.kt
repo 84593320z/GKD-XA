@@ -17,11 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.BottomAppBar
+import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -53,6 +52,7 @@ import li.gkd.app.ui.component.GkCopyTextCard
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkExpandableSection
 import li.gkd.app.ui.component.GkFixedTimeText
+import li.gkd.app.ui.component.GkBottomBar
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkTopAppBar
@@ -109,7 +109,7 @@ fun CrashReportPage() {
         },
         bottomBar = {
             if (crashDataList.isNotEmpty()) {
-                BottomAppBar {
+                GkBottomBar {
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(
                         text = UiStrings.feedback_report,

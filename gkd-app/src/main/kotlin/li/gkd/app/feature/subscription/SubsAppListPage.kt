@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import kotlinx.serialization.Serializable
 import li.gkd.app.text.UiStrings
 import li.gkd.app.MainActivity
 import li.gkd.app.core.state.Loadable
+import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.FloatingActionButton
 import li.gkd.app.domain.rule.RuleConfigIndex
 import li.gkd.app.domain.rule.RuleSetting
