@@ -423,7 +423,7 @@ private fun SubsSheetItem(
             .fillMaxWidth()
             .padding(horizontal = itemHorizontalPadding, vertical = 4.dp)
             .clip(MaterialTheme.shapes.large)
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+            .background(MiuixTheme.colorScheme.surface)
             .clickable(onClickLabel = onClickLabel, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -4,6 +4,7 @@ import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -357,7 +358,9 @@ fun AppConfigPage(route: AppConfigRoute) {
                     if (showSubscriptionHeader) {
                         stickyHeader(subsId) {
                             Text(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                modifier = Modifier
+                                    .background(MiuixTheme.colorScheme.surface)
+                                    .padding(horizontal = 16.dp, vertical = 4.dp),
                                 text = entry.subscription.name,
                                 style = MiuixTheme.textStyles.subtitle,
                                 color = MiuixTheme.colorScheme.primary,

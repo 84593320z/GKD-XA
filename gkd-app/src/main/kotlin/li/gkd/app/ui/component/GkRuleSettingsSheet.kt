@@ -92,7 +92,7 @@ fun GkRuleSettingsContent(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainerHigh),
+        colors = CardDefaults.defaultColors(),
     ) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min = 64.dp),
             verticalAlignment = Alignment.CenterVertically) {
@@ -143,7 +143,7 @@ fun GkRuleExclusionsCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainerHigh),
+        colors = CardDefaults.defaultColors(),
     ) {
         Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
