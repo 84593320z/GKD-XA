@@ -165,7 +165,9 @@ fun HomePage() {
     // 返回转场（栈顶已回到首页）期间保持毛玻璃采样：否则底栏液态玻璃会在返回动画里
     // 先退化成普通模糊、落定后才恢复，肉眼可见断层。进二级页（首页被覆盖）仍降级，
     // 避免新页首帧的重负载与模糊采样抢 GPU。
-    val returningHome = mainVm.topRoute is HomeRoute
+    // popTransition 覆盖预测性返回手势的预览窗口：此时返回栈尚未弹出（topRoute 仍是二级页），
+    // 但首页已在播放返回进场动画，需要保持液态玻璃采样
+    val returningHome = mainVm.topRoute is HomeRoute || mainVm.popTransitionFlow.value
     // 仅进页转场窗口内关毛玻璃；被盖住与返回时都保持（避免再出现“二级页底栏变实色”）
     val blurActive = blurWanted && (!navTransitionRunning || returningHome)
     // 液态玻璃组件树保持不变，只关采样；否则转场开头会整棵底栏换树，反而更卡
@@ -266,8 +268,11 @@ private fun MiuixDockedNavScaffold(
                     blurActive = blurActive,
                 ) {
                     // 顶栏随点击立即切换（selectedPage 在点击当帧更新）：
-                    // 任何淡入淡出/落定瞬切在掉帧时都会被感知为「顶栏延迟才切」
-                    pages.getOrNull(homePager.selectedPage)?.topBar?.invoke()
+                    // 任何淡入淡出/落定瞬切在掉帧时都会被感知为「顶栏延迟才切」。
+                    // 首帧窗口（contentReady 前点底栏）目标页可能尚未构建，回退用落定页顶栏，
+                    // 避免顶栏槽渲染成零高度导致内容上跳
+                    (pages.getOrNull(homePager.selectedPage)
+                        ?: pages.getOrNull(settledPage))?.topBar?.invoke()
                 }
             },
             floatingActionButton = {
@@ -361,8 +366,9 @@ private fun MiuixFloatingNavScaffold(
                     backdrop = backdrop,
                     blurActive = blurActive,
                 ) {
-                    // 同 docked：顶栏随点击立即切换
-                    pages.getOrNull(homePager.selectedPage)?.topBar?.invoke()
+                    // 同 docked：顶栏随点击立即切换；首帧窗口回退落定页顶栏
+                    (pages.getOrNull(homePager.selectedPage)
+                        ?: pages.getOrNull(settled))?.topBar?.invoke()
                 }
             },
             floatingActionButton = {

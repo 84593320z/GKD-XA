@@ -207,9 +207,14 @@ class UpdateStatus(val scope: CoroutineScope) {
                         onDownload { bytesSentTotal, _ ->
                             val downloadStatus = downloadStatusFlow.value
                             if (downloadStatus is LoadStatus.Loading) {
-                                downloadStatusFlow.value = LoadStatus.Loading(
-                                    bytesSentTotal.toFloat() / (newVersion.fileSize)
-                                )
+                                // fileSize 未回填（=0）时除法会产出 NaN/Infinity，进度条全程失效；
+                                // 退化为停在 0 的合法进度，等待 copyAndClose 完成回调
+                                val progress = if (newVersion.fileSize > 0) {
+                                    (bytesSentTotal.toFloat() / newVersion.fileSize).coerceIn(0f, 1f)
+                                } else {
+                                    0f
+                                }
+                                downloadStatusFlow.value = LoadStatus.Loading(progress)
                             } else if (downloadStatus is LoadStatus.Failure) {
                                 // 提前终止下载
                                 downloadJob?.cancel()

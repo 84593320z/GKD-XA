@@ -462,6 +462,7 @@ fun AboutPage() {
                                         mainVm.viewModelScope.launch {
                                             if (mainVm.dialogRequests.confirm(
                                                     title = "反馈须知",
+                                                    dismissOnRequest = true,
                                                     text = buildAnnotatedString {
                                                         val highlightStyle = SpanStyle(
                                                             fontWeight = FontWeight.Bold,

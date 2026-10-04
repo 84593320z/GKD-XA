@@ -134,12 +134,16 @@ class MainViewModel : BaseViewModel() {
     val backStack: NavBackStack<NavKey> = NavBackStack(HomeRoute)
     val topRoute get() = backStack.last()
 
+    /** 最近一次 popPage 是否触发了返回转场（含预测性返回手势的预览窗口），由首页在转场结束后复位。 */
+    val popTransitionFlow = MutableStateFlow(false)
+
     private val backThrottleTimer = ThrottleTimer()
 
     fun popPage(@CallSite loc: String = "") = runMainPost {
         if (backThrottleTimer.expired() && backStack.size > 1) {
             val old = backStack.last()
             backStack.removeAt(backStack.lastIndex)
+            popTransitionFlow.value = true
             LogUtils.d("popPage", "$old -> ${backStack.last()}", loc = loc)
         }
     }
@@ -156,6 +160,7 @@ class MainViewModel : BaseViewModel() {
             } else {
                 backStack.add(navKey)
             }
+            popTransitionFlow.value = false
             LogUtils.d("navigatePage", "$old -> ${backStack.last()}", loc = loc)
         }
     }
