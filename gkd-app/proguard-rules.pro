@@ -21,6 +21,10 @@
 
 # 特权 / 隐藏 API 探测：内部依赖 Class.forName 与反射字段
 -keep class li.gkd.app.priv.** { *; }
+# AIDL 已移到 :gkd-aidl（包名 li.gkd.aidl），Binder Stub/Proxy 跨进程边界同样需要保留
+-keep class li.gkd.aidl.** { *; }
+# receiver 包是新增的，manifest 组件显式保留（与上面 App/MainActivity 同风格）
+-keep public class li.gkd.app.receiver.BootReceiver { *; }
 -keepclassmembers class * {
     @androidx.annotation.Keep <fields>;
     @androidx.annotation.Keep <methods>;

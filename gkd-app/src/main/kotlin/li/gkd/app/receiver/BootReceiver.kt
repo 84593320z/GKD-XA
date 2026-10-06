@@ -10,7 +10,7 @@ import li.gkd.app.service.StatusService
  * debug 包行号：类声明 8，onReceive 10-13。
  * manifest 侧需要一并补回（本地包有、CI 包没有）：
  *   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
- *   <receiver android:name="li.gkd.app.receiver.BootReceiver" android:exported="true">
+ *   <receiver android:name="li.gkd.app.receiver.BootReceiver" android:exported="false">
  *       <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
  *   </receiver>
  */
