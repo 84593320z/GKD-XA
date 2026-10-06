@@ -23,8 +23,6 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- 恢复自 5d3b322 构建：开机自启兜底（BOOT_COMPLETED + persisted JobService） -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- 恢复自 5d3b322 构建：util/SystemServiceDump 读 dumpsys（accessibility / window） -->
-    <uses-permission android:name="android.permission.DUMP" />
 
     <!-- miuix-blur declares minSdk 33; blur is gated at runtime via isRuntimeShaderSupported() -->
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur,top.yukonga.miuix.kmp.shader" />
