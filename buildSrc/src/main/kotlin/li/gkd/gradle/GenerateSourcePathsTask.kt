@@ -174,14 +174,14 @@ fun Project.registerSourcePathsTask(commitId: String): TaskProvider<GenerateSour
             .sorted()
     }
 
-    val workingTreeEntries = providers.of(WorkingTreeEntriesValueSource::class.java) {
+    val workingTreeEntriesProvider = providers.of(WorkingTreeEntriesValueSource::class.java) {
         parameters.repositoryDirectory.set(rootProject.layout.projectDirectory)
     }
 
     val generatedAssetsDirectory = layout.buildDirectory.dir("generated/assets/sourcePaths")
     return tasks.register("generateSourcePaths", GenerateSourcePathsTask::class.java) {
         sourcePaths.set(trackedKotlinSourcePaths)
-        workingTreeEntries.set(workingTreeEntries)
+        workingTreeEntries.set(workingTreeEntriesProvider)
         gitCommitId.set(commitId)
         reportDetail.set(
             providers.gradleProperty("gkd.workingTreeReport").getOrElse("full"),
