@@ -46,34 +46,8 @@ jobs:
 
       - run: echo GKD_RENAME_APK_FLAG=1 >> gradle.properties
 
-      # --- 临时探针（验证 working-tree 防护的脏路径，验证完删除） ---
-      - name: GKD working-tree probe
-        run: |
-          printf 'package li.gkd.app\n\n// GkdWorkingTreeProbe: 只为验证防护而创建的未跟踪文件。\n' \
-            > gkd-app/src/main/kotlin/li/gkd/app/GkdWorkingTreeProbe.kt
-          printf '\n// GKD working-tree probe: 已跟踪文件的改动标记。\n' \
-            >> buildSrc/src/main/kotlin/li/gkd/gradle/Git.kt
-          echo "probe untracked sha256:"
-          sha256sum gkd-app/src/main/kotlin/li/gkd/app/GkdWorkingTreeProbe.kt
-          git status --porcelain=v1
-      # --- 探针结束 ---
-
       - run: chmod 777 ./gradlew
       - run: ./gradlew gkd-app:assembleGkdRelease
-
-      # --- 临时验证（验证完删除） ---
-      - name: GKD working-tree verify
-        run: |
-          WT=gkd-app/build/generated/assets/sourcePaths/working-tree.txt
-          echo "--- $WT ---"
-          cat "$WT"
-          echo "--- gkd-working-tree 快照内容 ---"
-          find gkd-app/build/gkd-working-tree -type f | sed 's#.*gkd-working-tree/##' | sort
-          echo "--- dirty.patch 字节数 ---"
-          wc -c < gkd-app/build/gkd-working-tree/dirty.patch
-          echo "--- dirty.patch 头 6 行 ---"
-          head -6 gkd-app/build/gkd-working-tree/dirty.patch
-      # --- 验证结束 ---
 
       - uses: actions/upload-artifact@v7
         with:
