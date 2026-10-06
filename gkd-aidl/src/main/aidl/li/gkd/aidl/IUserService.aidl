@@ -1,4 +1,4 @@
-package li.gkd.app.priv;
+package li.gkd.aidl;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;

@@ -1,5 +1,6 @@
 package li.gkd.app.priv.shizuku
 
+import li.gkd.aidl.IPrivilegeShizukuStartService
 import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection

@@ -228,6 +228,7 @@ composeCompiler {
 dependencies {
     implementation(libs.kotlin.stdlib)
 
+    implementation(project(":gkd-aidl"))
     implementation(project(":gkd-db"))
     implementation(project(":gkd-selector"))
 

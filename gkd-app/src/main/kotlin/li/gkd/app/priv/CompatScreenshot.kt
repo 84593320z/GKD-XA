@@ -1,5 +1,6 @@
 package li.gkd.app.priv
 
+import li.gkd.aidl.IUserService
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas

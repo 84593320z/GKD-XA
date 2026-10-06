@@ -21,6 +21,10 @@
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <uses-permission android:name="android.permission.GET_APP_OPS_STATS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- 恢复自 5d3b322 构建：开机自启兜底（BOOT_COMPLETED + persisted JobService） -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 恢复自 5d3b322 构建：util/SystemServiceDump 读 dumpsys（accessibility / window） -->
+    <uses-permission android:name="android.permission.DUMP" />
 
     <!-- miuix-blur declares minSdk 33; blur is gated at runtime via isRuntimeShaderSupported() -->
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur,top.yukonga.miuix.kmp.shader" />
@@ -310,6 +314,20 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+
+        <!-- 恢复自 5d3b322 构建：常驻通知自启兜底 -->
+        <service
+            android:name="li.gkd.app.service.StatusServiceJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver
+            android:name="li.gkd.app.receiver.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

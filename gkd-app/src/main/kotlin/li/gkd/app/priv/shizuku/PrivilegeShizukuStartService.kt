@@ -1,5 +1,6 @@
 package li.gkd.app.priv.shizuku
 
+import li.gkd.aidl.IPrivilegeShizukuStartService
 import android.os.ParcelFileDescriptor
 import android.os.ResultReceiver
 import androidx.annotation.Keep

@@ -1,4 +1,4 @@
-package li.gkd.app.priv.shizuku;
+package li.gkd.aidl;
 
 import android.os.ParcelFileDescriptor;
 import android.os.ResultReceiver;
