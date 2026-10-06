@@ -9,6 +9,7 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.app
 import li.gkd.app.appScope
 import li.gkd.app.permission.PermissionStates
+import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
 import li.gkd.app.service.ExposeService
 import li.gkd.app.service.StatusService
 import li.gkd.app.service.currentAppBlocked
@@ -71,6 +72,15 @@ private suspend fun updatePrivilegeContext(serverInfo: PrivilegeServerInfo?) =
                 AutomationService.tryConnect(true)
             }
             PermissionStates.refreshAll()
+            // 特权通道就绪 == 「拿到 root」的时刻，这里补一次全局同步：RuntimeStateSynchronizer 先
+            // grantSelf()（用特权进程给自己 pm grant WRITE_SECURE_SETTINGS）、再 refreshAll()、
+            // 最后 fixRestartAutomatorService() 写无障碍总开关与服务列表（内部自带 enableAutomator /
+            // useA11y / 黑名单判断，不满足条件时是空转）。
+            // 缺这根线时，开机只有 App.onCreate 那一次同步，而它早于 root 就绪；之后就要等用户
+            // 打开界面才补开无障碍 —— ColorOS 开机会关掉无障碍、临时 root 与 LSPosed 又普遍要
+            // 软重启后才可用，正是这个时序。用事件驱动而不是轮询：Privilege.serverState 是
+            // StateFlow，进程晚起或 root 先到都能立刻拿到当前状态。
+            RuntimeStateSynchronizer.requestSync(loc = "privilege connected")
             if (StatusService.needRestart) {
                 privilegeContext.startForegroundService(
                     ExposeService.exposeIntent(expose = -1),
