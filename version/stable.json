@@ -3,7 +3,7 @@
   "versionName": "1.3.3",
   "changelog": "v1.3.3\n\n- 修复 ColorOS 等 ROM 关机后无障碍不会自动恢复：冷启动按工作模式补开，并在 2/5/10 秒内复验重试\n- 开机自启兜底：新增 BootReceiver 与持久化 Job，常驻通知不再需要开机后手动打开\n- 主动关闭无障碍后 30 分钟内不再自动打开，避免与手动操作冲突\n- AIDL 抽为独立模块 gkd-aidl；APK 内新增 working-tree.txt 自证构建时工作区状态",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.3.3/GKD-XA-v1.3.3.apk",
-  "fileSize": 5759784,
+  "fileSize": 5759776,
   "versionLogs": [
     {
       "name": "1.3.3",
