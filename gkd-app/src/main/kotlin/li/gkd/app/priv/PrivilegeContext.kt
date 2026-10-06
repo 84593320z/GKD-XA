@@ -1,5 +1,6 @@
 package li.gkd.app.priv
 
+import li.gkd.aidl.IUserService
 import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.accessibilityservice.IAccessibilityServiceClient

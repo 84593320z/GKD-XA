@@ -1,5 +1,6 @@
 package li.gkd.app.priv
 
+import li.gkd.aidl.IUserService
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.ServiceSpecificException
