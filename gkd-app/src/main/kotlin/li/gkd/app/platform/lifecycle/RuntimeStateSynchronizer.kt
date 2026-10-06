@@ -9,6 +9,7 @@ import li.gkd.app.a11y.updateSystemDefaultAppId
 import li.gkd.app.appScope
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.priv.privilegeContextFlow
+import li.gkd.app.service.armA11yService
 import li.gkd.app.service.fixRestartAutomatorService
 import li.gkd.app.util.LogUtils
 import li.songe.codeorigin.CallSite
@@ -29,6 +30,7 @@ object RuntimeStateSynchronizer {
                     privilegeContextFlow.value?.grantSelf()
                     PermissionStates.refreshAll()
                     fixRestartAutomatorService()
+                    armA11yService(loc = "runtime sync")
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

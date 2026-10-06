@@ -73,9 +73,10 @@ private suspend fun updatePrivilegeContext(serverInfo: PrivilegeServerInfo?) =
             }
             PermissionStates.refreshAll()
             // 特权通道就绪 == 「拿到 root」的时刻，这里补一次全局同步：RuntimeStateSynchronizer 先
-            // grantSelf()（用特权进程给自己 pm grant WRITE_SECURE_SETTINGS）、再 refreshAll()、
-            // 最后 fixRestartAutomatorService() 写无障碍总开关与服务列表（内部自带 enableAutomator /
-            // useA11y / 黑名单判断，不满足条件时是空转）。
+            // grantSelf()（用特权进程给自己 pm grant WRITE_SECURE_SETTINGS）、再 refreshAll()，
+            // 然后 armA11yService() 按工作模式把无障碍写进 secure settings 并校验重试
+            // （fixRestartAutomatorService 那道门看的是 enableAutomator，它只有在无障碍已经跑起来之后
+            // 才为 true，冷启动必然是 false，所以必须由不看那个标志位的 arm 分支来开）。
             // 缺这根线时，开机只有 App.onCreate 那一次同步，而它早于 root 就绪；之后就要等用户
             // 打开界面才补开无障碍 —— ColorOS 开机会关掉无障碍、临时 root 与 LSPosed 又普遍要
             // 软重启后才可用，正是这个时序。用事件驱动而不是轮询：Privilege.serverState 是

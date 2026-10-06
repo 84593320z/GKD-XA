@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.a11y.systemRecentCn
@@ -26,6 +27,7 @@ import li.gkd.app.store.AppStore.actualA11yScopeAppList
 import li.gkd.app.store.AppStore.actualBlockA11yAppList
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.share.launchUi
+import li.gkd.app.util.LogUtils
 import li.gkd.app.util.mapState
 import li.gkd.app.util.runMainPost
 import li.gkd.app.util.ToastUtils.toast
@@ -58,28 +60,39 @@ private fun modifyA11yRun(
     }
 }
 
+/**
+ * 把无障碍总开关与我们的服务写进 secure settings，并等待系统真正把服务拉起来。
+ * 调用方必须持有 modifyA11yMutex。
+ */
+private suspend fun writeA11yServiceEnabled(): Boolean {
+    val names = app.getSecureA11yServices()
+    app.putSecureInt(Settings.Secure.ACCESSIBILITY_ENABLED, 1)
+    if (names.contains(A11yService.a11yCn)) { // 当前无障碍异常, 重启服务
+        names.remove(A11yService.a11yCn)
+        app.putSecureA11yServices(names)
+        delay(A11Y_AWAIT_FIX_TIME.milliseconds)
+    }
+    names.add(A11yService.a11yCn)
+    app.putSecureA11yServices(names)
+    delay(A11Y_AWAIT_START_TIME.milliseconds)
+    // https://github.com/orgs/gkd-kit/discussions/799
+    return A11yService.isRunning.value
+}
+
 private suspend fun switchA11yService() {
     if (A11yService.isRunning.value) {
+        // 用户在开关上主动关掉：一段时间内不再自动 arm，否则开机/回到前台会和他对着干
+        a11yUserDisabledAt = System.currentTimeMillis()
         A11yService.instance?.disableSelf()
     } else {
+        a11yUserDisabledAt = 0L
         if (!PermissionStates.writeSecureSettings.updateAndGet()) {
             if (!PermissionStates.writeSecureSettings.value) {
                 toast(UiStrings.secure_settings_permission_required)
                 return
             }
         }
-        val names = app.getSecureA11yServices()
-        app.putSecureInt(Settings.Secure.ACCESSIBILITY_ENABLED, 1)
-        if (names.contains(A11yService.a11yCn)) { // 当前无障碍异常, 重启服务
-            names.remove(A11yService.a11yCn)
-            app.putSecureA11yServices(names)
-            delay(A11Y_AWAIT_FIX_TIME.milliseconds)
-        }
-        names.add(A11yService.a11yCn)
-        app.putSecureA11yServices(names)
-        delay(A11Y_AWAIT_START_TIME.milliseconds)
-        // https://github.com/orgs/gkd-kit/discussions/799
-        if (!A11yService.isRunning.value) {
+        if (!writeA11yServiceEnabled()) {
             toast(UiStrings.a11y_enable_failed)
             showAccessRestrictedSettingsDialog()
             return
@@ -154,6 +167,98 @@ fun fixRestartAutomatorService(@CallSite loc: String = "") = modifyA11yRun(loc =
             fixA11yService()
         } else {
             fixAutomationService()
+        }
+    }
+}
+
+@Volatile
+private var a11yUserDisabledAt = 0L
+
+private const val A11Y_USER_DISABLED_SUPPRESS_MILLIS = 30 * 60 * 1000L
+
+/** 第 1 次立即执行，之后按这里的间隔重试（对付开机时系统把刚拉起的无障碍又解绑的那几秒）。 */
+private val A11Y_ARM_RETRY_MILLIS = longArrayOf(2_000L, 5_000L, 10_000L)
+
+private val armA11yDriverMutex = Mutex()
+
+private enum class ArmA11yOutcome {
+    Running,
+    WriteAgain,
+    Stop,
+}
+
+private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yOutcome {
+    if (A11yService.isRunning.value) {
+        return ArmA11yOutcome.Running
+    }
+    if (!currentAppUseA11y) {
+        LogUtils.d("$loc 工作模式不是无障碍，不自动开启", loc = "armA11yService")
+        return ArmA11yOutcome.Stop
+    }
+    if (skipBlockApp()) {
+        LogUtils.d("$loc 前台在禁用无障碍列表里，不自动开启", loc = "armA11yService")
+        return ArmA11yOutcome.Stop
+    }
+    val disabledAt = a11yUserDisabledAt
+    if (disabledAt != 0L) {
+        val remaining = A11Y_USER_DISABLED_SUPPRESS_MILLIS - (System.currentTimeMillis() - disabledAt)
+        if (remaining > 0) {
+            LogUtils.d("$loc 用户刚主动关闭无障碍，${remaining}ms 内不自动开启", loc = "armA11yService")
+            return ArmA11yOutcome.Stop
+        }
+        a11yUserDisabledAt = 0L
+    }
+    if (!PermissionStates.writeSecureSettings.updateAndGet()) {
+        LogUtils.d("$loc 没有 WRITE_SECURE_SETTINGS（root/特权未就绪），不自动开启", loc = "armA11yService")
+        return ArmA11yOutcome.Stop
+    }
+    var wrote = false
+    val running = modifyA11yMutex.withLock {
+        if (A11yService.isRunning.value) {
+            true
+        } else {
+            wrote = true
+            writeA11yServiceEnabled()
+        }
+    }
+    if (wrote) {
+        LogUtils.d(
+            "$loc 自动开启无障碍第 $attempt/$total 次，写入后无障碍${if (running) "已运行" else "未运行"}",
+            loc = "armA11yService",
+        )
+    }
+    return if (running) ArmA11yOutcome.Running else ArmA11yOutcome.WriteAgain
+}
+
+/**
+ * 冷启动补开无障碍。和 fixRestartAutomatorService 的区别是不看 storeFlow.enableAutomator：
+ * 那个标志位只有无障碍已经 onCreate（或 uiAutomation 连上）之后才为 true，开机时必然是 false，
+ * 用它当门等于「要等无障碍跑起来才会去跑起来」，冷启动永远进不去（自动化模式不受影响，
+ * 因为 AutomationService.tryConnect 在 updatePrivilegeContext 里是无条件走的）。
+ * 这里用 automatorMode 作为用户意图，并在写入后有限次校验重试；每个分支都打日志，
+ * 方便下次直接从导出日志看出是哪一条门拦住了。
+ */
+fun armA11yService(@CallSite loc: String = "") {
+    appScope.launchUi(Dispatchers.IO, loc = loc) {
+        if (!armA11yDriverMutex.tryLock()) {
+            LogUtils.d("$loc 已有自动开启任务在跑，跳过", loc = "armA11yService")
+            return@launchUi
+        }
+        try {
+            val total = A11Y_ARM_RETRY_MILLIS.size + 1
+            var outcome = ArmA11yOutcome.Stop
+            for (attempt in 1..total) {
+                if (attempt > 1) {
+                    delay(A11Y_ARM_RETRY_MILLIS[attempt - 2].milliseconds)
+                }
+                outcome = armA11yOnce(loc, attempt, total)
+                if (outcome != ArmA11yOutcome.WriteAgain) break
+            }
+            if (outcome == ArmA11yOutcome.WriteAgain) {
+                LogUtils.d("$loc 自动开启无障碍失败：写入 $total 次后无障碍仍未运行", loc = "armA11yService")
+            }
+        } finally {
+            armA11yDriverMutex.unlock()
         }
     }
 }
