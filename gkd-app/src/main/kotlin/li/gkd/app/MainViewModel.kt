@@ -4,8 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.annotation.MainThread
 import li.gkd.app.platform.service.ServiceController
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavBackStack
+import top.yukonga.miuix.kmp.nav.core.navBackStackOf
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -131,7 +132,7 @@ class MainViewModel : BaseViewModel() {
         navigatePage(PrivilegeServiceRoute)
     }
 
-    val backStack: NavBackStack<NavKey> = NavBackStack(HomeRoute)
+    val backStack: NavBackStack = navBackStackOf(HomeRoute)
     val topRoute get() = backStack.last()
 
     /** 最近一次 popPage 是否触发了返回转场（含预测性返回手势的预览窗口），由首页在转场结束后复位。 */

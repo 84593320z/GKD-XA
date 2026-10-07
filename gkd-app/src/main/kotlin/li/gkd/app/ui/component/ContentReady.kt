@@ -5,12 +5,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import top.yukonga.miuix.kmp.nav.core.LocalNavTransitionScope
 
 /** 当前 Nav 条目是否正在播放进/退场动画。 */
 @Composable
 fun rememberNavTransitionRunning(): Boolean =
-    LocalNavAnimatedContentScope.current.transition.isRunning
+    LocalNavTransitionScope.current.isRunning
 
 /**
  * KernelSU `rememberContentReady` 同款：

@@ -1,6 +1,6 @@
 package li.gkd.app.ui.share
 
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import li.gkd.app.feature.subscription.CategoryEditorRoute
 import li.gkd.app.feature.subscription.RuleExcludeEditorRoute
 import li.gkd.app.feature.subscription.SubsAppGroupListRoute

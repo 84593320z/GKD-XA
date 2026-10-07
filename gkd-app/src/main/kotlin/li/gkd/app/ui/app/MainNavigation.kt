@@ -2,23 +2,14 @@ package li.gkd.app.ui.app
 
 import li.gkd.app.MainViewModel
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.core.tween
 import li.gkd.app.feature.subscription.CategoryEditorPage
 import li.gkd.app.feature.subscription.CategoryEditorRoute
 import li.gkd.app.feature.subscription.RuleExcludeEditorPage
 import li.gkd.app.feature.subscription.RuleExcludeEditorRoute
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
+import top.yukonga.miuix.kmp.nav.transition.NavTransitions
 import li.gkd.app.ui.A11YScopeAppListRoute
 import li.gkd.app.feature.log.A11yEventLogPage
 import li.gkd.app.feature.log.A11yEventLogRoute
@@ -82,21 +73,14 @@ import li.gkd.app.ui.home.NotificationTextRoute
 import li.gkd.app.ui.home.BlockA11ySetupRoute
 import li.gkd.app.ui.home.HomeRoute
 
-private val editorTransitions = NavDisplay.transitionSpec {
-    (slideInVertically(tween(250)) { it / 8 } + fadeIn(tween(250))) togetherWith fadeOut(tween(150))
-} + NavDisplay.popTransitionSpec {
-    fadeIn(tween(150)) togetherWith (slideOutVertically(tween(250)) { it / 8 } + fadeOut(tween(250)))
-} + NavDisplay.predictivePopTransitionSpec {
-    fadeIn(tween(150)) togetherWith (slideOutVertically(tween(250)) { it / 8 } + fadeOut(tween(250)))
-}
 
-private val mainRouteEntryProvider = entryProvider {
+private fun NavEntryBuilder.mainRoutes() {
     entry<HomeRoute> { HomePage() }
     entry<WorkModeRoute> { WorkModePage() }
     entry<AboutRoute> { AboutPage() }
-    entry<ActionToastRoute>(metadata = editorTransitions) { ActionToastPage() }
-    entry<NotificationTextRoute>(metadata = editorTransitions) { NotificationTextPage() }
-    entry<BlockA11ySetupRoute>(metadata = editorTransitions) { BlockA11ySetupPage() }
+    entry<ActionToastRoute>(transition = NavTransitions.Modal) { ActionToastPage() }
+    entry<NotificationTextRoute>(transition = NavTransitions.Modal) { NotificationTextPage() }
+    entry<BlockA11ySetupRoute>(transition = NavTransitions.Modal) { BlockA11ySetupPage() }
     entry<BlockA11yAppListRoute> { BlockA11yAppListPage() }
     entry<AdvancedPageRoute> { AdvancedPage() }
     entry<AiProvidersPageRoute> { AiProvidersPage() }
@@ -109,7 +93,7 @@ private val mainRouteEntryProvider = entryProvider {
     entry<A11YScopeAppListRoute> { A11yScopeAppListPage() }
     entry<ActivityLogRoute> { ActivityLogPage() }
     entry<A11yEventLogRoute> { A11yEventLogPage() }
-    entry<EditBlockAppListRoute>(metadata = editorTransitions) { EditBlockAppListPage() }
+    entry<EditBlockAppListRoute>(transition = NavTransitions.Modal) { EditBlockAppListPage() }
     entry<SubsAppListRoute> { SubsAppListPage(it) }
     entry<WebViewRoute> { WebViewPage(it) }
     entry<SubsCategoryRoute> { SubsCategoryPage(it) }
@@ -117,9 +101,9 @@ private val mainRouteEntryProvider = entryProvider {
     entry<SubsGlobalGroupExcludeRoute> { SubsGlobalGroupExcludePage(it) }
     entry<ActionLogRoute> { ActionLogPage(it) }
     entry<ImagePreviewRoute> { ImagePreviewPage(it) }
-    entry<UpsertRuleGroupRoute>(metadata = editorTransitions) { UpsertRuleGroupPage(it) }
-    entry<CategoryEditorRoute>(metadata = editorTransitions) { CategoryEditorPage(it) }
-    entry<RuleExcludeEditorRoute>(metadata = editorTransitions) { RuleExcludeEditorPage(it) }
+    entry<UpsertRuleGroupRoute>(transition = NavTransitions.Modal) { UpsertRuleGroupPage(it) }
+    entry<CategoryEditorRoute>(transition = NavTransitions.Modal) { CategoryEditorPage(it) }
+    entry<RuleExcludeEditorRoute>(transition = NavTransitions.Modal) { RuleExcludeEditorPage(it) }
     entry<SubsAppGroupListRoute> { SubsAppGroupListPage(it) }
     entry<AppConfigRoute> { AppConfigPage(it) }
     entry<CrashReportRoute> { CrashReportPage() }
@@ -130,24 +114,10 @@ private val mainRouteEntryProvider = entryProvider {
 fun MainNavigation() {
     val mainVm = MainViewModel.requireCurrent()
     NavDisplay(
-        entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
-        ),
         backStack = mainVm.backStack,
         onBack = mainVm::popPage,
-        entryProvider = mainRouteEntryProvider,
-        transitionSpec = {
-            slideInHorizontally(initialOffsetX = { it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { -it })
-        },
-        popTransitionSpec = {
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        },
-        predictivePopTransitionSpec = {
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        },
-    )
+        transition = NavTransitions.MiuixDefault,
+    ) {
+        mainRoutes()
+    }
 }
