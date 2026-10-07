@@ -27,10 +27,7 @@ plugins {
 android {
     namespace = "li.gkd.app"
     defaultConfig {
-        // ⚠️⚠️ 测试分支专用，合并回 main 前必须 revert 掉这个 commit：
-        // 换包名以便与正式版 li.songe.gkdx 并存安装、互不覆盖。META.appId = app.packageName，
-        // 所以无障碍服务写进 secure settings 的条目、数据存储目录都各自独立，不会抢正式版的。
-        applicationId = "li.songe.gkdx.t"
+        applicationId = "li.songe.gkdx"
         versionCode = 133
         versionName = "1.3.3"
 
