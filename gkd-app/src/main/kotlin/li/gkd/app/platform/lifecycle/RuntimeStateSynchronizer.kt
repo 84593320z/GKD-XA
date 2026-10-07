@@ -25,23 +25,33 @@ object RuntimeStateSynchronizer {
                 while (true) {
                     loc = requests.tryReceive().getOrNull() ?: break
                 }
-                try {
-                    updateSystemDefaultAppId()
-                    privilegeContextFlow.value?.grantSelf()
-                    PermissionStates.refreshAll()
-                    fixRestartAutomatorService()
-                    armA11yService(loc = "runtime sync")
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    LogUtils.d(e, loc = loc)
-                }
+                // 逐步隔离：任何一步抛异常都不能连累后面的步骤 —— 之前 updateSystemDefaultAppId
+                // 在没有可解析 HOME 的设备上抛 NPE，会把 grantSelf / refreshAll / 自动开无障碍一起带走。
+                runStep(loc, "updateSystemDefaultAppId") { updateSystemDefaultAppId() }
+                runStep(loc, "grantSelf") { privilegeContextFlow.value?.grantSelf() }
+                runStep(loc, "refreshAll") { PermissionStates.refreshAll() }
+                runStep(loc, "fixRestartAutomatorService") { fixRestartAutomatorService() }
+                runStep(loc, "armA11yService") { armA11yService(loc = "runtime sync") }
             }
         }
     }
 
     fun requestSync(@CallSite loc: String = "") {
         check(requests.trySend(loc).isSuccess) { "运行时状态同步队列已关闭" }
+    }
+
+    private inline fun runStep(
+        loc: String,
+        name: String,
+        body: () -> Unit,
+    ) {
+        try {
+            body()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            LogUtils.d(e, loc = "$loc -> $name")
+        }
     }
 
     private const val COALESCE_DELAY_MILLIS = 50L

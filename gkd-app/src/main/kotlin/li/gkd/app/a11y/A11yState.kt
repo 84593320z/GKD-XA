@@ -291,8 +291,8 @@ fun updateSystemDefaultAppId() {
         ?.let(ComponentName::unflattenFromString)?.packageName ?: ""
     val launcherCn = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
         .resolveActivity(app.packageManager)
-    launcherAppIdFlow.value = launcherCn.packageName
-    if (app.getPkgInfo(launcherAppId)?.applicationInfo?.isSystem == true) {
+    launcherAppIdFlow.value = launcherCn?.packageName ?: ""
+    if (launcherCn != null && app.getPkgInfo(launcherAppId)?.applicationInfo?.isSystem == true) {
         systemRecentCn = launcherCn
     } else {
         if (AndroidTarget.P) {

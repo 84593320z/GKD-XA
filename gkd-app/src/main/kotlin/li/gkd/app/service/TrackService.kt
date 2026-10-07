@@ -300,7 +300,7 @@ class TrackService : LifecycleHookService(), SavedStateRegistryOwner {
             NotificationCatalog.track().startForeground()
         }
         onDestroyed {
-            service = null
+            if (service === this@TrackService) service = null
             layerMap.values.forEach { it.removeView() }
             layerMap.clear()
         }
