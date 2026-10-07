@@ -1,4 +1,5 @@
 // Mirrored from compose-miuix-ui example.
+// 同步自 miuix@39c40f9 (v0.9.4) example/shared/src/commonMain/kotlin/component/effect/OS3BgFrag.kt
 
 package li.gkd.app.ui.component.effect
 

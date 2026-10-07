@@ -4,6 +4,7 @@
 package li.gkd.app.ui.liquid
 
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
+// 同步自 miuix@39c40f9 (v0.9.4) example/shared/src/commonMain/kotlin/component/liquid/Lens.kt
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.unit.LayoutDirection
