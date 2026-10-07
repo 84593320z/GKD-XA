@@ -29,7 +29,7 @@ import li.gkd.db.A11yEventLog
 
 @Composable
 fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier) {
-    val railColor = MiuixTheme.colorScheme.secondary
+    val railColor = MiuixTheme.colorScheme.primary
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -51,7 +51,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                 Spacer(
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
-                        .background(MiuixTheme.colorScheme.secondary)
+                        .background(MiuixTheme.colorScheme.outline)
                         .size(height = 8.dp, width = 1.dp)
                 )
                 GkAppNameText(

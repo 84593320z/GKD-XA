@@ -402,7 +402,7 @@ private fun UriImage(
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = text,
-                            color = MiuixTheme.colorScheme.outline,
+                            color = Color.White.copy(alpha = 0.7f),
                             style = MiuixTheme.textStyles.footnote1,
                         )
                     }
@@ -442,7 +442,7 @@ private fun UriImage(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = msg,
-                            color = MiuixTheme.colorScheme.outline,
+                            color = Color.White.copy(alpha = 0.7f),
                             style = MiuixTheme.textStyles.footnote2,
                             modifier = Modifier.padding(horizontal = 16.dp),
                             textAlign = TextAlign.Center

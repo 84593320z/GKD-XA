@@ -65,7 +65,7 @@ fun <T> GkTextMenu(
                 option.options.forEach { otherOption ->
                     val selected = otherOption.value == option.value
                     DropdownMenuItem(
-                        modifier = if (selected) Modifier.background(MiuixTheme.colorScheme.onSecondary) else Modifier,
+                        modifier = if (selected) Modifier.background(MiuixTheme.colorScheme.secondaryContainer) else Modifier,
                         leadingIcon = if (otherOption is OptionIcon) ({
                             GkIcon(
                                 imageVector = otherOption.icon,

@@ -161,8 +161,8 @@ internal fun MiuixColors.toMaterialColorScheme(darkTheme: Boolean): ColorScheme 
         surfaceContainer = surfaceContainer,
         surfaceContainerHigh = surfaceContainerHigh,
         surfaceContainerHighest = surfaceContainerHighest,
-        tertiary = secondary,
-        onTertiary = onSecondary,
+        tertiary = primary,
+        onTertiary = onPrimary,
     )
 }
 
