@@ -61,7 +61,7 @@ fun GkAppNameText(
             color = color,
         )
     } else {
-        val userNameColor = MiuixTheme.colorScheme.secondary
+        val userNameColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
         val annotatedString = remember(showSystemIcon, appName, userName, userNameColor) {
             buildAnnotatedString {
                 if (showSystemIcon) {

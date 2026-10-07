@@ -263,7 +263,7 @@ private fun ActionLogContextText(
                     UiStrings.version_prefixed(actionLog.subsVersion)
                 },
                 style = MiuixTheme.textStyles.footnote2,
-                color = MiuixTheme.colorScheme.secondary,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

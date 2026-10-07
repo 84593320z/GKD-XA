@@ -123,7 +123,7 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                             .background(MiuixTheme.colorScheme.surfaceContainer)
                             .padding(horizontal = 2.dp),
                         style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.secondary,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 }
             }

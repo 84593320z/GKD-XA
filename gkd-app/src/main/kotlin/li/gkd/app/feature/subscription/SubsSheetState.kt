@@ -155,7 +155,7 @@ class SubsSheetState {
                                 modifier = Modifier.weight(1f, fill = false),
                                 style = MiuixTheme.textStyles.footnote2,
                                 color = when {
-                                    subsItem.isLocal -> MiuixTheme.colorScheme.secondary
+                                    subsItem.isLocal -> MiuixTheme.colorScheme.onSurfaceSecondary
                                     subscription.author == null -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.5f)
                                     else -> MiuixTheme.colorScheme.onSurfaceVariantSummary
                                 },
@@ -166,7 +166,7 @@ class SubsSheetState {
                             Text(
                                 text = UiStrings.version_prefixed(subscription.version),
                                 style = MiuixTheme.textStyles.footnote2,
-                                color = MiuixTheme.colorScheme.secondary,
+                                color = MiuixTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier
                                     .clip(MaterialTheme.shapes.extraSmall)
                                     .background(MiuixTheme.colorScheme.tertiaryContainer)
@@ -330,7 +330,7 @@ class SubsSheetState {
                                     Text(
                                         text = updateUrl,
                                         style = MiuixTheme.textStyles.footnote2,
-                                        color = MiuixTheme.colorScheme.secondary,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                         softWrap = false,
                                         overflow = TextOverflow.MiddleEllipsis,
                                         modifier = Modifier
