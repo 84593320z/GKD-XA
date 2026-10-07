@@ -234,7 +234,7 @@ fun BlockA11yAppListPage() {
                     text = UiStrings.a11y_whitelist_follow_apps,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
-                    color = MiuixTheme.colorScheme.secondary,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
         } else if (editable) {

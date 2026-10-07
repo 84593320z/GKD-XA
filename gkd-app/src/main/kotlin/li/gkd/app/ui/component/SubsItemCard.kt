@@ -190,7 +190,7 @@ fun SubsItemCard(
                                 modifier = Modifier.clearAndSetSemantics {},
                                 text = META.appName,
                                 style = MiuixTheme.textStyles.footnote2,
-                                color = MiuixTheme.colorScheme.secondary,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         }
                         val timeStr = formatTimeAgo(subsItem.mtime)

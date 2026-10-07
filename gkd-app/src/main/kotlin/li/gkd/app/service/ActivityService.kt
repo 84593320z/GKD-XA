@@ -80,14 +80,14 @@ class ActivityService : OverlayWindowService(
                             RowText(text = topActivity.appId)
                             RowText(
                                 text = topActivity.shortActivityId,
-                                color = MiuixTheme.colorScheme.secondary
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
                             )
                         }
                         if (topActivity.number > 0) {
                             Text(
                                 text = topActivity.number.toString(),
                                 style = MiuixTheme.textStyles.footnote2,
-                                color = MiuixTheme.colorScheme.secondary,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .zIndex(1f)
