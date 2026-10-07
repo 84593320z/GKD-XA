@@ -146,6 +146,23 @@ private class PersistedValue<T>(
     }
 }
 
+/**
+ * 解析不了的文件先改名留档，再回落默认值。写盘本身是原子的（.tmp + fd.sync + ATOMIC_MOVE），
+ * 所以走到这里基本是字段类型变更、未知 key 或人工改坏；不留档的话下一次写入就直接覆盖掉用户
+ * 原来的配置，再想救回来就没有机会了，而且原来连一行日志都没有。
+ */
+private fun archiveUnreadable(file: File) {
+    if (!file.exists()) return
+    val target = File(file.parentFile, "${file.name}.corrupt-${System.currentTimeMillis()}")
+    runCatching {
+        Files.move(file.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }.onSuccess {
+        LogUtils.d("设置文件解析失败，已改名留档: ${target.name}")
+    }.onFailure {
+        LogUtils.d("设置文件解析失败，且留档也没成功", it)
+    }
+}
+
 class SettingsRepository(
     storeFolder: File,
     scope: CoroutineScope,
@@ -161,6 +178,10 @@ class SettingsRepository(
             text?.let {
                 runCatching { json.decodeFromString<SettingsStore>(it) }.getOrNull()
                     ?.migrateAiProviders()
+                    ?: run {
+                        archiveUnreadable(storeFolder.resolve("store.json"))
+                        defaultSettings()
+                    }
             } ?: defaultSettings()
         },
         encode = { json.encodeToString(it) },

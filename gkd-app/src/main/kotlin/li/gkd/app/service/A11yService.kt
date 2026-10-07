@@ -203,5 +203,12 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
         @Volatile
         var instance: A11yService? = null
             private set
+
+        /**
+         * isRunning 只代表系统把服务 onCreate 起来了，instance 要到 onServiceConnected 才赋值。
+         * 自动修复如果只认 isRunning，「创建了但一直连不上」会被判定成运行正常，
+         * 于是永远不再重试、用户在开关上也关不掉它。需要「确认可用」的地方一律用这个。
+         */
+        val isReady get() = isRunning.value && instance != null
     }
 }

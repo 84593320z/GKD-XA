@@ -76,7 +76,7 @@ private suspend fun writeA11yServiceEnabled(): Boolean {
     app.putSecureA11yServices(names)
     delay(A11Y_AWAIT_START_TIME.milliseconds)
     // https://github.com/orgs/gkd-kit/discussions/799
-    return A11yService.isRunning.value
+    return A11yService.isReady
 }
 
 private suspend fun switchA11yService() {
@@ -131,7 +131,7 @@ private fun skipBlockApp(): Boolean {
 }
 
 private suspend fun fixA11yService() {
-    if (!A11yService.isRunning.value && PermissionStates.writeSecureSettings.updateAndGet()) {
+    if (!A11yService.isReady && PermissionStates.writeSecureSettings.updateAndGet()) {
         if (skipBlockApp()) return
         val names = app.getSecureA11yServices()
         val a11yBroken = names.contains(A11yService.a11yCn)
@@ -188,7 +188,7 @@ private enum class ArmA11yOutcome {
 }
 
 private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yOutcome {
-    if (A11yService.isRunning.value) {
+    if (A11yService.isReady) {
         return ArmA11yOutcome.Running
     }
     if (!currentAppUseA11y) {
@@ -214,7 +214,7 @@ private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yO
     }
     var wrote = false
     val running = modifyA11yMutex.withLock {
-        if (A11yService.isRunning.value) {
+        if (A11yService.isReady) {
             true
         } else {
             wrote = true

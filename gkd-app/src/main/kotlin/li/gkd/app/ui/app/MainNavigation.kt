@@ -7,6 +7,11 @@ import li.gkd.app.feature.subscription.CategoryEditorRoute
 import li.gkd.app.feature.subscription.RuleExcludeEditorPage
 import li.gkd.app.feature.subscription.RuleExcludeEditorRoute
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalFocusManager
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import top.yukonga.miuix.kmp.nav.core.NavDisplay
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 import top.yukonga.miuix.kmp.nav.transition.NavTransitions
@@ -113,6 +118,20 @@ private fun NavEntryBuilder.mainRoutes() {
 @Composable
 fun MainNavigation() {
     val mainVm = MainViewModel.requireCurrent()
+    // 被盖住的 entry 仍然保持 composed，所以栈顶换了之后上一页的焦点不会自己清掉：
+    // 在编辑器页点了输入框、返回或跳走后键盘还挂着、光标在看不见的上一页闪。
+    // 上游 miuix-nav 已在 7052841 里修掉，但那是库内私有实现，这里做应用侧等价处理。
+    val focusManager = LocalFocusManager.current
+    val topKey = mainVm.backStack.lastOrNull()
+    val previousTopKey = remember { mutableStateOf<NavKey?>(null) }
+    DisposableEffect(topKey) {
+        val previous = previousTopKey.value
+        previousTopKey.value = topKey
+        if (previous != null && previous != topKey) {
+            focusManager.clearFocus()
+        }
+        onDispose { }
+    }
     NavDisplay(
         backStack = mainVm.backStack,
         onBack = mainVm::popPage,
