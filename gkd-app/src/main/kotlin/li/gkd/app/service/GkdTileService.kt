@@ -146,7 +146,9 @@ private suspend fun fixA11yService() {
         names.add(A11yService.a11yCn)
         app.putSecureA11yServices(names)
         delay(A11Y_AWAIT_START_TIME.milliseconds)
-        if (currentAppUseA11y && !A11yService.isRunning.value) {
+        // 判定口径要和函数入口一致：入口已经改成 isReady，这里若还看 isRunning，
+        // 「服务被创建但连不上」就会走完先摘再挂后被当成修复成功、一声不吭。
+        if (currentAppUseA11y && !A11yService.isReady) {
             toast(UiStrings.a11y_restart_failed)
             showAccessRestrictedSettingsDialog()
         }
