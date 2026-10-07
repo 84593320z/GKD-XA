@@ -1,17 +1,16 @@
+// 已同步到 miuix@39c40f9 (component/liquid/LiquidGlassNavigationBar.kt)
 // Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package li.gkd.app.ui.liquid
+package li.gkd.app.ui.liquid.liquid
 
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
-// 同步自 miuix@39c40f9 (v0.9.4) example/shared/src/commonMain/kotlin/component/liquid/LiquidGlassNavigationBar.kt
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -56,11 +54,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -71,8 +76,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import li.gkd.app.ui.liquid.animation.DampedDragAnimation
 import li.gkd.app.ui.liquid.animation.InteractiveHighlight
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.BadgedBox
 import top.yukonga.miuix.kmp.basic.Icon
@@ -129,7 +132,7 @@ private const val LIGHT_REF_Y = 0.7f
 private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f // |g_xy| > 0.1, ≈ 6° tilt
 
 // 3° quantization step for the gravity direction: finer changes are imperceptible.
-private val GRAVITY_ANGLE_STEP_RAD = (3.0 * PI / 180.0).toFloat()
+private const val GRAVITY_ANGLE_STEP_RAD = (3.0 * PI / 180.0).toFloat()
 
 /**
  * In-screen-plane gravity direction angle (radians, quantized to 3° steps).
@@ -229,12 +232,16 @@ fun IosLiquidGlassNavigationBar(
     }
 
     var currentIndex by remember { mutableIntStateOf(selectedIndex) }
+    val onItemClickUpdated by rememberUpdatedState(onItemClick)
 
-    class DampedDragHolder {
-        var instance: DampedDragAnimation? = null
+    fun indexAt(positionX: Float): Int {
+        if (tabWidthPx == 0f) return currentIndex
+        val horizontalPaddingPx = with(density) { 4.dp.toPx() }
+        val logicalX = if (isLtr) positionX else totalWidthPx - positionX
+        return ((logicalX - horizontalPaddingPx) / tabWidthPx)
+            .toInt()
+            .coerceIn(0, tabsCount - 1)
     }
-
-    val holder = remember { DampedDragHolder() }
 
     val dampedDrag = remember(animationScope, tabsCount, density, isLtr) {
         DampedDragAnimation(
@@ -244,33 +251,31 @@ fun IosLiquidGlassNavigationBar(
             visibilityThreshold = 0.001f,
             initialScale = 1f,
             pressedScale = 78f / 56f,
-            canDrag = { offset ->
-                val anim = holder.instance ?: return@DampedDragAnimation true
-                if (tabWidthPx == 0f) return@DampedDragAnimation false
-                val currentValue = anim.value
-                val indicatorX = currentValue * tabWidthPx
-                val pad = with(density) { 4.dp.toPx() }
-                val globalTouchX = if (isLtr) {
-                    pad + indicatorX + offset.x
-                } else {
-                    totalWidthPx - pad - tabWidthPx - indicatorX + offset.x
-                }
-                globalTouchX in 0f..totalWidthPx
+            canDrag = { position ->
+                position.x in 0f..totalWidthPx
             },
-            onDragStarted = {},
+            onDragStarted = { position ->
+                updateValue(indexAt(position.x).toFloat())
+            },
             onDragStopped = {
                 val targetIndex = targetValue.roundToInt().coerceIn(0, tabsCount - 1)
                 if (currentIndex != targetIndex) {
                     currentIndex = targetIndex
-                } else {
-                    animateToValue(targetIndex.toFloat())
+                    onItemClickUpdated(targetIndex)
                 }
+                updateValue(targetIndex.toFloat())
+                animationScope.launch {
+                    offsetAnimation.animateTo(0f, spring(1f, 300f, 0.5f))
+                }
+            },
+            onDragCancelled = {
+                updateValue(currentIndex.toFloat())
                 animationScope.launch {
                     offsetAnimation.animateTo(0f, spring(1f, 300f, 0.5f))
                 }
             },
             onDrag = { _, dragAmount ->
-                if (tabWidthPx > 0f) {
+                if (tabWidthPx > 0f && dragAmount.x != 0f) {
                     updateValue(
                         (targetValue + dragAmount.x / tabWidthPx * if (isLtr) 1f else -1f)
                             .coerceIn(0f, (tabsCount - 1).toFloat()),
@@ -280,18 +285,22 @@ fun IosLiquidGlassNavigationBar(
                     }
                 }
             },
-        ).also { holder.instance = it }
+        )
     }
 
     LaunchedEffect(selectedIndex) {
-        if (currentIndex != selectedIndex) currentIndex = selectedIndex
+        if (currentIndex != selectedIndex) {
+            currentIndex = selectedIndex
+            dampedDrag.animateToValue(selectedIndex.toFloat())
+        }
     }
-    val onItemClickUpdated by rememberUpdatedState(onItemClick)
-    LaunchedEffect(dampedDrag) {
-        snapshotFlow { currentIndex }.drop(1).collectLatest { index ->
-            dampedDrag.animateToValue(index.toFloat())
+
+    fun activateTab(index: Int) {
+        if (currentIndex != index) {
+            currentIndex = index
             onItemClickUpdated(index)
         }
+        dampedDrag.animateToValue(index.toFloat())
     }
 
     // Keyed on dampedDrag: the position lambda captures it; a stale capture would freeze the press spot.
@@ -331,13 +340,26 @@ fun IosLiquidGlassNavigationBar(
         items.forEachIndexed { index, item ->
             Column(
                 modifier = Modifier
-                    .clickable(
-                        interactionSource = null,
-                        indication = null,
-                        role = Role.Tab,
-                        onClick = { currentIndex = index },
-                    )
-                    .semantics { selected = index == currentIndex }
+                    .semantics(mergeDescendants = true) {
+                        selected = index == currentIndex
+                        role = Role.Tab
+                        onClick {
+                            activateTab(index)
+                            true
+                        }
+                    }
+                    .onKeyEvent { event ->
+                        val isActivationKey = event.key == Key.Enter ||
+                            event.key == Key.NumPadEnter ||
+                            event.key == Key.Spacebar
+                        if (isActivationKey) {
+                            if (event.type == KeyEventType.KeyUp) activateTab(index)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    .focusable()
                     .weight(1f)
                     .fillMaxHeight()
                     .graphicsLayer {
@@ -393,21 +415,13 @@ fun IosLiquidGlassNavigationBar(
                                 alpha = if (isDark) 0.2f else 0.1f,
                             ),
                         )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {},
-                        )
                         .then(
                             if (isBlurActive && backdrop != null) {
                                 Modifier.drawBackdrop(
                                     backdrop = backdrop,
                                     shape = { pillShape },
                                     effects = {
-                                        // 24dp lens + 16dp press-scale 采样范围须在 blur() 之前抬高 padding。
-                                        // blur() 会按调用时的 padding 烘焙采样 clamp；若之后再抬高，
-                                        // recording 尺寸与 clamp 不一致，底/右边缘折射带会错位（反射异常）。
-                                        // 见 miuix 3528c846；0.9.3 尚无库内二次 apply 兜底，必须前置。
+                                        // 24dp lens refraction + 16dp press-scale reach, raised before blur() reads it.
                                         padding = maxOf(padding, 40.dp.toPx())
                                         vibrancy()
                                         blur(
@@ -433,7 +447,14 @@ fun IosLiquidGlassNavigationBar(
                                     .background(containerColor, pillShape)
                             },
                         )
-                        .then(if (isBlurActive) interactiveHighlight.modifier else Modifier)
+                        .then(
+                            if (isBlurActive) {
+                                interactiveHighlight.modifier.then(interactiveHighlight.gestureModifier)
+                            } else {
+                                Modifier
+                            },
+                        )
+                        .then(dampedDrag.modifier)
                         .height(64.dp)
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -456,8 +477,6 @@ fun IosLiquidGlassNavigationBar(
                                 backdrop = backdrop,
                                 shape = { pillShape },
                                 effects = {
-                                    // 与可见底栏一致：padding 必须先于 blur()（0.9.3 无库内兜底）
-                                    padding = maxOf(padding, 24.dp.toPx())
                                     vibrancy()
                                     blur(4.dp.toPx(), 4.dp.toPx())
                                     lens(
@@ -487,8 +506,6 @@ fun IosLiquidGlassNavigationBar(
                                 val progressOffset = dampedDrag.value * singleTabWidth
                                 translationX = if (isLtr) progressOffset + panelOffset else -progressOffset + panelOffset
                             }
-                            .then(interactiveHighlight.gestureModifier)
-                            .then(dampedDrag.modifier)
                             .drawBackdrop(
                                 backdrop = combinedBackdrop,
                                 shape = { pillShape },
@@ -536,7 +553,6 @@ fun IosLiquidGlassNavigationBar(
                                 val progressOffset = dampedDrag.value * tabWidthPx
                                 translationX = if (isLtr) progressOffset + panelOffset else -progressOffset + panelOffset
                             }
-                            .then(dampedDrag.modifier)
                             .clip(pillShape)
                             .background(accentColor.copy(alpha = 0.15f), pillShape)
                             .height(56.dp)

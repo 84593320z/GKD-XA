@@ -1,10 +1,10 @@
+// 已同步到 miuix@39c40f9 (component/animation/DampedDragAnimation.kt)
 // Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package li.gkd.app.ui.liquid.animation
 
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
-// 同步自 miuix@39c40f9 (v0.9.4) example/shared/src/commonMain/kotlin/component/animation/DampedDragAnimation.kt
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.time.TimeSource
 
-class DampedDragAnimation(
+internal class DampedDragAnimation(
     private val animationScope: CoroutineScope,
     val initialValue: Float,
     val valueRange: ClosedRange<Float>,
@@ -44,6 +44,7 @@ class DampedDragAnimation(
     val canDrag: (Offset) -> Boolean = { true },
     val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
     val onDragStopped: DampedDragAnimation.() -> Unit,
+    val onDragCancelled: DampedDragAnimation.() -> Unit = onDragStopped,
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
 ) {
 
@@ -88,7 +89,7 @@ class DampedDragAnimation(
                 release()
             },
             onDragCancel = {
-                onDragStopped()
+                onDragCancelled()
                 release()
             },
         ) { change, dragAmount ->
