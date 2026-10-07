@@ -4,6 +4,7 @@
 package li.gkd.app.ui.liquid.animation
 
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
+// 同步自 miuix@39c40f9 (v0.9.4) example/shared/src/commonMain/kotlin/component/animation/DampedDragAnimation.kt
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
