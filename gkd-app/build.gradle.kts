@@ -240,6 +240,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.service)
+    // viewModel<T>() 之前是靠 navigation3 传递进来的，miuix-nav 接管导航后必须显式声明
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)

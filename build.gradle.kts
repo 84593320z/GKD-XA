@@ -30,7 +30,9 @@ object Cfg {
     val buildToolsVersion get() = "37.0.0"
     val minSdk get() = 26
     val targetSdk get() = compileSdk
-    val sourceVersion = JavaVersion.VERSION_11
+    // miuix 0.9.4 的 inline 函数（entry DSL 等）是 JVM 21 字节码；target 11 会报
+    // "Cannot inline bytecode built with JVM target 21"，所以整体抬到 21。CI 用 JDK 21。
+    val sourceVersion = JavaVersion.VERSION_21
     val targetVersion get() = sourceVersion
     val kotlinTargetVersion get() = JvmTarget.fromTarget(targetVersion.majorVersion)
     // 统一应用于所有子项目；未依赖对应库的模块允许出现 unresolved opt-in marker 警告。
