@@ -3,7 +3,7 @@
   "versionName": "1.4.0",
   "changelog": "v1.4.0（测试通道）\n\n- 界面层完全跟随 miuix 0.9.4：导航换成 miuix-nav，转场与预测式返回改由库提供（连续栈深度、拖拽中途松手可回弹）\n- 修复深色/浅色下大量内容看不清：补齐 MIUIX→Material3 颜色桥接漏掉的 10 个槽位，并补上 Material3 内容色\n- 批量修掉 23 处颜色槽位误用（MIUIX 的 secondary 是容器色，之前被当文字色用了 11 处，浅色下等于白底画白字）\n- 修复几个会静默失效的逻辑洞：无可解析桌面时自动开无障碍整条链被中断、切工作模式后新通道没人起、服务实例被旧实例清成空\n- 底栏支持键盘方向键与 TalkBack 选中态；删掉 1955 行零引用代码",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.0/GKD-XA-v1.4.0.apk",
-  "fileSize": 5812708,
+  "fileSize": 5812856,
   "versionLogs": [
     {
       "name": "1.4.0",
