@@ -118,16 +118,22 @@ private fun NavEntryBuilder.mainRoutes() {
 @Composable
 fun MainNavigation() {
     val mainVm = MainViewModel.requireCurrent()
-    // 被盖住的 entry 仍然保持 composed，所以栈顶换了之后上一页的焦点不会自己清掉：
-    // 在编辑器页点了输入框、返回或跳走后键盘还挂着、光标在看不见的上一页闪。
-    // 上游 miuix-nav 已在 7052841 里修掉，但那是库内私有实现，这里做应用侧等价处理。
+    // 被盖住的 entry 仍然保持 composed，所以返回之后上一页的焦点不会自己交还：
+    // 在编辑器页点过输入框、返回后键盘还挂着、光标在看不见的上一页闪。
+    // 上游 miuix-nav 在 7052841 里修了这个，但那是库内私有实现，这里做应用侧等价处理。
+    //
+    // 只在「栈变浅 = 返回」时清，前进方向不能清：有 5 个页面用
+    // autoFocus(immediateFocus = true) 在进页面当帧就抢焦点（CategoryEditorPage、
+    // UpsertRuleGroupPage、RuleExcludeEditorPage、A11yScopeAppListPage、
+    // BlockA11yAppListPage），而父节点的 effect 在子节点之后执行，一起清会把它们全部打掉。
     val focusManager = LocalFocusManager.current
     val topKey = mainVm.backStack.lastOrNull()
-    val previousTopKey = remember { mutableStateOf<NavKey?>(null) }
-    DisposableEffect(topKey) {
-        val previous = previousTopKey.value
-        previousTopKey.value = topKey
-        if (previous != null && previous != topKey) {
+    val stackSize = mainVm.backStack.size
+    val previousTop = remember { mutableStateOf<Pair<NavKey?, Int>?>(null) }
+    DisposableEffect(topKey, stackSize) {
+        val previous = previousTop.value
+        previousTop.value = topKey to stackSize
+        if (previous != null && previous.second > stackSize && previous.first != topKey) {
             focusManager.clearFocus()
         }
         onDispose { }
