@@ -6,6 +6,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor as MaterialLocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -104,6 +105,9 @@ fun AppTheme(
             ApplyWindowChrome(darkTheme = darkTheme, background = materialScheme.background)
             CompositionLocalProvider(
                 LocalContentColor provides MiuixTheme.colorScheme.onSurface,
+                // 没被 M3 Surface 包住的 Material3 Text / Icon 读的是这个 Local；不提供的话它会退到
+                // 未指定色，最终按平台默认（黑）绘制 —— 深色下就是「内容不显示」。
+                MaterialLocalContentColor provides materialScheme.onSurface,
             ) {
                 MaterialTheme(
                     colorScheme = materialScheme,
@@ -163,6 +167,20 @@ internal fun MiuixColors.toMaterialColorScheme(darkTheme: Boolean): ColorScheme 
         surfaceContainerHighest = surfaceContainerHighest,
         tertiary = secondary,
         onTertiary = onSecondary,
+        // MIUIX 色板没有下面这些槽位。留着 Material3 默认值会出事：MIUIX 深色的 surface 是纯黑、
+        // background 是 #242424，明度阶梯方向和 Material3 的默认 token 相反，于是 M3 的
+        // Surface / Card / Snackbar / Tooltip 会拿到和内容色对冲的面板色。这里按 MIUIX 自己的
+        // 明度补齐，注意深浅两色的「最暗 / 最亮」落在不同字段上，必须分模式取。
+        surfaceContainerLowest = if (darkTheme) surface else background,
+        surfaceContainerLow = if (darkTheme) background else surface,
+        surfaceBright = if (darkTheme) surfaceContainerHighest else background,
+        surfaceDim = if (darkTheme) surface else surfaceContainerHigh,
+        inverseSurface = onSurface,
+        inverseOnSurface = surface,
+        inversePrimary = primaryContainer,
+        surfaceTint = primary,
+        outlineVariant = dividerLine,
+        scrim = windowDimming,
     )
 }
 
