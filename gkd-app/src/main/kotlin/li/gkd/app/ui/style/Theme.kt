@@ -165,8 +165,10 @@ internal fun MiuixColors.toMaterialColorScheme(darkTheme: Boolean): ColorScheme 
         surfaceContainer = surfaceContainer,
         surfaceContainerHigh = surfaceContainerHigh,
         surfaceContainerHighest = surfaceContainerHighest,
-        tertiary = secondary,
-        onTertiary = onSecondary,
+        // MIUIX 没有 tertiary，之前接的是 secondary —— 但那是容器色（浅色 #E6E6E6）、
+        // onSecondary 恒为白，等于给 M3 组件一对白字压浅底；接 primary/onPrimary 才对得上语义。
+        tertiary = primary,
+        onTertiary = onPrimary,
         // MIUIX 色板没有下面这些槽位。留着 Material3 默认值会出事：MIUIX 深色的 surface 是纯黑、
         // background 是 #242424，明度阶梯方向和 Material3 的默认 token 相反，于是 M3 的
         // Surface / Card / Snackbar / Tooltip 会拿到和内容色对冲的面板色。这里按 MIUIX 自己的

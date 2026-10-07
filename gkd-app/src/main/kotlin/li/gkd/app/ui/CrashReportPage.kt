@@ -219,7 +219,7 @@ private fun CrashReportCard(
                         text = message ?: UiStrings.exception_message_empty,
                         style = MiuixTheme.textStyles.body2,
                         color = if (message == null) {
-                            MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f)
+                            MiuixTheme.colorScheme.onSurfaceVariantActions
                         } else {
                             MiuixTheme.colorScheme.onSurface
                         },

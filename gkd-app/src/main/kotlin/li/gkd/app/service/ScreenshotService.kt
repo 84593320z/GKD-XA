@@ -53,7 +53,7 @@ class ScreenshotService : LifecycleHookService() {
             instance = this@ScreenshotService
         }
         onDestroyed {
-            instance = null
+            if (instance === this@ScreenshotService) instance = null
             captureSessionSlot.close()
         }
     }

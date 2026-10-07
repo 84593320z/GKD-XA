@@ -655,7 +655,7 @@ private fun SnapshotCard(
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
                 style = MiuixTheme.textStyles.footnote2,
-                color = if (activityLabel == null) colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f)
+                color = if (activityLabel == null) colorScheme.onSurfaceVariantActions
                     else colorScheme.onSurface,
             )
         }

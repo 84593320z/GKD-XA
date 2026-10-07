@@ -859,7 +859,7 @@ private fun RequiredTextItem(
             modifier = Modifier
                 .padding(vertical = (lineHeightDp - 4.dp) / 2)
                 .clip(CircleShape)
-                .background(MiuixTheme.colorScheme.secondary)
+                .background(MiuixTheme.colorScheme.onSurfaceVariantSummary)
                 .size(4.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))

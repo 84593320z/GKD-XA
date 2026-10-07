@@ -3,6 +3,7 @@ package li.gkd.app
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.MainThread
+import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
 import li.gkd.app.platform.service.ServiceController
 import top.yukonga.miuix.kmp.nav.core.NavBackStack
 import top.yukonga.miuix.kmp.nav.core.navBackStackOf
@@ -365,6 +366,9 @@ class MainViewModel : BaseViewModel() {
         AppStore.updateAutomatorMode(option.value)
         A11yService.instance?.shutdown()
         uiAutomationFlow.value?.shutdown()
+        // 换模式后旧通道已被关，新模式该由谁起来原先没人管：
+        // 补一次同步，让 armA11yService / AutomationService 按新的 automatorMode 重新决策。
+        RuntimeStateSynchronizer.requestSync(loc = "work mode changed")
     }
 
     fun updateAutomatorMode(option: AutomatorModeOption) {

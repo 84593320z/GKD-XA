@@ -218,8 +218,9 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
         if (querying) return
         // 无障碍从零启动时获取 safeActiveWindow 非常耗时
         if (byEvent == null && service.justStarted && !hasOthersService) return checkFutureStartJob()
+        // 必须在启动协程前占位：否则事件风暴里多个调用都能通过上面的 if (querying) return
+        querying = true
         scope.launchLogged(queryDispatcher) {
-            querying = true
             val st = if (META.debuggable) System.currentTimeMillis() else 0L
             try {
                 if (META.debuggable) {

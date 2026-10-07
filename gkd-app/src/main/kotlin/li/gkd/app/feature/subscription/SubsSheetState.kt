@@ -156,7 +156,7 @@ class SubsSheetState {
                                 style = MiuixTheme.textStyles.footnote2,
                                 color = when {
                                     subsItem.isLocal -> MiuixTheme.colorScheme.onSurfaceSecondary
-                                    subscription.author == null -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.5f)
+                                    subscription.author == null -> MiuixTheme.colorScheme.onSurfaceVariantActions
                                     else -> MiuixTheme.colorScheme.onSurfaceVariantSummary
                                 },
                                 maxLines = 1,
