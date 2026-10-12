@@ -31,7 +31,7 @@ object RuntimeStateSynchronizer {
                 runStep(loc, "grantSelf") { privilegeContextFlow.value?.grantSelf() }
                 runStep(loc, "refreshAll") { PermissionStates.refreshAll() }
                 runStep(loc, "fixRestartAutomatorService") { fixRestartAutomatorService() }
-                runStep(loc, "armA11yService") { armA11yService(loc = "runtime sync") }
+                runStep(loc, "armA11yService") { armA11yService(loc = "sync($loc)") }
             }
         }
     }

@@ -191,6 +191,11 @@ private enum class ArmA11yOutcome {
 
 private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yOutcome {
     if (A11yService.isReady) {
+        // 「已经就绪」是这里唯一的静默出口，而导出日志里分不清「跑过发现没事」和「根本没跑」，
+        // 排查开机问题时只能靠旁证 —— 补一条只有首轮才打的日志。
+        if (attempt == 1) {
+            LogUtils.d("$loc 无障碍已就绪，无需写入", loc = "armA11yService")
+        }
         return ArmA11yOutcome.Running
     }
     if (!currentAppUseA11y) {
