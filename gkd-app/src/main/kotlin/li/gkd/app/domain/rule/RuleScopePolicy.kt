@@ -30,23 +30,7 @@ object RuleScopePolicy {
         group: RawSubscription.RawGlobalGroup,
         rule: RawSubscription.RawGlobalRule?,
         appId: String,
-    ): RawSubscription.RawGlobalApp? {
-        // 对齐上游 v1.13.0-beta-1：子规则的 apps 不再整条替换父项，而是按字段合并 ——
-        // enable（应用启用范围）只认 group 级，activityIds / 版本限制才允许子规则覆盖。
-        // 旧的 `rule?.apps ?: group.apps` 会让子规则里写的 enable 直接决定某个应用开不开，
-        // 同一份社区订阅在本应用和上游 GKD 上会匹配到不同的应用范围。
-        val parent = group.apps.orEmpty().lastOrNull { it.id == appId }
-        val child = rule?.apps.orEmpty().lastOrNull { it.id == appId }
-        if (parent == null && child == null) return null
-        return RawSubscription.RawGlobalApp(
-            id = appId,
-            enable = parent?.enable,
-            activityIds = child?.activityIds ?: parent?.activityIds,
-            excludeActivityIds = child?.excludeActivityIds ?: parent?.excludeActivityIds,
-            versionCode = child?.versionCode ?: parent?.versionCode,
-            versionName = child?.versionName ?: parent?.versionName,
-        )
-    }
+    ): RawSubscription.RawGlobalApp? = (rule?.apps ?: group.apps).orEmpty().lastOrNull { it.id == appId }
 
     fun globalDefault(
         group: RawSubscription.RawGlobalGroup,
@@ -54,14 +38,11 @@ object RuleScopePolicy {
         appId: String,
         launcherAppId: String,
         systemAppIds: Set<String>,
-        matchAnyApp: Boolean? = null,
     ): Boolean {
-        // 同上：是否在应用范围内只看 group 级条目与 group 级三个字段。
-        if (group.apps.orEmpty().any { it.id == appId }) return true
-        if (appId == launcherAppId && group.matchLauncher != true) return false
-        if (appId in systemAppIds && group.matchSystemApp != true) return false
-        if (matchAnyApp == false) return false
-        return !(matchAnyApp == null && group.matchAnyApp == false)
+        if (globalApp(group, rule, appId) != null) return true
+        if (appId == launcherAppId && !(rule?.matchLauncher ?: group.matchLauncher ?: false)) return false
+        if (appId in systemAppIds && !(rule?.matchSystemApp ?: group.matchSystemApp ?: false)) return false
+        return rule?.matchAnyApp ?: group.matchAnyApp ?: true
     }
 
     fun globalRuleAllowed(

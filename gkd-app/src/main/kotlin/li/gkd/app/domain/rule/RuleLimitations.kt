@@ -102,28 +102,20 @@ object RuleLimitationPolicy {
                 }
                 is RawSubscription.RawGlobalGroup -> {
                     rule as RawSubscription.RawGlobalRule
-                    // 对齐上游 v1.13.0-beta-1：enable 只看 group 级，子规则 apps 只覆盖页面/版本限制，
-                    // 所以按 id 取合并后的条目，而不是让子规则整条替换父项 —— 必须和
-                    // RuleScopePolicy.globalApp / GlobalRule 的运行时口径保持一致。
-                    (group.apps.orEmpty().map { it.id } + rule.apps.orEmpty().map { it.id })
-                        .distinct()
-                        .filter { appId == null || it == appId }
-                        .forEach { id ->
-                            val app = RuleScopePolicy.globalApp(group, rule, id) ?: return@forEach
-                            val childHasIt = rule.apps.orEmpty().any { it.id == id }
-                            val origin = (if (childHasIt) source else groupSource).copy(appId = id)
-                            if (app.enable == false) entries.add(
-                                RuleLimitation(groupSource.copy(appId = id), RuleLimitationKind.ExcludedApp, id))
-                            appProps(origin, id, app)
-                        }
-                    if (group.matchLauncher != true) entries.add(
-                        RuleLimitation(groupSource, RuleLimitationKind.DefaultScope, UiStrings.rule_launcher_default_disabled,
-                            implicit = group.matchLauncher == null))
-                    if (group.matchSystemApp != true) entries.add(
-                        RuleLimitation(groupSource, RuleLimitationKind.DefaultScope, UiStrings.rule_system_apps_default_disabled,
-                            implicit = group.matchSystemApp == null))
-                    if (group.matchAnyApp != true) entries.add(
-                        RuleLimitation(groupSource, RuleLimitationKind.DefaultScope, UiStrings.rule_unspecified_apps_default_disabled))
+                    val propsSource = if (rule.apps != null) source else groupSource
+                    (rule.apps ?: group.apps).orEmpty().filter { appId == null || it.id == appId }.forEach { app ->
+                        val origin = propsSource.copy(appId = app.id)
+                        if (app.enable == false) entries.add(RuleLimitation(origin, RuleLimitationKind.ExcludedApp, app.id))
+                        appProps(origin, app.id, app)
+                    }
+                    if (!(rule.matchLauncher ?: group.matchLauncher ?: false)) entries.add(
+                        RuleLimitation(source, RuleLimitationKind.DefaultScope, UiStrings.rule_launcher_default_disabled,
+                            implicit = rule.matchLauncher == null && group.matchLauncher == null))
+                    if (!(rule.matchSystemApp ?: group.matchSystemApp ?: false)) entries.add(
+                        RuleLimitation(source, RuleLimitationKind.DefaultScope, UiStrings.rule_system_apps_default_disabled,
+                            implicit = rule.matchSystemApp == null && group.matchSystemApp == null))
+                    if (!(rule.matchAnyApp ?: group.matchAnyApp ?: true)) entries.add(
+                        RuleLimitation(source, RuleLimitationKind.DefaultScope, UiStrings.rule_unspecified_apps_default_disabled))
                     if (appId != null && !RuleScopePolicy.globalRuleAllowed(group, rule, appId, info, groupExcluded)) {
                         blocked++
                         if (!groupExcluded) {
