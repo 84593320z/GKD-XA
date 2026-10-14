@@ -99,7 +99,12 @@ object ExternalCallTokens {
     val token: String by lazy {
         runCatching { tokenFile.readText().trim() }.getOrNull()?.takeIf { it.length >= 16 } ?: run {
             val bytes = ByteArray(12).also { SecureRandom().nextBytes(it) }
-            val generated = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+            // android.util.Base64 没有 getUrlEncoder()（那是 java.util.Base64，要 API 26），
+            // 这里用 Android 自己的 flags，避免抬高 minSdk。
+            val generated = Base64.encodeToString(
+                bytes,
+                Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING,
+            )
             tokenFile.parentFile?.mkdirs()
             tokenFile.writeText(generated)
             generated
