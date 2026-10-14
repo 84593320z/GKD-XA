@@ -144,11 +144,24 @@ object FolderUtils {
     }
 
     @WorkerThread
-    fun buildLogFile(): File {
+    fun buildLogFile(snapshotDays: Int = 0): File {
         val tempDir = createGkdTempDir()
         val files = listOf(dbFolder, storeFolder, subsFolder, logFolder, crashFolder).filter {
             it.list()?.isNotEmpty() == true
         }.map { it.copyToLogTemp(tempDir) }.toMutableList()
+        // 快照里是截图，默认绝不带上；只有用户在这次导出里明确选了范围才拷。
+        if (snapshotDays > 0) {
+            val since = System.currentTimeMillis() + (-snapshotDays.toLong() * 86_400_000L)
+            val snapshotDir = tempDir.resolve("snapshot").apply { mkdirs() }
+            snapshotFolder.listFiles()?.filter { it.lastModified() >= since }?.forEach { source ->
+                source.copyTo(snapshotDir.resolve(source.name), overwrite = true)
+            }
+            if (snapshotDir.list()?.isEmpty() == true) {
+                snapshotDir.delete()
+            } else {
+                files.add(snapshotDir)
+            }
+        }
         tempDir.resolve("source-paths.txt").also { file ->
             app.assets.open(file.name).use { input ->
                 file.outputStream().use { output ->
