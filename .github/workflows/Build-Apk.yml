@@ -50,7 +50,17 @@ jobs:
       # 单元测试先跑：仓库里有 32 个测试文件（含 domain/rule/RuleScopePolicyTest），
       # 但之前两个 workflow 都只跑 assembleGkdRelease，规则匹配语义的断言从来没被执行过，
       # 语义漂移只能靠真机发现。放在打包前，失败就不要再白等一次构建。
-      - run: ./gradlew gkd-app:testGkdDebugUnitTest
+      - name: 单元测试
+        run: ./gradlew gkd-app:testGkdDebugUnitTest 2>&1 | tee /tmp/gkd-test.log; exit "${PIPESTATUS[0]}"
+
+      # 失败原因必须能从 API 读到：job 日志接口不认证就拿不到（403），而 check-run 的
+      # annotations 是公开可读的 —— 所以失败时把编译错误和断言消息转成 ::error:: 注解。
+      - name: 失败时输出错误注解
+        if: failure()
+        run: |
+          grep -aE "^e: file://|error:|FAILED" /tmp/gkd-test.log | head -30 | sed 's/^/::error::/'
+          grep -rhoE '<failure message="[^"]{0,200}' gkd-app/build/test-results 2>/dev/null | head -20 | sed 's/^/::error::/'
+
       - run: ./gradlew gkd-app:assembleGkdRelease
 
       - uses: actions/upload-artifact@v7
