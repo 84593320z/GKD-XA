@@ -363,6 +363,8 @@ object AiRuleGenerator {
             return
         }
         isGenerating.value = true
+        // 异常路径原来只 toast，已生成好的规则直接丢了；留一份引用给 catch 用。
+        var latestRule: RawSubscription? = null
         try {
             // Step 1: 捕获快照
             val snapshot = SnapshotCapture.capture()
@@ -383,8 +385,10 @@ object AiRuleGenerator {
 
             // Step 3: 尝试执行规则并验证
             var lastRuleText = ruleText
+            var matchedSelectorText: String? = null
             val maxRetries = 2
             for (attempt in 0 until maxRetries) {
+                latestRule = currentRule
                 val actions = extractActions(currentRule)
                 if (actions.isEmpty()) {
                     ToastUtils.toast("加强模式：未找到有效选择器")
@@ -419,6 +423,7 @@ object AiRuleGenerator {
                             .perform(targetNode, action)
                         if (actionResult.result) {
                             actionExecuted = true
+                            matchedSelectorText = action.selector
                             LogUtils.d("加强模式：执行动作成功, action=${action.action}, selector=${action.selector}")
                             break
                         }
@@ -459,12 +464,22 @@ object AiRuleGenerator {
                 val afterNodes = info2nodeList(afterRootNode)
                 val afterSignature = snapshotSignature(afterNodes)
 
-                // Step 5: 对比判断
-                if (beforeSignature != afterSignature) {
-                    // 界面发生变化，规则生效
-                    ToastUtils.toast("加强模式：规则验证成功！")
+                // Step 5: 判据先看「刚才命中的那个选择器还在不在」，界面签名只作辅助。
+                // 原来只比签名：误点了别的元素、页面滚动、跳到别的界面都会让签名变化，
+                // 于是「点错了」被判成「规则生效」—— 而这正是加强模式存在的意义所在。
+                val selectorGone = matchedSelectorText?.let { text ->
+                    val compiled = (Selector.compile(text) as? SelectorCompileResult.Success)?.value
+                    compiled == null || a11yContext.querySelfOrSelector(
+                        afterRootNode, compiled, MatchOptions(),
+                    ) == null
+                } ?: false
+                if (selectorGone) {
+                    ToastUtils.toast("加强模式：规则验证成功（目标已不再命中）")
                     insertRuleToSubscription(currentRule)
                     return
+                }
+                if (beforeSignature != afterSignature) {
+                    LogUtils.d("加强模式：界面有变化但目标仍在，判为未生效, selector=$matchedSelectorText")
                 }
 
                 // 界面未变化，规则可能未生效
@@ -484,6 +499,9 @@ object AiRuleGenerator {
                 }
             }
         } catch (e: Exception) {
+            // 取节点、执行动作都可能抛异常；别把已经生成好的规则一起丢掉。
+            // runCatching 是为了让保存失败不掩盖原始异常。
+            latestRule?.let { runCatching { insertRuleToSubscription(it) } }
             ToastUtils.toast("加强模式失败：${e.message}")
             LogUtils.d("Enhanced generate failed", e)
         } finally {
