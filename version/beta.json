@@ -3,7 +3,7 @@
   "versionName": "1.4.2",
   "changelog": "v1.4.2\n\n- 修复：检查更新拿到的是上游 gkd-plus 的版本号和更新日志、且更新失败（更新通道等四处指错），需手动安装一次\n- 修复：外部调用接口无鉴权，任意应用可触发截图与全局同步；现在必须带 token\n- 修复：加强模式把「点错了」判成「验证成功」，改为执行后重新查询同一选择器是否仍命中\n- 新增：导出日志可选附带最近 1/3/7 天快照（默认不带）\n- 升级 priv-kit 0.16.1 → 0.17.7：修 Android 17 无线调试反复弹系统选择器",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.2/GKD-XA-v1.4.2.apk",
-  "fileSize": 5830488,
+  "fileSize": 5831744,
   "versionLogs": [
     {
       "name": "1.4.2",
