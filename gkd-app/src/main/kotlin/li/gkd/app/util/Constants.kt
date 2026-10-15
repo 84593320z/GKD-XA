@@ -6,7 +6,8 @@ const val IMPORT_SHORT_URL = "https://i.gkd.li/i/"
 const val SERVER_SCRIPT_URL =
     "https://registry.npmmirror.com/@gkd-kit/config/latest/files/dist/server.js"
 
-const val REPOSITORY_URL = "https://github.com/fjjzy/gkd-plus"
+// fork 时这里一直指着上游 gkd-plus 的仓库：关于页、崩溃上报页的「提 issue」都跳别人家去了。
+const val REPOSITORY_URL = "https://github.com/84593320z/GKD-XA"
 const val ISSUES_URL = "${REPOSITORY_URL}/issues"
 
 const val HOME_PAGE_URL = "https://gkd.li"

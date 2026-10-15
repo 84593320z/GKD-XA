@@ -160,7 +160,10 @@ class UpdateStatus(val scope: CoroutineScope) {
                     if (!NetworkUtils.isAvailable()) {
                         error(UiStrings.network_unavailable)
                     }
-                    val newVersion = if (UPDATE_URL.contains("api.github.com/repos/fjjzy/gkd-plus/releases")) {
+                    // 通道既可能是 GitHub Releases API（返回 release 对象），也可能是 version/*.json
+                    // （直接就是 NewVersion）。按 URL 形态分流，而不是认某个具体仓库名 ——
+                    // 之前这里写死了上游 fork 的仓库地址，换源后这条分支就永远进不去。
+                    val newVersion = if (UPDATE_URL.contains("api.github.com/repos/")) {
                         val release = client.get(UPDATE_URL).body<GitHubRelease>()
                         if (!release.isNewerThanCurrent()) {
                             if (manual) toast(UiStrings.updates_none, loc = loc)

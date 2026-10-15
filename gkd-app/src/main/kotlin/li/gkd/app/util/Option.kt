@@ -115,13 +115,13 @@ sealed class UpdateChannelOption(
     data object Stable : UpdateChannelOption(
         0,
         UiStrings.update_channel_stable,
-        "https://api.github.com/repos/fjjzy/gkd-plus/releases/latest"
+        "https://api.github.com/repos/84593320z/GKD-XA/releases/latest"
     )
 
     data object Beta : UpdateChannelOption(
         1,
         UiStrings.update_channel_beta,
-        "https://api.github.com/repos/fjjzy/gkd-plus/releases/latest"
+        "https://api.github.com/repos/84593320z/GKD-XA/releases/latest"
     )
 
     companion object {
