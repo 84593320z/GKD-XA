@@ -1,10 +1,15 @@
 {
-  "versionCode": 142,
-  "versionName": "1.4.2",
-  "changelog": "v1.4.2\n\n- 修复：检查更新拿到的是上游 gkd-plus 的版本号和更新日志、且更新失败（更新通道等四处指错），需手动安装一次\n- 修复：外部调用接口无鉴权，任意应用可触发截图与全局同步；现在必须带 token\n- 修复：加强模式把「点错了」判成「验证成功」，改为执行后重新查询同一选择器是否仍命中\n- 新增：导出日志可选附带最近 1/3/7 天快照（默认不带）\n- 升级 priv-kit 0.16.1 → 0.17.7：修 Android 17 无线调试反复弹系统选择器",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.2/GKD-XA-v1.4.2.apk",
-  "fileSize": 5831744,
+  "versionCode": 143,
+  "versionName": "1.4.3",
+  "changelog": "v1.4.3\n\n- Chat Completions 改走 SSE 流式，并加 Max Tokens 自适应：抬底 16384、截断翻倍、被拒回退并按服务商记住上限\n- 加强模式能区分「选择器无法快速匹配」与「条件不满足」，重试提示直接指向首属性写法\n- 触发记录支持按应用多选筛选（仅全部记录视图）\n- 悬浮快照按钮改为单击展开菜单，去掉 400ms 双击等待\n- 同步 gkd-selector 0.6.1 的 fast query 诊断 API（纯加法）\n- 单测 136 → 152",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.3/GKD-XA-v1.4.3.apk",
+  "fileSize": 5837208,
   "versionLogs": [
+    {
+      "name": "1.4.3",
+      "code": 143,
+      "desc": "- AI 生成改走 SSE 流式 + Max Tokens 自适应（抬底/翻倍/按服务商记住上限）\n- 加强模式区分「无法快速匹配」与「条件不满足」，重试提示指向写法\n- 触发记录按应用多选筛选；悬浮按钮改为单击展开菜单\n- 同步 gkd-selector 0.6.1 诊断 API；单测 136 → 152"
+    },
     {
       "name": "1.4.2",
       "code": 142,
