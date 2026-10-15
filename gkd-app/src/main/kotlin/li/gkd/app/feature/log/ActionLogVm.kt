@@ -6,6 +6,7 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -47,14 +48,19 @@ class ActionLogVm(
     val route: ActionLogRoute,
 ) : BaseViewModel() {
 
-    val pagingDataFlow = Pager(PagingConfig(pageSize = 100)) {
-        when {
-            route.subsId != null -> Db.actionLogDao.pagingSubsSource(route.subsId)
-            route.appId != null -> Db.actionLogDao.pagingAppSource(route.appId)
-            else -> Db.actionLogDao.pagingSource()
-        }
+    private val filterAppIdsFlow = MutableStateFlow<List<String>>(emptyList())
+    val selectedAppIdsFlow: StateFlow<List<String>> = filterAppIdsFlow
+
+    val pagingDataFlow = filterAppIdsFlow.flatMapLatest { appIds ->
+        Pager(PagingConfig(pageSize = 100)) {
+            when {
+                route.subsId != null -> Db.actionLogDao.pagingSubsSource(route.subsId)
+                route.appId != null -> Db.actionLogDao.pagingAppSource(route.appId)
+                appIds.isNotEmpty() -> Db.actionLogDao.pagingAppIdsSource(appIds)
+                else -> Db.actionLogDao.pagingSource()
+            }
+        }.flow
     }
-        .flow
         .cachedIn(scope)
         .combine(SubscriptionState.subsMapFlow) { pagingData, subsMap ->
             pagingData.map { actionLog ->
@@ -112,6 +118,10 @@ class ActionLogVm(
 
     fun showActionLog(actionLog: ActionLog) {
         selectedActionLogFlow.value = actionLog
+    }
+
+    fun setFilterAppIds(appIds: List<String>) {
+        filterAppIdsFlow.value = appIds
     }
 
     fun dismissActionLog() {

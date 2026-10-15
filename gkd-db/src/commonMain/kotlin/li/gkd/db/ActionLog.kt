@@ -60,6 +60,9 @@ data class ActionLog(
         @Query("SELECT * FROM action_log WHERE app_id=:appId ORDER BY id DESC ")
         fun pagingAppSource(appId: String): PagingSource<Int, ActionLog>
 
+        @Query("SELECT * FROM action_log WHERE app_id IN (:appIds) ORDER BY id DESC ")
+        fun pagingAppIdsSource(appIds: List<String>): PagingSource<Int, ActionLog>
+
         @Query("SELECT COUNT(*) FROM action_log")
         fun count(): Flow<Int>
 

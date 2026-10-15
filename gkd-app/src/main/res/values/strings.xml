@@ -67,6 +67,9 @@
     <string name="action_ignore">忽略</string>
     <string name="action_install">安装</string>
     <string name="action_log_activity_unknown">界面未记录</string>
+    <string name="action_log_all_apps">全部应用</string>
+    <string name="action_log_app_filter">按应用筛选</string>
+    <string name="action_log_app_filter_empty">暂无触发记录的应用</string>
     <string name="action_log_description">规则误触可定位关闭</string>
     <string name="action_log_open">打开触发记录页面</string>
     <string name="action_log_open_app">查看应用</string>
@@ -535,6 +538,7 @@
     <string name="remote_category_delete_unsupported">远程订阅类别不可删除</string>
     <string name="remote_category_edit_unsupported">远程订阅类别不可编辑</string>
     <string name="remote_rule_delete_unsupported">远程订阅规则不可删除</string>
+    <string name="reset_filter">重置筛选</string>
     <string name="restricted_settings_permission_description">当前操作权限「访问受限设置」已被限制，请前往特权服务重新授权</string>
     <string name="restrictions_description_title">限制说明</string>
     <string name="restrictions_view">查看限制</string>

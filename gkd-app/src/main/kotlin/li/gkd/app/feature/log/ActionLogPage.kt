@@ -7,16 +7,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +47,11 @@ import li.gkd.app.ui.AppConfigRoute
 import li.gkd.app.ui.component.GkLogTimeline
 import li.gkd.app.ui.component.GkLogTimeText
 import li.gkd.app.ui.component.gkLogTimelineRail
+import li.gkd.app.ui.component.GkAppIcon
+import li.gkd.app.ui.component.GkAppNameText
+import li.gkd.app.ui.component.GkCheckbox
+import li.gkd.app.ui.component.GkDialog
+import li.gkd.app.ui.component.GkFilterIconButton
 import li.gkd.app.ui.component.GkGroupNameText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
@@ -55,6 +67,7 @@ import li.gkd.app.ui.component.rememberRuleControlEnvironment
 import li.gkd.app.ui.component.useSubs
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.share.noRippleClickable
+import li.gkd.app.ui.style.appItemPadding
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.TimeUtils.throttle
@@ -73,9 +86,13 @@ fun ActionLogPage(route: ActionLogRoute) {
     val subsId = route.subsId
     val appId = route.appId
     val appScoped = subsId == null && appId != null
+    val appFilterScoped = subsId == null && appId == null
     val mainVm = MainViewModel.requireCurrent()
     val vm = viewModel { ActionLogVm(route) }
     val dialogState by vm.dialogStateFlow.collectAsStateWithLifecycle()
+    val selectedAppIds by vm.selectedAppIdsFlow.collectAsStateWithLifecycle()
+    val logAppOrder by mainVm.appOrderListState.collectAsStateWithLifecycle()
+    var showAppFilterDialog by remember { mutableStateOf(false) }
     val scope = vm.scope
     val list = vm.pagingDataFlow.collectAsLazyPagingItems()
     val pageScrollState = rememberListScrollState()
@@ -102,7 +119,17 @@ fun ActionLogPage(route: ActionLogRoute) {
             subtitle = when {
                 subsId != null -> UiStrings.action_log_title
                 appId != null -> appId
-                else -> ""
+                selectedAppIds.isNotEmpty() -> UiStrings.selection_count(selectedAppIds.size)
+                else -> UiStrings.action_log_all_apps
+            },
+            actions = {
+                if (appFilterScoped) {
+                    GkFilterIconButton(
+                        filtered = selectedAppIds.isNotEmpty(),
+                        onClick = { showAppFilterDialog = true },
+                        contentDescription = UiStrings.action_log_app_filter,
+                    )
+                }
             },
         )
     }, content = { contentPadding ->
@@ -171,8 +198,130 @@ fun ActionLogPage(route: ActionLogRoute) {
             },
         )
     }
+
+    if (showAppFilterDialog) {
+        ActionLogAppFilterDialog(
+            appIds = logAppOrder.value.orEmpty(),
+            selectedAppIds = selectedAppIds,
+            onDismiss = { showAppFilterDialog = false },
+            onConfirm = {
+                vm.setFilterAppIds(it)
+                showAppFilterDialog = false
+            },
+        )
+    }
 }
 
+
+@Composable
+private fun ActionLogAppFilterDialog(
+    appIds: List<String>,
+    selectedAppIds: List<String>,
+    onDismiss: () -> Unit,
+    onConfirm: (List<String>) -> Unit,
+) {
+    var selected by remember { mutableStateOf(selectedAppIds.toSet()) }
+    GkDialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            Column {
+                Text(
+                    text = UiStrings.action_log_app_filter,
+                    style = MiuixTheme.textStyles.subtitle,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+                if (appIds.isEmpty()) {
+                    Text(
+                        text = UiStrings.action_log_app_filter_empty,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        TextButton(onClick = throttle { selected = appIds.toSet() }) {
+                            Text(text = UiStrings.selection_all)
+                        }
+                        TextButton(onClick = throttle { selected = emptySet() }) {
+                            Text(text = UiStrings.reset_filter)
+                        }
+                    }
+                    Column(
+                        modifier = Modifier
+                            .heightIn(max = 360.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        appIds.forEach { appId ->
+                            ActionLogAppFilterItem(
+                                appId = appId,
+                                checked = appId in selected,
+                                onClick = {
+                                    selected =
+                                        if (appId in selected) selected - appId else selected + appId
+                                },
+                            )
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = throttle(onDismiss)) {
+                        Text(text = UiStrings.action_cancel)
+                    }
+                    TextButton(onClick = throttle { onConfirm(appIds.filter { it in selected }) }) {
+                        Text(text = UiStrings.action_confirm)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionLogAppFilterItem(
+    appId: String,
+    checked: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .clickable(onClick = throttle(onClick))
+            .fillMaxWidth()
+            .appItemPadding(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GkAppIcon(appId = appId)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            GkAppNameText(appId = appId, fallbackName = appId)
+            Text(
+                text = appId,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false,
+            )
+        }
+        GkCheckbox(
+            key = appId,
+            checked = checked,
+        )
+    }
+}
 
 private fun sameActionLogContext(first: ActionLog, second: ActionLog): Boolean =
     first.activityId == second.activityId &&
