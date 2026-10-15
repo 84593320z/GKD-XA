@@ -704,6 +704,7 @@
     <string name="selection_toggle">切换选中</string>
     <string name="selector_invalid">非法选择器</string>
     <string name="selector_invalid_detail">非法选择器\n%1$s\n%2$s</string>
+    <string name="selector_no_fast_query_retry">该选择器无法快速匹配：首个属性必须是 [id=\"xxx\"] / [vid=\"xxx\"] / [text=\"xxx\"] 这类等号精确匹配（不能用 ^=、*= 等模糊匹配），请重写选择器</string>
     <string name="selector_node_not_found">没有查询到节点</string>
     <string name="selector_type_error">选择器类型错误:%1$s</string>
     <string name="service_launch_failed">%1$s启动服务失败: %2$s</string>

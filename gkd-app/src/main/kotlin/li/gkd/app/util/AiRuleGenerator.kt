@@ -42,6 +42,7 @@ import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.snapshot.SnapshotCapture
 import li.gkd.app.store.AppStore.storeFlow
+import li.gkd.app.text.UiStrings
 import li.gkd.db.LOCAL_SUBS_ID
 import li.gkd.selector.MatchOptions
 import li.gkd.selector.Selector
@@ -410,6 +411,8 @@ object AiRuleGenerator {
 
                 // 尝试用生成规则匹配并执行动作
                 var actionExecuted = false
+                var unmatchedSelector: String? = null
+                var anyFastQueryable = false
                 val a11yContext = A11yContext(getRoot = { A11yRuntime.getRoot() }, interruptable = false)
                 for (action in actions) {
                     val selector = (Selector.compile(action.selector) as? SelectorCompileResult.Success)?.value
@@ -427,11 +430,15 @@ object AiRuleGenerator {
                             LogUtils.d("加强模式：执行动作成功, action=${action.action}, selector=${action.selector}")
                             break
                         }
+                    } else {
+                        unmatchedSelector = action.selector
+                        anyFastQueryable = anyFastQueryable || !selector.fastQueryList.isEmpty()
                     }
                 }
 
                 if (!actionExecuted) {
-                    LogUtils.d("加强模式：选择器未匹配到任何节点，attempt=$attempt")
+                    val noFastQuery = unmatchedSelector != null && !anyFastQueryable
+                    LogUtils.d("加强模式：选择器未匹配到任何节点，attempt=$attempt, 可快速匹配=$anyFastQueryable, selector=$unmatchedSelector")
                     if (attempt == maxRetries - 1) {
                         ToastUtils.toast("加强模式：规则未能匹配节点，已保存供手动调整")
                         insertRuleToSubscription(currentRule)
@@ -439,7 +446,10 @@ object AiRuleGenerator {
                     }
                     // 未匹配到，重新生成
                     ToastUtils.toast("加强模式：规则未匹配，正在重新生成...")
-                    val retryContent = buildRetryPrompt(prompt, snapshotJson, lastRuleText, "选择器未匹配到任何节点")
+                    val retryContent = buildRetryPrompt(
+                        prompt, snapshotJson, lastRuleText,
+                        if (noFastQuery) UiStrings.selector_no_fast_query_retry else "选择器未匹配到任何节点",
+                    )
                     val retryResult = callAiApi(config, retryContent)
                     val retryRuleText = extractContent(retryResult)
                     currentRule = parseAndValidateRule(retryRuleText) ?: run {
