@@ -61,6 +61,11 @@ data class AiConfig(
     val temperature: Float = 0f,
     val topP: Float = 1f,
     val maxTokens: Int = 4096,
+    /**
+     * 该服务商撞过的墙：被服务端拒绝过的最小 max_tokens 值，后续预算严格小于它。
+     * null 表示还没撞过。按服务商各存一份，老 store.json 缺这个字段时回落 null（不影响解析）。
+     */
+    val maxTokenCeiling: Int? = null,
 ) {
     val isAnthropic get() = protocol == "anthropic"
 

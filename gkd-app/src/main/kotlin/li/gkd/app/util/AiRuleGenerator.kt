@@ -7,10 +7,14 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readLine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -42,6 +46,7 @@ import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.snapshot.SnapshotCapture
 import li.gkd.app.store.AppStore.storeFlow
+import li.gkd.app.store.AppStore.updateSettings
 import li.gkd.app.text.UiStrings
 import li.gkd.db.LOCAL_SUBS_ID
 import li.gkd.selector.MatchOptions
@@ -62,6 +67,8 @@ data class ChatRequest(
     val temperature: Float = 0f,
     val top_p: Float = 1f,
     val max_tokens: Int = 4096,
+    /** 只有需要 SSE 时才写 true；null 时该 key 不出现（json 的 explicitNulls = false），保持旧请求体不变 */
+    val stream: Boolean? = null,
 )
 
 @Serializable
@@ -176,7 +183,16 @@ object AiRuleGenerator {
         }
     }
 
-    private fun buildRequestBody(config: AiConfig, content: String, maxTokensOverride: Int? = null): String {
+    /** 只有 Chat Completions 接 SSE：Responses / anthropic 的流式写法不同，一律保持现在的非流式请求。 */
+    private val AiConfig.streamChatCompletions: Boolean
+        get() = !isAnthropic && endpointMode == AiEndpointMode.CHAT
+
+    private fun buildRequestBody(
+        config: AiConfig,
+        content: String,
+        maxTokensOverride: Int? = null,
+        stream: Boolean = false,
+    ): String {
         val maxTokens = maxTokensOverride ?: config.maxTokens
         val systemPrompt = config.systemPrompt.trim().takeIf { it.isNotEmpty() }
         return when {
@@ -209,6 +225,7 @@ object AiRuleGenerator {
                     temperature = config.temperature,
                     top_p = config.topP,
                     max_tokens = maxTokens,
+                    stream = stream.takeIf { it },
                 )
             )
         }
@@ -565,9 +582,57 @@ $previousRule
 请分析失败原因，重新选择更准确的目标节点和选择器。"""
     }
 
+    /** 该服务商记下的上限：以 store 里的最新值为准，取不到才用调用方传进来的 config 副本。 */
+    private fun ceilingOf(config: AiConfig): Int? =
+        storeFlow.value.aiProviders.firstOrNull { it.id == config.id }?.maxTokenCeiling
+            ?: config.maxTokenCeiling
+
+    /** 记住这道墙，返回收窄后的上限；写盘走服务商自己的 id，多个服务商互不影响。 */
+    private fun recordCeiling(config: AiConfig, rejectedBudget: Int): Int {
+        val newCeiling = AiTokenBudget.narrowedCeiling(ceilingOf(config), rejectedBudget)
+        if (ceilingOf(config) == newCeiling) return newCeiling
+        updateSettings { store ->
+            store.copy(
+                aiProviders = store.aiProviders.map {
+                    if (it.id == config.id) it.copy(maxTokenCeiling = newCeiling) else it
+                },
+            )
+        }
+        return newCeiling
+    }
+
+    /**
+     * 一次 AI 调用：先按自适应预算发请求，
+     * 截断（finishReason == length）就翻倍重试一次，被服务端拒绝就记下上限并回退重试一次。
+     */
     private suspend fun callAiApi(config: AiConfig, userContent: String): String {
+        val budget = AiTokenBudget.budgetForRequest(config.maxTokens, ceilingOf(config))
+        LogUtils.d("AI max tokens budget: configured=${config.maxTokens}, ceiling=${ceilingOf(config)}, use=$budget")
+        return try {
+            val first = postAiRequest(config, userContent, budget)
+            if (!first.truncated) {
+                return first.content
+            }
+            val retryBudget = AiTokenBudget.budgetForTruncatedRetry(budget, ceilingOf(config))
+            if (retryBudget == null) {
+                LogUtils.d("AI 输出被截断，但已达该服务商已知上限（ceiling=${ceilingOf(config)}），不再翻倍重试")
+                first.content
+            } else {
+                ToastUtils.toast(UiStrings.ai_max_tokens_retry(retryBudget))
+                postAiRequest(config, userContent, retryBudget).content
+            }
+        } catch (e: AiTokenLimitReject) {
+            val newCeiling = recordCeiling(config, e.budget)
+            val fallbackBudget = AiTokenBudget.budgetForRejection(newCeiling)
+            ToastUtils.toast(UiStrings.ai_max_tokens_rejected(e.budget, fallbackBudget))
+            postAiRequest(config, userContent, fallbackBudget).content
+        }
+    }
+
+    private suspend fun postAiRequest(config: AiConfig, userContent: String, budget: Int): AiReply {
         val endpoint = buildApiEndpoint(config)
-        val requestBody = buildRequestBody(config, userContent)
+        val stream = config.streamChatCompletions
+        val requestBody = buildRequestBody(config, userContent, maxTokensOverride = budget, stream = stream)
         LogUtils.d("AI Request endpoint: $endpoint")
         LogUtils.d("AI Request body (first 2000 chars): ${requestBody.take(2000)}")
         val httpClient = createHttpClient()
@@ -577,14 +642,28 @@ $previousRule
                 contentType(ContentType.Application.Json)
                 setBody(requestBody)
             }
+            if (!response.status.isSuccess()) {
+                val body = response.bodyAsText()
+                LogUtils.d("AI Response (first 3000 chars): ${body.take(3000)}")
+                val hint = errorHint(body)
+                val message = "HTTP ${response.status.value} $hint".trim()
+                // 只有「max_tokens 过大 / 参数非法」这一类错误才触发回退，其它错误维持原样抛出
+                if (AiTokenBudget.isTokenLimitRejection(hint.ifBlank { body })) {
+                    throw AiTokenLimitReject(budget, message)
+                }
+                throw Exception(message)
+            }
+            // 服务端可能忽略 stream 参数：content-type 不是 event-stream 就原样走非流式解析
+            val eventStream = stream &&
+                    response.headers[HttpHeaders.ContentType]?.contains(SSE_CONTENT_TYPE, ignoreCase = true) == true
+            if (eventStream) {
+                return readSseReply(response.bodyAsChannel())
+            }
             val body = response.bodyAsText()
             LogUtils.d("AI Response (first 3000 chars): ${body.take(3000)}")
-            if (!response.status.isSuccess()) {
-                throw Exception("HTTP ${response.status.value} ${errorHint(body)}".trim())
-            }
             val jsonElement = json.parseToJsonElement(body)
 
-            return when {
+            val content = when {
                 config.isAnthropic -> {
                     val contentArr = jsonElement.jsonObject["content"]
                         ?: throw Exception(errorHint(body).ifBlank { "Anthropic 响应缺少 content" })
@@ -613,9 +692,29 @@ $previousRule
                         ?: throw Exception("No content in OpenAI response")
                 }
             }
+            // 非流式路径不读 finish_reason，预算自适应在这里只靠服务端拒绝那一半
+            return AiReply(content, truncated = false)
         } finally {
             httpClient.close()
         }
+    }
+
+    /** 边收边攒 SSE 行，收到 [DONE] 就收尾，不用等连接关闭。 */
+    private suspend fun readSseReply(channel: ByteReadChannel): AiReply {
+        val lines = mutableListOf<String>()
+        while (true) {
+            val line = channel.readLine() ?: break
+            lines.add(line)
+            if (isSseDoneLine(line)) break
+        }
+        val result = SseStreamParser.parse(lines)
+        LogUtils.d("AI SSE Response: chars=${result.content.length}, finishReason=${result.finishReason}, done=${result.done}")
+        return AiReply(result.content, result.isTruncated)
+    }
+
+    private fun isSseDoneLine(line: String): Boolean {
+        val trimmed = line.trimEnd('\r').trim()
+        return trimmed.startsWith("data:") && trimmed.substring(5).trim() == SseStreamParser.DONE_MARKER
     }
 
     private fun extractContent(text: String): String {
@@ -702,6 +801,14 @@ $previousRule
         }
     }
 }
+
+/** 一次请求的正文与「是否被 max_tokens 截断」的结论。 */
+private class AiReply(val content: String, val truncated: Boolean)
+
+/** 服务端判定本次的 max_tokens 过大 / 非法：带上那个值才能记住上限并回退。 */
+private class AiTokenLimitReject(val budget: Int, message: String) : Exception(message)
+
+private val SSE_CONTENT_TYPE = "text/event-stream"
 
 private val JsonElement?.jsonArrayOrNull: JsonArray? get() = this as? JsonArray
 

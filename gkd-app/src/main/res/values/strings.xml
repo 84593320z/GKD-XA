@@ -40,6 +40,8 @@
     <string name="a11y_whitelist_follow_apps">已设置为跟随应用白名单</string>
     <string name="a11y_whitelist_independent">已设置为独立无障碍白名单</string>
     <string name="a11y_whitelist_open">进入无障碍白名单页面</string>
+    <string name="ai_max_tokens_retry">AI 输出被截断，正在把 Max Tokens 提到 %1$s 重试</string>
+    <string name="ai_max_tokens_rejected">服务商不接受 Max Tokens %1$s，已记下上限并回退到 %2$s 重试</string>
     <string name="about_easter_egg">你干嘛~ 哎呦~</string>
     <string name="about_title">关于</string>
     <string name="action_add">添加</string>
