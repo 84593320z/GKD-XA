@@ -3,7 +3,7 @@
   "versionName": "1.4.3",
   "changelog": "v1.4.3\n\n- Chat Completions 改走 SSE 流式，并加 Max Tokens 自适应：抬底 16384、截断翻倍、被拒回退并按服务商记住上限\n- 加强模式能区分「选择器无法快速匹配」与「条件不满足」，重试提示直接指向首属性写法\n- 触发记录支持按应用多选筛选（仅全部记录视图）\n- 悬浮快照按钮改为单击展开菜单，去掉 400ms 双击等待\n- 同步 gkd-selector 0.6.1 的 fast query 诊断 API（纯加法）\n- 单测 136 → 152",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.3/GKD-XA-v1.4.3.apk",
-  "fileSize": 5837208,
+  "fileSize": 5837216,
   "versionLogs": [
     {
       "name": "1.4.3",
