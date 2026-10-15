@@ -211,7 +211,7 @@ if (buildProperty("GKD_RENAME_APK_FLAG").isPresent) {
     androidComponents.onVariants { variant ->
         variant.outputs.onEach { output ->
             output as VariantOutputImpl
-            output.outputFileName = "gkd-plus-v${output.versionName.get()}.apk"
+            output.outputFileName = "GKD-XA-v${output.versionName.get()}.apk"
         }
     }
 }
