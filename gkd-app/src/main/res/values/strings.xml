@@ -343,6 +343,11 @@
     <string name="external_call_processing">正在处理外部调用</string>
     <string name="external_call_unknown">未知调用: expose=%1$s data=%2$s</string>
     <string name="external_call_denied">外部调用被拒绝：缺少或错误的 token</string>
+    <string name="external_call_command_item">外部调用命令</string>
+    <string name="external_call_command_item_description">查看并复制 Tasker / adb 使用的完整命令，调用必须携带 token</string>
+    <string name="external_call_command">am start-foreground-service -n %1$s --ei expose 0 --es token %2$s</string>
+    <string name="external_call_command_description">token 等同凭据，请勿泄露；已默认掩码，点击上方命令可显示完整值</string>
+    <string name="token_toggle">显示或隐藏 token</string>
     <string name="logs_snapshot_range">附带快照（含截图，默认不带）</string>
     <string name="logs_snapshot_none">不带</string>
     <string name="logs_snapshot_days">最近 %1$s 天</string>

@@ -42,10 +42,13 @@ import li.gkd.app.platform.service.ServiceController
 import li.gkd.app.service.ActivityService
 import li.gkd.app.service.ButtonService
 import li.gkd.app.service.EventService
+import li.gkd.app.service.ExposeService
+import li.gkd.app.service.ExternalCallTokens
 import li.gkd.app.service.HttpService
 import li.gkd.app.service.TrackService
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.feature.settings.ai.AiProvidersPageRoute
+import li.gkd.app.util.ToastUtils.copyText
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.ui.style.EmptyHeight
 import li.gkd.app.ui.style.itemHorizontalPadding
@@ -55,6 +58,7 @@ import li.gkd.app.ui.style.TABULAR_NUMBERS_FONT_FEATURE
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.util.componentName
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkPageScaffold
@@ -86,6 +90,7 @@ private fun AdvancedContent() {
     val scope = vm.scope
     var showEditPortDialog by rememberSaveable { mutableStateOf(false) }
     var showHttpSettingsDialog by rememberSaveable { mutableStateOf(false) }
+    var showExternalCallDialog by rememberSaveable { mutableStateOf(false) }
     val store by storeFlow.collectAsStateWithLifecycle()
     val httpServer by HttpService.httpServerFlow.collectAsStateWithLifecycle()
     val localNetworkIps by HttpService.localNetworkIpsFlow.collectAsStateWithLifecycle()
@@ -104,6 +109,10 @@ private fun AdvancedContent() {
                 }
             },
         )
+    }
+
+    if (showExternalCallDialog) {
+        ExternalCallCommandDialog { showExternalCallDialog = false }
     }
 
     GkPageScaffold(
@@ -284,6 +293,12 @@ private fun AdvancedContent() {
                     imageVector = GkIcons.Edit,
                     onClick = mainVm.githubUpload::editCookie,
                 )
+                SettingItem(
+                    title = UiStrings.external_call_command_item,
+                    subtitle = UiStrings.external_call_command_item_description,
+                    imageVector = GkIcons.ContentCopy,
+                    onClick = { showExternalCallDialog = true },
+                )
             }
 
             Spacer(modifier = Modifier.height(EmptyHeight))
@@ -413,3 +428,45 @@ private fun EditHttpPortDialog(
         },
     )
 }
+
+@Composable
+private fun ExternalCallCommandDialog(onDismissRequest: () -> Unit) {
+    var tokenVisible by rememberSaveable { mutableStateOf(false) }
+    val service = ExposeService::class.componentName.flattenToShortString()
+    val token = ExternalCallTokens.token
+    val displayToken = if (tokenVisible) token else token.maskedToken()
+    PerfAlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(text = UiStrings.external_call_command_item) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = UiStrings.external_call_command(service, displayToken),
+                    style = MiuixTheme.textStyles.body2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClickLabel = UiStrings.token_toggle) { tokenVisible = !tokenVisible },
+                )
+                Text(text = UiStrings.external_call_command_description, style = MiuixTheme.textStyles.body2)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                text = UiStrings.action_copy,
+                onClick = { copyText(UiStrings.external_call_command(service, token)) },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.textButtonColorsPrimary(),
+            )
+        },
+        dismissButton = {
+            TextButton(
+                text = UiStrings.action_close,
+                onClick = onDismissRequest,
+                modifier = Modifier.weight(1f),
+            )
+        },
+    )
+}
+
+// 随机 token 的头尾泄露代价相同，所以只留 3 位做识别用，剩下 13 位（约 78bit）不外露。
+private fun String.maskedToken(): String = take(3) + "……"
