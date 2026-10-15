@@ -341,6 +341,9 @@
     <string name="logs_snapshot_range">附带快照（含截图，默认不带）</string>
     <string name="logs_snapshot_none">不带</string>
     <string name="logs_snapshot_days">最近 %1$s 天</string>
+    <string name="button_menu_snapshot">仅快照</string>
+    <string name="button_menu_enhanced">加强模式</string>
+    <string name="button_menu_cancel">算了</string>
     <string name="feedback_app_issue_prefix">如果您已经确信是 GKD 应用本体的问题</string>
     <string name="feedback_continue_suffix">，可点击下方继续反馈</string>
     <string name="feedback_notice">反馈须知</string>
