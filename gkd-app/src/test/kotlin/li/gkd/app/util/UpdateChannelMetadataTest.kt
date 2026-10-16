@@ -14,9 +14,8 @@ import org.junit.Test
  * 它们靠手工拼装、CI 只回填 fileSize，所以把「改了一个字段忘了另一个」钉成构建门禁。
  */
 class UpdateChannelMetadataTest {
-    // 与 Upgrade.kt 的 parseVersionCode / tag 判定保持同一套宽松度，
-    // 否则 v1.4.5-beta-1 这类预发布 tag 会被本测试误判成字段不一致。
-    private val VERSION_NAME = Regex("""(\d+)\.(\d+)\.(\d+)""")
+    // CHANGELOG.md 顶部小节标题允许带预发布后缀（## v1.4.5-beta-1（2026-…）），
+    // 但不能把紧跟的中文括号日期吞进去。
     private val CHANGELOG_SECTION = Regex("^## (v\\d+\\.\\d+\\.\\d+[^\\s（]*)", RegexOption.MULTILINE)
 
     private val channelJson = Json {
@@ -52,14 +51,18 @@ class UpdateChannelMetadataTest {
             assertTrue("$name.json downloadUrl 附件名不符合 GKD-XA-<tag>.apk",
                 version.downloadUrl.endsWith("GKD-XA-$tag.apk"))
 
-            val parts = VERSION_NAME.findAll(version.versionName).firstOrNull()?.destructured
-                ?: error("$name.json versionName 解析不出 x.y.z: ${version.versionName}")
-            assertEquals(
-                "$name.json versionCode 与 versionName 对不上（改了一个忘了另一个）",
-                parts.component1().toInt() * 10000 + parts.component2().toInt() * 100 +
-                    parts.component3().toInt(),
-                version.versionCode,
-            )
+            // 真正的「改了一个忘另一个」是 JSON 与 build.gradle.kts 不一致：
+            // JSON 里的 versionCode 必须等于 META.versionCode（gradle 手工 bump 的那个数），
+            // 用户侧比较用的就是这个数；tag 解析出的 10404 是另一套编号，不能拿来当断言。
+            val gradle = File(repoRoot, "gkd-app/build.gradle.kts").readText()
+            val gradleCode = Regex("""versionCode\s*=\s*(\d+)""").find(gradle)
+                ?.groupValues?.get(1)?.toInt()
+            val gradleName = Regex("""versionName\s*=\s*"([^"]+)"""").find(gradle)
+                ?.groupValues?.get(1)
+            assertEquals("$name.json versionCode 与 gkd-app/build.gradle.kts 不一致",
+                gradleCode, version.versionCode)
+            assertEquals("$name.json versionName 与 gkd-app/build.gradle.kts 不一致",
+                gradleName, version.versionName)
 
             val head = version.versionLogs.firstOrNull()
             assertTrue("$name.json versionLogs 为空", head != null)
