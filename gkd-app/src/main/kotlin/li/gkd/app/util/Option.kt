@@ -118,10 +118,17 @@ sealed class UpdateChannelOption(
         "https://api.github.com/repos/84593320z/GKD-XA/releases/latest"
     )
 
+    // 不能也写成 releases/latest：GitHub 的 latest 按定义排除 prerelease，测试通道会和稳定通道
+    // 拿到同一个响应，这个设置项等于失效。
+    //
+    // 也不能改成 /releases?per_page=N（数组）：已经装机的 1.4.2+ 客户端按 URL 形态分流，
+    // 认 api.github.com/repos/ 就用单个 release 对象反序列化，收到数组直接解析失败 ——
+    // 修一个问题就得让用户重装一次，和上次改更新通道撞的是同一堵墙。
+    // version/beta.json 走的是 NewVersion 那条分流，新旧客户端都能读，且仓库里已经在维护它。
     data object Beta : UpdateChannelOption(
         1,
         UiStrings.update_channel_beta,
-        "https://api.github.com/repos/84593320z/GKD-XA/releases/latest"
+        "https://raw.githubusercontent.com/84593320z/GKD-XA/main/version/beta.json"
     )
 
     companion object {
