@@ -1,10 +1,15 @@
 {
-  "versionCode": 143,
-  "versionName": "1.4.3",
-  "changelog": "v1.4.3\n\n- Chat Completions 改走 SSE 流式，并加 Max Tokens 自适应：抬底 16384、截断翻倍、被拒回退并按服务商记住上限\n- 加强模式能区分「选择器无法快速匹配」与「条件不满足」，重试提示直接指向首属性写法\n- 触发记录支持按应用多选筛选（仅全部记录视图）\n- 悬浮快照按钮改为单击展开菜单，去掉 400ms 双击等待\n- 同步 gkd-selector 0.6.1 的 fast query 诊断 API（纯加法）\n- 单测 136 → 152",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.3/GKD-XA-v1.4.3.apk",
-  "fileSize": 5837216,
+  "versionCode": 144,
+  "versionName": "1.4.4",
+  "changelog": "v1.4.4\n\n- Chat Completions 改走 SSE 流式 + Max Tokens 自适应（抬底 16384 / 截断翻倍 / 按服务商记住上限）；Responses 与 anthropic 未接流式、行为不变\n- 加强模式区分「无法快速匹配」与「条件不满足」，重试提示直接指向首属性写法\n- 新增「设置 - 高级设置 - 外部调用」：显示并复制带 token 的抓取快照命令\n- 同步 gkd-selector 0.6.1 诊断 API；单测 136 → 152\n\n⚠ 本版未做完整真机验证，但改动全部集中在 AI 生成链路，无障碍主流程未动。若出现 AI 生成失败或结果缺尾，请导出日志反馈；本版可整体回退到 v1.4.3，不涉及数据库迁移与配置格式变更。",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.4/GKD-XA-v1.4.4.apk",
+  "fileSize": 5839508,
   "versionLogs": [
+    {
+      "name": "1.4.4",
+      "code": 144,
+      "desc": "- AI 生成改走 SSE 流式 + Max Tokens 自适应（抬底/翻倍/按服务商记住上限）\n- 加强模式区分「无法快速匹配」与「条件不满足」\n- 新增「高级设置 - 外部调用」：复制带 token 的抓取快照命令\n- 同步 selector 0.6.1 诊断 API；单测 136 → 152\n- ⚠ 未做完整真机验证，仅限 AI 链路；可整体回退到 1.4.3"
+    },
     {
       "name": "1.4.3",
       "code": 143,
