@@ -108,4 +108,32 @@ class SseStreamParserTest {
         assertEquals("stop", result.finishReason)
         assertTrue(result.done)
     }
+
+    @Test
+    fun finishReasonChunkWithoutDoneMarkerCountsAsCompleteStream() {
+        val result = SseStreamParser.parse(
+            """
+            data: {"choices":[{"index":0,"delta":{"content":"{\"a\": 1}"},"finish_reason":"stop"}]}
+            """.trimIndent().lines(),
+        )
+
+        assertEquals("{\"a\": 1}", result.content)
+        assertTrue(
+            "有些服务商只发 finish_reason 收尾，不能因为缺 [DONE] 就判成断流",
+            result.isComplete,
+        )
+    }
+
+    @Test
+    fun silentCloseIsTheOnlyIncompleteCase() {
+        val cut = SseStreamParser.parse(
+            """
+            data: {"choices":[{"index":0,"delta":{"content":"半"}}]}
+            """.trimIndent().lines(),
+        )
+        assertFalse("既无 [DONE] 又无 finish_reason 时必须识别成残缺", cut.isComplete)
+        assertFalse(cut.isTruncated)
+
+        assertTrue(SseStreamParser.parse(listOf("data: [DONE]")).isComplete)
+    }
 }

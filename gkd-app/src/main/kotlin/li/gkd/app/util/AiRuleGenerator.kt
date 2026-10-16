@@ -26,6 +26,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -603,13 +604,19 @@ $previousRule
 
     /**
      * 一次 AI 调用：先按自适应预算发请求，
-     * 截断（finishReason == length）就翻倍重试一次，被服务端拒绝就记下上限并回退重试一次。
+     * 截断（finishReason == length）就翻倍重试一次，被服务端拒绝就记下上限并回退重试一次，
+     * 流被中途掐断则按原预算重试一次。
      */
     private suspend fun callAiApi(config: AiConfig, userContent: String): String {
         val budget = AiTokenBudget.budgetForRequest(config.maxTokens, ceilingOf(config))
         LogUtils.d("AI max tokens budget: configured=${config.maxTokens}, ceiling=${ceilingOf(config)}, use=$budget")
         return try {
             val first = postAiRequest(config, userContent, budget)
+            if (first.interrupted) {
+                // 中途掐断不该由预算解释：按原预算再要一次，不翻倍、也不弹「提高 max_tokens」的提示
+                LogUtils.d("AI 流式响应未正常结束（chars=${first.content.length}），按原预算重试一次")
+                return postAiRequest(config, userContent, budget).content
+            }
             if (!first.truncated) {
                 return first.content
             }
@@ -692,8 +699,25 @@ $previousRule
                         ?: throw Exception("No content in OpenAI response")
                 }
             }
-            // 非流式路径不读 finish_reason，预算自适应在这里只靠服务端拒绝那一半
-            return AiReply(content, truncated = false)
+            // 非流式响应同样带截断信号，各家字段名不同，见 AiTruncation
+            val truncated = when {
+                config.isAnthropic -> AiTruncation.anthropic(
+                    jsonElement.jsonObject["stop_reason"]?.jsonPrimitive?.contentOrNull,
+                )
+
+                config.endpointMode == AiEndpointMode.RESPONSES -> AiTruncation.responses(
+                    jsonElement.jsonObject["status"]?.jsonPrimitive?.contentOrNull,
+                    jsonElement.jsonObject["incomplete_details"].objectOrNull()
+                        ?.get("reason")?.jsonPrimitive?.contentOrNull,
+                )
+
+                else -> AiTruncation.chatCompletions(
+                    jsonElement.jsonObject["choices"].jsonArrayOrNull?.firstOrNull()
+                        .objectOrNull()?.get("finish_reason")?.jsonPrimitive?.contentOrNull,
+                )
+            }
+            if (truncated) LogUtils.d("AI 非流式响应带截断标记，交给预算翻倍重试")
+            return AiReply(content, truncated)
         } finally {
             httpClient.close()
         }
@@ -709,7 +733,7 @@ $previousRule
         }
         val result = SseStreamParser.parse(lines)
         LogUtils.d("AI SSE Response: chars=${result.content.length}, finishReason=${result.finishReason}, done=${result.done}")
-        return AiReply(result.content, result.isTruncated)
+        return AiReply(result.content, result.isTruncated, interrupted = !result.isComplete)
     }
 
     private fun isSseDoneLine(line: String): Boolean {
@@ -803,7 +827,12 @@ $previousRule
 }
 
 /** 一次请求的正文与「是否被 max_tokens 截断」的结论。 */
-private class AiReply(val content: String, val truncated: Boolean)
+private class AiReply(
+    val content: String,
+    val truncated: Boolean,
+    /** 流被中途掐断（既没有 [DONE] 也没有 finish_reason），正文残缺但不是预算问题。 */
+    val interrupted: Boolean = false,
+)
 
 /** 服务端判定本次的 max_tokens 过大 / 非法：带上那个值才能记住上限并回退。 */
 private class AiTokenLimitReject(val budget: Int, message: String) : Exception(message)

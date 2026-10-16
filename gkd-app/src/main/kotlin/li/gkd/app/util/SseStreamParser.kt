@@ -13,6 +13,12 @@ data class SseStreamResult(
     val done: Boolean,
 ) {
     val isTruncated: Boolean get() = finishReason == SseStreamParser.FINISH_REASON_LENGTH
+
+    /**
+     * [DONE] 和 finish_reason 至少见到一个才算收尾。两个都没有说明连接被中途掐断，
+     * 此时 content 是残缺正文 —— 调用方不能当完整回复用。
+     */
+    val isComplete: Boolean get() = done || finishReason != null
 }
 
 object SseStreamParser {
