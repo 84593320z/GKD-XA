@@ -1,10 +1,15 @@
 {
-  "versionCode": 144,
-  "versionName": "1.4.4",
-  "changelog": "v1.4.4\n\n- 新增「设置 - 高级设置 - 外部调用命令」：查看并复制 Tasker / adb 使用的完整命令（含 token，默认掩码，点命令文本展开）\n- 本版相对 v1.4.3 只有这一个设置页；无障碍主流程、AI 生成链路、数据库与配置格式未动\n- 未实机验证：长命令换行、页面 token 与 ExposeService 校验值是否一致\n- 回退只需 revert 9631ece 一个提交，不涉及数据库迁移与配置格式变更",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.4/GKD-XA-v1.4.4.apk",
+  "versionCode": 145,
+  "versionName": "1.4.5",
+  "changelog": "v1.4.5\n\n- AI 回复截断：非流式响应（Chat Completions / Anthropic / Responses）也识别「被长度上限截断」；SSE 流中途断开不再当作完整回复，按原预算重试一次\n- 更新检查：测试通道改为读取 version/beta.json，不再与稳定通道共用；version/*.json 增加构建门禁（版本号 / 日志首条 / 倒序 / 下载地址与 tag）\n- 界面：应用名组件 appId 改为必传；权限按钮改为「单次授予 / 永久授予」，工作模式改为「手动开启 / 自动开启」\n- 无数据库迁移与配置格式变更；可回退到 v1.4.4",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.5/GKD-XA-v1.4.5.apk",
   "fileSize": 5839508,
   "versionLogs": [
+    {
+      "name": "1.4.5",
+      "code": 145,
+      "desc": "- AI 截断识别扩展到非流式响应；SSE 中途断开按原预算重试一次\n- 测试通道与稳定通道分离（beta.json 独立）；version/*.json 加构建门禁\n- 应用名组件 appId 必传；权限文案改单次/永久授予，工作模式改手动/自动开启\n- 无数据库迁移，可回退 1.4.4"
+    },
     {
       "name": "1.4.4",
       "code": 144,
