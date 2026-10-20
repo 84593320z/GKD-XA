@@ -3,7 +3,7 @@
   "versionName": "1.4.5",
   "changelog": "v1.4.5\n\n- AI 回复截断：非流式响应（Chat Completions / Anthropic / Responses）也识别「被长度上限截断」；SSE 流中途断开不再当作完整回复，按原预算重试一次\n- 更新检查：测试通道改为读取 version/beta.json，不再与稳定通道共用；version/*.json 增加构建门禁（版本号 / 日志首条 / 倒序 / 下载地址与 tag）\n- 界面：应用名组件 appId 改为必传；权限按钮改为「单次授予 / 永久授予」，工作模式改为「手动开启 / 自动开启」\n- 无数据库迁移与配置格式变更；可回退到 v1.4.4",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.5/GKD-XA-v1.4.5.apk",
-  "fileSize": 5839508,
+  "fileSize": 5840356,
   "versionLogs": [
     {
       "name": "1.4.5",
