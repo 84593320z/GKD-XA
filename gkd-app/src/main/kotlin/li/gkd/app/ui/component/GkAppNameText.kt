@@ -33,7 +33,7 @@ import li.gkd.app.ui.style.placeholderWidth
 @Composable
 fun GkAppNameText(
     modifier: Modifier = Modifier,
-    appId: String? = null,
+    appId: String,
     appInfo: AppInfo? = null,
     fallbackName: String? = null,
     style: TextStyle = LocalTextStyle.current,
@@ -41,7 +41,7 @@ fun GkAppNameText(
 ) {
     val info = appInfo ?: AppInfoRepository.appInfoMapFlow.collectAsStateWithLifecycle().value[appId]
     val showSystemIcon = info?.isSystem == true
-    val appName = (info?.name ?: fallbackName ?: appId ?: error("appId is required"))
+    val appName = info?.name ?: fallbackName ?: appId
     val userName = info?.userId?.let { userId ->
         if (userId == currentUserId) {
             null

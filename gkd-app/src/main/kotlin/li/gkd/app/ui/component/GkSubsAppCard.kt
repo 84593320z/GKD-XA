@@ -39,7 +39,7 @@ fun GkSubsAppCard(
         trailing = { GkRuleEnableControl(control, onSettingChange, modifier = it,
             identity = RuleSwitchTarget.App(subsId, rawApp.id)) },
     ) {
-        GkAppNameText(appInfo = appInfo, fallbackName = rawApp.name)
+        GkAppNameText(appId = appInfo?.id ?: rawApp.id, appInfo = appInfo, fallbackName = rawApp.name)
         Row(
             Modifier.fillMaxWidth().heightIn(min = 20.dp),
             verticalAlignment = Alignment.CenterVertically,

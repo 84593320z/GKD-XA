@@ -48,7 +48,7 @@ fun GkAppCheckboxCard(
                 .weight(1f),
             verticalArrangement = Arrangement.Center
         ) {
-            GkAppNameText(appInfo = appInfo)
+            GkAppNameText(appId = appInfo.id, appInfo = appInfo)
             Text(
                 text = appInfo.id,
                 style = MiuixTheme.textStyles.body2,
