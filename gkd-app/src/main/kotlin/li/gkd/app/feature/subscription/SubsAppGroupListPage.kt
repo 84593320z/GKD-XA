@@ -316,7 +316,12 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
                                     },
                                     onDragStopped = {
                                         val result = reorderSession.finishDragging()
-                                        if (result.moved) selectionState.clear()
+                                        if (result.moved) {
+                                            selectionState.clear()
+                                        } else if (!isSelectedMode && !batchBusy) {
+                                            // 长按后原地松手：保持旧版"长按进多选"的手感
+                                            selectionState.select(group.key)
+                                        }
                                         result.reorderedItems?.let { reordered ->
                                             scope.launchUi {
                                                 var saved = false
