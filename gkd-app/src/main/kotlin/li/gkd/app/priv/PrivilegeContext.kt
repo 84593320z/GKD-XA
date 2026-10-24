@@ -1,5 +1,8 @@
 package li.gkd.app.priv
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import li.gkd.aidl.IUserService
 import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
@@ -96,11 +99,16 @@ class PrivilegeContext private constructor(
                 PrivilegeCommand(listOf("pm", "grant", META.appId, permission))
             )
             try {
-                val result = process.awaitResult()
+                // 给 pm grant 设上限：这一步挂在同步链上，特权服务卡住不能把后续 arm 一起拖住
+                val result = withTimeout(5_000) { process.awaitResult() }
                 LogUtils.d("ensureWriteSecureSettings exitCode=${result.exitCode} stderr=${result.stderr.decodeToString().trim()}")
             } finally {
                 process.close()
             }
+        } catch (e: TimeoutCancellationException) {
+            LogUtils.d("ensureWriteSecureSettings timeout after 5s")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             LogUtils.d(e, "ensureWriteSecureSettings shell grant failed")
         }
