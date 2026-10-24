@@ -545,6 +545,11 @@
     <string name="remote_category_delete_unsupported">远程订阅类别不可删除</string>
     <string name="remote_category_edit_unsupported">远程订阅类别不可编辑</string>
     <string name="remote_rule_delete_unsupported">远程订阅规则不可删除</string>
+    <string name="remote_rule_reorder_unsupported">远程订阅规则组不可调整顺序</string>
+    <string name="subscription_adding_download">正在下载订阅…</string>
+    <string name="subscription_adding_parse">正在解析订阅…</string>
+    <string name="subscription_adding_check">正在检查订阅…</string>
+    <string name="subscription_adding_save">正在保存订阅…</string>
     <string name="reset_filter">重置筛选</string>
     <string name="restricted_settings_permission_description">当前操作权限「访问受限设置」已被限制，请前往特权服务重新授权</string>
     <string name="restrictions_description_title">限制说明</string>

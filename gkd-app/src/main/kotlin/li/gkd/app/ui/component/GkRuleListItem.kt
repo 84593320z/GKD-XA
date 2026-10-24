@@ -3,7 +3,9 @@ package li.gkd.app.ui.component
 import li.gkd.app.text.UiStrings
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,9 +24,11 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -39,6 +43,8 @@ fun GkRuleListItem(
     highlighted: Boolean = false,
     selectable: Boolean = true,
     selectionEnabled: Boolean = true,
+    interactionSource: MutableInteractionSource? = null,
+    handlesLongPress: Boolean = true,
     onLongClick: (() -> Unit)? = null,
     onSelect: () -> Unit = {},
     legacyStyle: Boolean = false,
@@ -46,6 +52,7 @@ fun GkRuleListItem(
     trailing: @Composable (Modifier) -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val clickInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val containerColor by animateColorAsState(
         targetValue = if (selected || highlighted) MiuixTheme.colorScheme.primaryContainer
             else MiuixTheme.colorScheme.surfaceContainer,
@@ -66,15 +73,24 @@ fun GkRuleListItem(
                 .then(
                     if (!selectedMode || selectable) {
                         Modifier.combinedClickable(
+                            interactionSource = clickInteractionSource,
+                            indication = LocalIndication.current,
                             enabled = !selectedMode || selectionEnabled,
                             onClick = if (selectedMode) onSelect else onClick,
-                            onLongClick = if (selectable && selectionEnabled) onLongClick else null,
+                            onLongClick = if (handlesLongPress && selectable && selectionEnabled) onLongClick else null,
                             onClickLabel = if (selectedMode) UiStrings.selection_toggle else UiStrings.details_view,
                         )
                     } else {
                         Modifier
                     }
                 ).semantics {
+                    // 长按被拖拽手势接管时，给无障碍留一条"进入多选"的动作
+                    if (!handlesLongPress && selectable && selectionEnabled && onLongClick != null) {
+                        this.onLongClick(label = UiStrings.selection_mode_enter) {
+                            onLongClick()
+                            true
+                        }
+                    }
                     if (selectedMode && selectable) {
                         role = Role.Checkbox
                         this.selected = selected

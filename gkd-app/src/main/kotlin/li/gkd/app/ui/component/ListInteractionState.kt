@@ -109,6 +109,11 @@ class ReorderSession<T, K>(
         moved = false
     }
 
+    /** 保存失败时把顺序恢复到拖拽前，避免界面停在未落盘的状态。 */
+    fun reset() {
+        items = sourceItems
+    }
+
     fun move(fromIndex: Int, toIndex: Int) {
         if (fromIndex == toIndex || fromIndex !in items.indices || toIndex !in items.indices) {
             return

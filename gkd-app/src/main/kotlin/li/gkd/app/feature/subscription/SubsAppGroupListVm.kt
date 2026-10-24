@@ -94,4 +94,18 @@ class SubsAppGroupListVm(
         }
         return deletedSize
     }
+
+    /** 只有本地订阅能改写规则文件；远程订阅的组顺序由订阅源决定。 */
+    suspend fun reorderGroups(keys: List<Int>) {
+        check(route.subsItemId < 0) { UiStrings.remote_rule_reorder_unsupported }
+        subscription.update { current ->
+            current.edit {
+                updateApp(route.appId) {
+                    val byKey = groups.associateBy { it.key }
+                    val orderedKeys = keys.toSet()
+                    copy(groups = keys.mapNotNull(byKey::get) + groups.filter { it.key !in orderedKeys })
+                }
+            }
+        }
+    }
 }

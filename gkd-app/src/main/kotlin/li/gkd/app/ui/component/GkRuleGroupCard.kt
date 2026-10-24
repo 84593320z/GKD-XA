@@ -1,5 +1,6 @@
 package li.gkd.app.ui.component
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,8 @@ fun GkRuleGroupCard(
     isSelectedMode: Boolean = false,
     isSelected: Boolean = false,
     selectionEnabled: Boolean = true,
+    interactionSource: MutableInteractionSource? = null,
+    handlesLongPress: Boolean = true,
     onLongClick: () -> Unit = {},
     onSelectedChange: () -> Unit = {},
     legacyStyle: Boolean = false,
@@ -46,6 +49,8 @@ fun GkRuleGroupCard(
         selectedMode = isSelectedMode, selected = isSelected, highlighted = highlighted,
         selectable = control.canEnable,
         selectionEnabled = selectionEnabled,
+        interactionSource = interactionSource,
+        handlesLongPress = handlesLongPress,
         onLongClick = onLongClick, onSelect = onSelectedChange,
         legacyStyle = legacyStyle,
         trailing = {

@@ -29,6 +29,9 @@ object RuntimeStateSynchronizer {
                 // 在没有可解析 HOME 的设备上抛 NPE，会把 grantSelf / refreshAll / 自动开无障碍一起带走。
                 runStep(loc, "updateSystemDefaultAppId") { updateSystemDefaultAppId() }
                 runStep(loc, "grantSelf") { privilegeContextFlow.value?.grantSelf() }
+                // Shizuku/ADB 的服务端没有 GRANT_RUNTIME_PERMISSIONS，grantSelf 拿不到写安全设置权限，
+                // 这里用特权服务补一次 pm grant；必须在 refreshAll 之前，权限状态才会立刻反映到 UI。
+                runStep(loc, "ensureWriteSecureSettings") { privilegeContextFlow.value?.ensureWriteSecureSettings() }
                 runStep(loc, "refreshAll") { PermissionStates.refreshAll() }
                 runStep(loc, "fixRestartAutomatorService") { fixRestartAutomatorService() }
                 runStep(loc, "armA11yService") { armA11yService(loc = "sync($loc)") }
@@ -43,7 +46,7 @@ object RuntimeStateSynchronizer {
     private inline fun runStep(
         loc: String,
         name: String,
-        body: () -> Unit,
+        body: suspend () -> Unit,
     ) {
         try {
             body()

@@ -4,11 +4,14 @@ import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -56,6 +59,7 @@ import li.gkd.app.ui.component.RulePropertyText
 import li.gkd.app.ui.component.animateListItem
 import li.gkd.app.ui.component.rememberListScrollState
 import li.gkd.app.ui.component.rememberMultiSelectionState
+import li.gkd.app.ui.component.rememberReorderSession
 import li.gkd.app.ui.component.rememberRuleControlEnvironment
 import li.gkd.app.ui.component.rememberRuleListFocus
 
@@ -106,6 +110,9 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
         } }
         val groups = app.groups
         val editable = subsItemId < 0
+        // 只有本地订阅、且至少两个组时才需要排序；拖拽期间临时关闭多选入口
+        val reorderSession = rememberReorderSession(groups) { it.key }
+        val reorderEnabled = editable && groups.size > 1
         val selectionState = rememberMultiSelectionState<Int>()
         val selectableKeys = remember(controls) { controls.filterValues { it.canEnable }.keys }
         val selectedKeys = selectionState.selectedKeys intersect selectableKeys
@@ -142,6 +149,12 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
         val pageScrollState = rememberListScrollState()
         val scrollBehavior = pageScrollState.scrollBehavior
         val listState = pageScrollState.listState
+        // 长按拖拽只移动 reorderSession 里的临时顺序，落盘在 onDragStopped 里一次完成
+        val reorderableState = rememberReorderableLazyListState(listState) { from, to ->
+            val fromIndex = reorderSession.items.indexOfFirst { it.key == from.key }
+            val toIndex = reorderSession.items.indexOfFirst { it.key == to.key }
+            reorderSession.move(fromIndex, toIndex)
+        }
         val itemKeys = remember(groups, appExists, showAppRestriction) { buildList {
             if (showAppRestriction) add("app-restrictions")
             if (appExists) add("app-switch")
@@ -290,37 +303,64 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
                             }
                         }
                     }
-                    items(groups, { it.key }) { group ->
-                        GkRuleGroupCard(
-                            modifier = Modifier.animateListItem(),
-                            subs = subs,
-                            appId = appId,
-                            group = group,
-                            control = controls.getValue(group.key),
-                            onOpen = {
-                                mainVm.showRuleGroup(
-                                    subscriptionId = subs.id,
-                                    appId = appId,
-                                    group = group,
-                                )
-                            },
-                            onSettingChange = { setting ->
-                                val request = vm.prepareSwitches(state, setOf(group.key))
-                                scope.launchUi { vm.applySwitches(request, setting).failureMessage?.let { toast(it) } }
-                            },
-                            highlighted = !isSelectedMode && focus.highlightedKey == group.key,
-                            isSelectedMode = isSelectedMode,
-                            selectionEnabled = !batchBusy,
-                            isSelected = group.key in selectedKeys,
-                            onLongClick = {
-                                if (!batchBusy) {
-                                    selectionState.select(group.key)
+                    items(if (reorderEnabled) reorderSession.items else groups, { it.key }) { group ->
+                        val canDrag = reorderEnabled && (reorderSession.dragging || (!batchBusy && !isSelectedMode))
+                        ReorderableItem(state = reorderableState, key = group.key, enabled = canDrag) {
+                            val interactionSource = remember { MutableInteractionSource() }
+                            GkRuleGroupCard(
+                                modifier = Modifier.animateListItem().longPressDraggableHandle(
+                                    enabled = canDrag,
+                                    interactionSource = interactionSource,
+                                    onDragStarted = {
+                                        reorderSession.startDragging()
+                                    },
+                                    onDragStopped = {
+                                        val result = reorderSession.finishDragging()
+                                        if (result.moved) selectionState.clear()
+                                        result.reorderedItems?.let { reordered ->
+                                            scope.launchUi {
+                                                var saved = false
+                                                try {
+                                                    vm.reorderGroups(reordered.map { it.key })
+                                                    saved = true
+                                                } finally {
+                                                    if (!saved) reorderSession.reset()
+                                                }
+                                            }
+                                        }
+                                    },
+                                ),
+                                interactionSource = interactionSource,
+                                handlesLongPress = !canDrag,
+                                subs = subs,
+                                appId = appId,
+                                group = group,
+                                control = controls.getValue(group.key),
+                                onOpen = {
+                                    mainVm.showRuleGroup(
+                                        subscriptionId = subs.id,
+                                        appId = appId,
+                                        group = group,
+                                    )
+                                },
+                                onSettingChange = { setting ->
+                                    val request = vm.prepareSwitches(state, setOf(group.key))
+                                    scope.launchUi { vm.applySwitches(request, setting).failureMessage?.let { toast(it) } }
+                                },
+                                highlighted = !isSelectedMode && focus.highlightedKey == group.key,
+                                isSelectedMode = isSelectedMode,
+                                selectionEnabled = !batchBusy && !reorderSession.dragging,
+                                isSelected = group.key in selectedKeys,
+                                onLongClick = {
+                                    if (!batchBusy && !reorderSession.dragging) {
+                                        selectionState.select(group.key)
+                                    }
+                                },
+                                onSelectedChange = {
+                                    selectionState.toggle(group.key)
                                 }
-                            },
-                            onSelectedChange = {
-                                selectionState.toggle(group.key)
-                            }
-                        )
+                            )
+                        }
                     }
                     item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
                         if (groups.isEmpty()) {

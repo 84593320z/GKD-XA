@@ -276,6 +276,7 @@ object SubscriptionRepository {
     suspend fun addOrModifyRemote(
         url: String,
         oldItem: SubsItem? = null,
+        onStage: suspend (SubscriptionAddStage) -> Unit = {},
     ): SubscriptionResult = withContext(Dispatchers.IO) {
         fun failure(
             reason: SubscriptionResult.FailureReason,
@@ -293,6 +294,7 @@ object SubscriptionRepository {
                 result = failure(SubscriptionResult.FailureReason.DuplicateUrl)
                 return@tryWithStateLock
             }
+            onStage(SubscriptionAddStage.Downloading)
             val text = try {
                 client.get(url).bodyAsText()
             } catch (e: CancellationException) {
@@ -307,6 +309,7 @@ object SubscriptionRepository {
                 )
                 return@tryWithStateLock
             }
+            onStage(SubscriptionAddStage.Parsing)
             val subscription = try {
                 RawSubscription.parse(text)
             } catch (e: Exception) {
@@ -319,6 +322,7 @@ object SubscriptionRepository {
                 )
                 return@tryWithStateLock
             }
+            onStage(SubscriptionAddStage.Checking)
             if (oldItem == null && items.any { it.id == subscription.id }) {
                 result = failure(SubscriptionResult.FailureReason.AlreadyExists)
                 return@tryWithStateLock
@@ -340,11 +344,15 @@ object SubscriptionRepository {
                 order = if (items.isEmpty()) 1 else items.maxOf { it.order } + 1,
             )
             try {
-                saveLocked(
-                    subscription = subscription,
-                    newItem = newItem,
-                    insertItem = oldItem == null,
-                )
+                onStage(SubscriptionAddStage.Saving)
+                // 进入落盘阶段后不再响应取消，避免只写了一半
+                withContext(NonCancellable) {
+                    saveLocked(
+                        subscription = subscription,
+                        newItem = newItem,
+                        insertItem = oldItem == null,
+                    )
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

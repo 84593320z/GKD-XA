@@ -147,9 +147,4 @@ class SubsManageVm : BaseViewModel() {
             Db.subsItemDao.updateEnable(item.id, enabled)
         }
     }
-
-    suspend fun addOrModifySubscription(
-        url: String,
-        oldItem: SubsItem? = null,
-    ): SubscriptionResult = SubscriptionRepository.addOrModifyRemote(url, oldItem)
 }

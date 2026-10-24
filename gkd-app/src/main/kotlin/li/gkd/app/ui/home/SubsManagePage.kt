@@ -358,8 +358,8 @@ private fun useLoadedSubsManagePage(
                         toast(UiStrings.subscription_refresh_wait_compact)
                     } else {
                         scope.launchUi {
-                            val url = mainVm.subsLinkDialog.request() ?: return@launchUi
-                            vm.addOrModifySubscription(url).message?.let { toast(it) }
+                            // 新增订阅的下载/解析/保存都在对话框里完成并显示阶段
+                            mainVm.subsLinkDialog.request()
                         }
                     }
                 },
