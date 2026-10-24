@@ -1,10 +1,15 @@
 {
-  "versionCode": 145,
-  "versionName": "1.4.5",
-  "changelog": "v1.4.5\n\n- AI 回复截断：非流式响应（Chat Completions / Anthropic / Responses）也识别「被长度上限截断」；SSE 流中途断开不再当作完整回复，按原预算重试一次\n- 更新检查：测试通道改为读取 version/beta.json，不再与稳定通道共用；version/*.json 增加构建门禁（版本号 / 日志首条 / 倒序 / 下载地址与 tag）\n- 界面：应用名组件 appId 改为必传；权限按钮改为「单次授予 / 永久授予」，工作模式改为「手动开启 / 自动开启」\n- 无数据库迁移与配置格式变更；可回退到 v1.4.4",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.5/GKD-XA-v1.4.5.apk",
+  "versionCode": 146,
+  "versionName": "1.4.6",
+  "changelog": "v1.4.6\n\n- Shizuku/ADB 下由特权服务补授「写入安全设置」权限，开机自愈不再需要特权服务在线（root 行为不变）\n- 新增订阅显示下载 / 解析 / 检查 / 保存四个阶段，保存阶段不可取消，失败提示留在对话框内\n- 订阅内应用分组支持长按拖拽排序（仅本地订阅），失败自动回滚；原地松手仍进入多选\n- 无数据库迁移与配置格式变更；可回退到 v1.4.5",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.6/GKD-XA-v1.4.6.apk",
   "fileSize": 5840356,
   "versionLogs": [
+    {
+      "name": "1.4.6",
+      "code": 146,
+      "desc": "- Shizuku/ADB 补授写入安全设置权限（pm grant），开机自愈不再依赖特权服务在线\n- 新增订阅显示下载/解析/检查/保存阶段，保存阶段不可取消\n- 订阅内应用分组长按拖拽排序，失败回滚；原地松手仍进多选\n- 无数据库迁移，可回退 1.4.5"
+    },
     {
       "name": "1.4.5",
       "code": 145,
