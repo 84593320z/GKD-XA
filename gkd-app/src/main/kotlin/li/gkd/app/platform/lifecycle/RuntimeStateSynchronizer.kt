@@ -43,7 +43,7 @@ object RuntimeStateSynchronizer {
         check(requests.trySend(loc).isSuccess) { "运行时状态同步队列已关闭" }
     }
 
-    private inline fun runStep(
+    private suspend fun runStep(
         loc: String,
         name: String,
         body: suspend () -> Unit,
