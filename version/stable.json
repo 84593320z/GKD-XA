@@ -3,7 +3,7 @@
   "versionName": "1.4.6",
   "changelog": "v1.4.6\n\n- Shizuku/ADB 下由特权服务补授「写入安全设置」权限，开机自愈不再需要特权服务在线（root 行为不变）\n- 新增订阅显示下载 / 解析 / 检查 / 保存四个阶段，保存阶段不可取消，失败提示留在对话框内\n- 订阅内应用分组支持长按拖拽排序（仅本地订阅），失败自动回滚；原地松手仍进入多选\n- 无数据库迁移与配置格式变更；可回退到 v1.4.5",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.6/GKD-XA-v1.4.6.apk",
-  "fileSize": 5840356,
+  "fileSize": 5851440,
   "versionLogs": [
     {
       "name": "1.4.6",
