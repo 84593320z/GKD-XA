@@ -1,10 +1,15 @@
 {
-  "versionCode": 147,
-  "versionName": "1.4.7",
-  "changelog": "v1.4.7\n\n- 订阅 exclude 里写单段包名（如系统包 android）不再被静默丢弃；应用 id 列表解析同样生效\n- 分享日志的跳转链接改用 HTTPS\n- 构建门禁补上匹配引擎单测；发布管线在写签名信息之前先跑单测\n- 无数据库迁移与配置格式变更；可回退到 v1.4.6",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.7/GKD-XA-v1.4.7.apk",
+  "versionCode": 148,
+  "versionName": "1.4.8",
+  "changelog": "v1.4.8\n\n- 修复：本地订阅里删除规则组后崩溃重启（拖拽快照与最新数据错位，Key 0 is missing in the map）\n- 修复：无障碍保活窗口偶发附加失败（BadTokenException），改为 300ms / 1s / 3s 退避重试\n- 加强模式：一次操作只生成一次规则；截图前真正隐藏悬浮窗，不再把菜单拍进去\n- 加强模式：重试提示在页面没有 id/vid/text 时允许 clickable + 尺寸/位置/层级，不再强迫 fastQuery\n- 无数据库迁移与配置格式变更；可回退到 v1.4.7",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.8/GKD-XA-v1.4.8.apk",
   "fileSize": 5851460,
   "versionLogs": [
+    {
+      "name": "1.4.8",
+      "code": 148,
+      "desc": "- 修复：删除规则组后崩溃（Key 0 is missing in the map）\n- 修复：保活窗口 BadTokenException，改 300ms/1s/3s 退避重试\n- 加强模式只生成一次（不再并发两条规则）\n- 加强模式截图不再带悬浮菜单；重试提示不再强迫 fastQuery\n- 无数据库迁移，可回退 1.4.7"
+    },
     {
       "name": "1.4.7",
       "code": 147,
