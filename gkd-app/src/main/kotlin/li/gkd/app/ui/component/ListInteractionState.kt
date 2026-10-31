@@ -1,7 +1,6 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -168,6 +167,10 @@ fun <T, K> rememberReorderSession(
     keyOf: (T) -> K,
 ): ReorderSession<T, K> {
     val state = remember { ReorderSession(items, keyOf) }
-    SideEffect { state.sync(items) }
+    // 必须在组合期同步，不能放 SideEffect：SideEffect 在提交之后才执行，删除/过滤后的那一帧
+    // 会继续用旧快照渲染列表，而按新数据现算的字典型状态已经少了被删的 key，
+    // 调用方取值时抛 NoSuchElementException（v1.4.6 线上就是 "Key 0 is missing in the map."）。
+    // sync 内部只在 items 变化且非拖拽时赋值，是幂等的，不会造成循环重组。
+    state.sync(items)
     return state
 }

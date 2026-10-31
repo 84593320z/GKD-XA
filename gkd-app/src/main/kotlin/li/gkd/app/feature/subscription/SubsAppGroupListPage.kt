@@ -304,6 +304,9 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
                         }
                     }
                     items(if (reorderEnabled) reorderSession.items else groups, { it.key }) { group ->
+                        // 拖拽快照与 controls 若来自不同一次状态更新会短暂错位：取不到就跳过这一帧，
+                        // 不能像以前那样 getValue 直接抛（v1.4.6 删规则组崩溃就是这里）。
+                        val control = controls[group.key] ?: return@items
                         val canDrag = reorderEnabled && (reorderSession.dragging || (!batchBusy && !isSelectedMode))
                         ReorderableItem(state = reorderableState, key = group.key, enabled = canDrag) {
                             val interactionSource = remember { MutableInteractionSource() }
@@ -340,7 +343,7 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
                                 subs = subs,
                                 appId = appId,
                                 group = group,
-                                control = controls.getValue(group.key),
+                                control = control,
                                 onOpen = {
                                     mainVm.showRuleGroup(
                                         subscriptionId = subs.id,
