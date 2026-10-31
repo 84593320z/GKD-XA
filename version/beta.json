@@ -3,7 +3,7 @@
   "versionName": "1.4.8",
   "changelog": "v1.4.8\n\n- 修复：本地订阅里删除规则组后崩溃重启（拖拽快照与最新数据错位，Key 0 is missing in the map）\n- 修复：无障碍保活窗口偶发附加失败（BadTokenException），改为 300ms / 1s / 3s 退避重试\n- 加强模式：一次操作只生成一次规则；截图前真正隐藏悬浮窗，不再把菜单拍进去\n- 加强模式：重试提示在页面没有 id/vid/text 时允许 clickable + 尺寸/位置/层级，不再强迫 fastQuery\n- 无数据库迁移与配置格式变更；可回退到 v1.4.7",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.8/GKD-XA-v1.4.8.apk",
-  "fileSize": 5851460,
+  "fileSize": 5852172,
   "versionLogs": [
     {
       "name": "1.4.8",
