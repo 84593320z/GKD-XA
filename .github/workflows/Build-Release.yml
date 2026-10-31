@@ -20,6 +20,14 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
 
+      # 与 Build-Apk 同一道门禁，且排在 keystore 落盘之前：任一测试失败就不写明文口令、
+      # 不打 APK。正常发版靠「release commit 推 main 顺带触发 Build-Apk」间接覆盖，
+      # 但给旧提交直接打 tag 的走法会绕过去，所以发布管线自己也跑一遍。
+      - name: 单元测试（发布门禁）
+        run: |
+          chmod 777 ./gradlew
+          ./gradlew gkd-app:testGkdDebugUnitTest gkd-selector:jvmTest
+
       - name: write gkd secrets info
         env:
           GKD_STORE_FILE_BASE64: ${{ secrets.GKD_STORE_FILE_BASE64 }}

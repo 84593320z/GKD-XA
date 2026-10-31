@@ -53,13 +53,21 @@ jobs:
       - name: 单元测试
         run: ./gradlew gkd-app:testGkdDebugUnitTest 2>&1 | tee /tmp/gkd-test.log; exit "${PIPESTATUS[0]}"
 
+      # gkd-selector 是从上游 vendored 进来的匹配引擎，commonTest 里 7 个文件（语法、tokenizer、
+      # 查询、位置、优化）从来没有在任何 pipe 里跑过：它自己没接 Android，jvmTest 就能跑。
+      # 匹配引擎是误点风险最高的模块，这道门禁比 app 层单测更值得先立起来。
+      - name: selector 单元测试
+        run: ./gradlew gkd-selector:jvmTest 2>&1 | tee /tmp/gkd-selector-test.log; exit "${PIPESTATUS[0]}"
+
       # 失败原因必须能从 API 读到：job 日志接口不认证就拿不到（403），而 check-run 的
       # annotations 是公开可读的 —— 所以失败时把编译错误和断言消息转成 ::error:: 注解。
       - name: 失败时输出错误注解
         if: failure()
         run: |
-          grep -aE "^e: file://|error:|FAILED" /tmp/gkd-test.log | head -30 | sed 's/^/::error::/'
+          grep -aE "^e: file://|error:|FAILED" /tmp/gkd-test.log 2>/dev/null | head -30 | sed 's/^/::error::/'
+          grep -aE "^e: file://|error:|FAILED" /tmp/gkd-selector-test.log 2>/dev/null | head -30 | sed 's/^/::error::/'
           grep -rhoE '<failure message="[^"]{0,200}' gkd-app/build/test-results 2>/dev/null | head -20 | sed 's/^/::error::/'
+          grep -rhoE '<failure message="[^"]{0,200}' gkd-selector/build/test-results 2>/dev/null | head -20 | sed 's/^/::error::/'
 
       - run: ./gradlew gkd-app:assembleGkdRelease
 
