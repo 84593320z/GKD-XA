@@ -3,6 +3,8 @@ package li.gkd.app.service
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.os.Handler
+import android.os.Looper
 import android.view.Display
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -150,16 +152,27 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
         }
     }
 
-    private fun attachKeepAliveOverlay() {
-        if (!KeepAliveOverlayCoordinator.acquire(
+    private fun attachKeepAliveOverlay(attempt: Int = 1) {
+        if (KeepAliveOverlayCoordinator.acquire(
                 source = KeepAliveOverlayCoordinator.Source.Accessibility,
                 owner = this,
                 context = this,
                 windowType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
             )
         ) {
-            toast(UiStrings.a11y_keep_alive_failed)
+            return
         }
+        // ColorOS 17 上偶发：onServiceConnected 里立刻 addView 会拿到尚未就绪的窗口 token，
+        // 抛 "BadTokenException: token ... is not valid"（2026-10-25/26/31 日志各一次）。
+        // token 通常几百毫秒内就生效，失败就退避重试；acquire 幂等，重复调用不会叠窗口。
+        val delayMillis = KEEP_ALIVE_RETRY_DELAYS.getOrNull(attempt - 1)
+        if (delayMillis == null || destroyed) {
+            toast(UiStrings.a11y_keep_alive_failed)
+            return
+        }
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (!destroyed) attachKeepAliveOverlay(attempt + 1)
+        }, delayMillis)
     }
 
     private fun releaseKeepAliveOverlayAfterHandoff() {
@@ -196,6 +209,8 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     }
 
     companion object {
+        private val KEEP_ALIVE_RETRY_DELAYS = longArrayOf(300L, 1_000L, 3_000L)
+
         val a11yCn by lazy { SelectToSpeakService::class.componentName }
         val isRunning: StateFlow<Boolean>
             field = MutableStateFlow(false)
