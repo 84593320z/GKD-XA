@@ -122,6 +122,7 @@ abstract class OverlayWindowService(
         private var aliveSize = 0
         val isAnyAlive: Boolean
             get() = aliveSize > 0
+        private const val OVERLAY_HIDE_SETTLE_MILLIS = 120L
     }
 
     private val resizeFlow = MutableSharedFlow<Unit>()
@@ -202,12 +203,29 @@ abstract class OverlayWindowService(
 
     protected suspend fun <T> withAllOverlaysHidden(block: suspend () -> T): T {
         shareContext.overlayContentHidden = true
+        // 只跳过绘制是不够的：窗口还在、上一帧像素也可能还在，加强模式导出的快照里就拍到过
+        // 整个悬浮菜单。用窗口 alpha=0 + 不可触摸把它真正从屏幕与点击链路里摘掉。
+        setWindowHidden(true)
         return try {
             awaitOverlayContentHidden()
+            // 窗口属性由 SurfaceFlinger 在下一次事务生效，等一帧后立刻截图仍可能抓到上一帧
+            delay(OVERLAY_HIDE_SETTLE_MILLIS)
             block()
         } finally {
             shareContext.overlayContentHidden = false
+            setWindowHidden(false)
         }
+    }
+
+    private fun setWindowHidden(hidden: Boolean) {
+        val params = overlayLayoutParams ?: return
+        params.alpha = if (hidden) 0f else 1f
+        params.flags = if (hidden) {
+            params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        } else {
+            params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+        }
+        runCatching { app.windowManager.updateViewLayout(view, params) }
     }
 
     private suspend fun awaitOverlayContentHidden() =
@@ -229,6 +247,7 @@ abstract class OverlayWindowService(
     private val defaultPosition get() = listOf(minMargin, BarUtils.getStatusBarHeight())
 
     private lateinit var shareContext: ShareContext
+    private var overlayLayoutParams: WindowManager.LayoutParams? = null
 
     private val positionFlow by lazy {
         MutableStateFlow(
@@ -281,6 +300,7 @@ abstract class OverlayWindowService(
             x = positionFlow.value.first()
             y = positionFlow.value.last()
         }
+        overlayLayoutParams = layoutParams
         var screenWidth = ScreenUtils.getScreenWidth()
         var screenHeight = ScreenUtils.getScreenHeight()
         var paramsXy = layoutParams.x to layoutParams.y

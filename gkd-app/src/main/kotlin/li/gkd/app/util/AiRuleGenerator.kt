@@ -386,7 +386,8 @@ object AiRuleGenerator {
         var latestRule: RawSubscription? = null
         try {
             // Step 1: 捕获快照
-            val snapshot = SnapshotCapture.capture()
+            // 加强模式下面自己会生成并验证，关掉 capture 里的「顺带生成」，避免并发两次模型调用
+            val snapshot = SnapshotCapture.capture(triggerAiRule = false)
             val snapshotJson = withContext(Dispatchers.IO) {
                 SnapshotRepository.snapshotFile(snapshot.id).readText()
             }

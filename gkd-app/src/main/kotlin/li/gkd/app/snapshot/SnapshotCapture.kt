@@ -234,7 +234,15 @@ object SnapshotCapture {
         return ScreenResult(processedBitmap, status)
     }
 
-    suspend fun capture(forcedCropStatusBar: Boolean = false): ComplexSnapshot {
+    /**
+     * [triggerAiRule]：本次截图后是否顺带触发一次普通 AI 生成（沿用「快照即生成规则」的老行为）。
+     * 加强模式自己会调模型并执行验证，必须传 false —— 否则同一次操作会并发跑两次生成、
+     * 插入两条规则、烧两份 token（此前就是如此）。
+     */
+    suspend fun capture(
+        forcedCropStatusBar: Boolean = false,
+        triggerAiRule: Boolean = true,
+    ): ComplexSnapshot {
         val service = A11yRuntime.service ?: throw RpcError(UiStrings.service_unavailable_authorize)
         if (!captureMutex.tryLock()) {
             throw RpcError(UiStrings.snapshot_save_in_progress)
@@ -314,7 +322,7 @@ object SnapshotCapture {
                 UiStrings.snapshot_saved_warning(statusDetail)
             }
             toast(toastText, forced = true)
-            if (storeFlow.value.aiEnable) {
+            if (triggerAiRule && storeFlow.value.aiEnable) {
                 appScope.launchLogged {
                     AiRuleGenerator.generateRule(snapshot.id)
                 }
