@@ -1,10 +1,15 @@
 {
-  "versionCode": 146,
-  "versionName": "1.4.6",
-  "changelog": "v1.4.6\n\n- Shizuku/ADB 下由特权服务补授「写入安全设置」权限，开机自愈不再需要特权服务在线（root 行为不变）\n- 新增订阅显示下载 / 解析 / 检查 / 保存四个阶段，保存阶段不可取消，失败提示留在对话框内\n- 订阅内应用分组支持长按拖拽排序（仅本地订阅），失败自动回滚；原地松手仍进入多选\n- 无数据库迁移与配置格式变更；可回退到 v1.4.5",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.6/GKD-XA-v1.4.6.apk",
-  "fileSize": 5851440,
+  "versionCode": 147,
+  "versionName": "1.4.7",
+  "changelog": "v1.4.7\n\n- 订阅 exclude 里写单段包名（如系统包 android）不再被静默丢弃；应用 id 列表解析同样生效\n- 分享日志的跳转链接改用 HTTPS\n- 构建门禁补上匹配引擎单测；发布管线在写签名信息之前先跑单测\n- 无数据库迁移与配置格式变更；可回退到 v1.4.6",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.7/GKD-XA-v1.4.7.apk",
+  "fileSize": 5851460,
   "versionLogs": [
+    {
+      "name": "1.4.7",
+      "code": 147,
+      "desc": "- 修复：订阅 exclude 里的单段包名（如系统包 android）被静默丢弃\n- 应用 id 列表解析同样支持单段包名\n- 分享日志的跳转链接改用 HTTPS\n- 构建门禁覆盖匹配引擎单测；发布管线先跑单测再写签名\n- 无数据库迁移，可回退 1.4.6"
+    },
     {
       "name": "1.4.6",
       "code": 146,
