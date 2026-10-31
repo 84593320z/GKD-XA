@@ -70,7 +70,7 @@ class ShareLogState(
         val item = GithubUploadItem(
             label = UiStrings.logs_title,
             getFile = { FolderUtils.buildLogFile(snapshotDays) },
-            showHref = { "http://i.gkd.li/log/${it.id}" },
+            showHref = { "https://i.gkd.li/log/${it.id}" },
             releaseFile = FolderUtils::deleteSharedFile,
         )
         if (!githubUpload.startTask(item)) toast(UiStrings.upload_busy)

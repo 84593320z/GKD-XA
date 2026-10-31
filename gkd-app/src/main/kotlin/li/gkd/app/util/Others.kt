@@ -88,9 +88,11 @@ private fun Char.isAsciiClassVar(): Boolean {
     return this.isAsciiVar() || this == '$'
 }
 
-// https://developer.android.com/build/configure-app-module?hl=zh-cn
+// 已安装应用的包名可以只有一段，例如系统包 "android"。
+// 注意别按「应用模块包名」的编译规则来校验：那条规则要求至少两段，
+// 用它会把订阅 exclude 里的 !android 之类静默丢掉。
 fun String.isValidAppId(): Boolean {
-    if (!contains('.')) return false
+    if (isEmpty()) return false
     if (!first().isAsciiLetter()) return false
     var i = 0
     while (i < length) {
