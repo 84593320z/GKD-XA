@@ -8,6 +8,7 @@ import kotlinx.atomicfu.atomic
 import li.gkd.app.META
 import li.gkd.app.a11y.currentTopActivity
 import li.gkd.app.a11y.updateTopActivity
+import li.gkd.app.priv.requestPrivilegeRecovery
 import li.gkd.app.util.LogUtils
 import li.songe.codeorigin.CallSite
 import kotlin.reflect.jvm.jvmName
@@ -41,6 +42,7 @@ private class MainActivityLifecycleObserver(
 
     override fun onResume(owner: LifecycleOwner) {
         LogUtils.d("MainActivity::onResume", loc = logLoc)
+        requestPrivilegeRecovery()
         RuntimeStateSynchronizer.requestSync(loc = logLoc)
     }
 
