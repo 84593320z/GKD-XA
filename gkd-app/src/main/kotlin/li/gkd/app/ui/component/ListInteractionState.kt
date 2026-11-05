@@ -86,7 +86,7 @@ class ReorderSession<T, K>(
     initialItems: List<T>,
     private val keyOf: (T) -> K,
 ) {
-    private var sourceItems = initialItems
+    private var sourceItems by mutableStateOf(initialItems)
 
     var items by mutableStateOf(initialItems)
         private set
@@ -98,9 +98,9 @@ class ReorderSession<T, K>(
     fun sync(items: List<T>) {
         if (items == sourceItems) return
         sourceItems = items
-        if (!dragging) {
-            this.items = items
-        }
+        // 拖拽期间也要同步：保留用户当前的顺序，但换成最新对象并剔除已删除项。
+        // 只跳过赋值会让渲染列表与按最新数据算出的状态错位（v1.4.7 删除规则组崩溃的根因）。
+        this.items = if (dragging) mergeOrder(items) else items
     }
 
     fun startDragging() {
@@ -126,23 +126,7 @@ class ReorderSession<T, K>(
     fun finishDragging(): ReorderFinishResult<T> {
         dragging = false
         val wasMoved = moved
-        val mergedItems = if (wasMoved) {
-            val latestByKey = sourceItems.associateBy(keyOf)
-            val consumedKeys = mutableSetOf<K>()
-            buildList {
-                items.forEach { item ->
-                    val key = keyOf(item)
-                    latestByKey[key]?.let { latestItem ->
-                        if (consumedKeys.add(key)) add(latestItem)
-                    }
-                }
-                sourceItems.forEach { item ->
-                    if (consumedKeys.add(keyOf(item))) add(item)
-                }
-            }
-        } else {
-            sourceItems
-        }
+        val mergedItems = if (wasMoved) mergeOrder(sourceItems) else sourceItems
         items = mergedItems
         val result = ReorderFinishResult(
             moved = wasMoved,
@@ -152,6 +136,23 @@ class ReorderSession<T, K>(
         )
         moved = false
         return result
+    }
+
+    /** 以当前顺序为主、以 [latestItems] 的对象为准：丢掉的 key 不恢复，新增的 key 追加到末尾。 */
+    private fun mergeOrder(latestItems: List<T>): List<T> {
+        val latestByKey = latestItems.associateBy(keyOf)
+        val consumedKeys = mutableSetOf<K>()
+        return buildList {
+            items.forEach { item ->
+                val key = keyOf(item)
+                latestByKey[key]?.let { latestItem ->
+                    if (consumedKeys.add(key)) add(latestItem)
+                }
+            }
+            latestItems.forEach { item ->
+                if (consumedKeys.add(keyOf(item))) add(item)
+            }
+        }
     }
 
     fun cancelDragging() {

@@ -32,16 +32,16 @@ object KeepAliveOverlayCoordinator {
         owner: Any,
         context: Context,
         windowType: Int,
-    ): Boolean {
+    ): Result<Unit> {
         val current = get(source)
-        if (current?.owner === owner) return true
+        if (current?.owner === owner) return Result.success(Unit)
         val overlay = runCatching { KeepAliveOverlay(context, windowType) }
             .onFailure(LogUtils::d)
-            .getOrNull() ?: return false
+            .getOrElse { return Result.failure(it) }
         current?.overlay?.close()
         set(source, AttachedOverlay(owner, overlay))
         attachedState(source).value = true
-        return true
+        return Result.success(Unit)
     }
 
     suspend fun releaseAfterHandoff(

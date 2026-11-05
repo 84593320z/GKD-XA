@@ -4,6 +4,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import li.gkd.app.text.UiStrings
 import li.gkd.app.app
@@ -28,6 +30,8 @@ val currentUserId by lazy { android.os.Process.myUserHandle().hashCode() }
 val privilegeContextFlow: StateFlow<PrivilegeContext?>
     field = MutableStateFlow(null)
 
+private val privilegeContextMutex = Mutex()
+
 private val userServiceSpec = PrivilegeUserServiceSpec(
     serviceClassName = UserService::class.java.name,
     embedded = true,
@@ -47,8 +51,15 @@ private suspend fun clearPrivilegeContext(context: PrivilegeContext) {
 
 private suspend fun updatePrivilegeContext(serverInfo: PrivilegeServerInfo?) =
     withContext(Dispatchers.IO) {
-        val oldContext = privilegeContextFlow.value
-        if (oldContext?.serverInfo == serverInfo) return@withContext
+        privilegeContextMutex.withLock { applyPrivilegeContext(serverInfo) }
+    }
+
+private suspend fun applyPrivilegeContext(serverInfo: PrivilegeServerInfo?) {
+    // 自动恢复与 serverState 收集器可能同时进入：以 Privilege 的当前状态为准，
+    // 丢弃过期的 null / 旧 serverInfo，避免把刚连上的 context 又清掉。
+    if (Privilege.serverState.value != serverInfo) return
+    val oldContext = privilegeContextFlow.value
+    if (oldContext?.serverInfo == serverInfo) return
 
         if (serverInfo != null) {
             if (oldContext != null) {
@@ -94,12 +105,16 @@ private suspend fun updatePrivilegeContext(serverInfo: PrivilegeServerInfo?) =
             PermissionStates.refreshAll()
             toast(UiStrings.privilege_service_disconnected)
         }
-    }
+}
 
 fun initPrivilege() {
-    appScope.launchLogged {
+    appScope.launchLogged(Dispatchers.IO) {
+        var wasConnected = false
         Privilege.serverState.collect { serverInfo ->
+            val disconnected = wasConnected && serverInfo == null
+            wasConnected = serverInfo != null
             LogUtils.d("Privilege.serverState", serverInfo)
+            if (serverInfo != null) clearPrivilegeRecoveryCooldown()
             try {
                 updatePrivilegeContext(serverInfo)
             } catch (e: CancellationException) {
@@ -108,6 +123,7 @@ fun initPrivilege() {
                 LogUtils.d("update PrivilegeContext failed", e)
                 toast(UiStrings.privilege_service_state_update_failed(e.message))
             }
+            if (disconnected) requestPrivilegeRecovery()
         }
     }
 }

@@ -40,8 +40,8 @@ import li.gkd.app.notif.NotificationChannels
 import li.gkd.app.platform.lifecycle.MainActivityVisibility
 import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
 import li.gkd.app.priv.PrivilegeOwnerLifecycle
-import li.gkd.app.priv.gkdPrivilegeUiConfig
 import li.gkd.app.priv.initPrivilege
+import li.gkd.app.priv.requestPrivilegeRecovery
 import li.gkd.app.service.ExposeService
 import li.gkd.app.service.clearHttpSubs
 import li.gkd.app.service.initA11yWhiteAppList
@@ -57,7 +57,6 @@ import li.gkd.app.util.ToastUtils.toast
 import li.gkd.db.Db
 import li.gkd.db.initialize
 import org.lsposed.hiddenapibypass.HiddenApiBypass
-import priv.kit.ui.PrivilegeUi
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -271,9 +270,7 @@ class App : Application() {
         AppInfoRepository.initialize()
         initA11yFeat()
         initPrivilege()
-        appScope.launchLogged(Dispatchers.IO) {
-            PrivilegeUi.startSilently(gkdPrivilegeUiConfig)
-        }
+        requestPrivilegeRecovery()
         appScope.launchLogged(Dispatchers.IO) {
             SubscriptionRepository.initialize()
         }

@@ -3,14 +3,13 @@ package li.gkd.app.service
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.os.Handler
-import android.os.Looper
 import android.view.Display
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import com.google.android.accessibility.selecttospeak.SelectToSpeakService
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -93,6 +92,7 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     private var tempShutdownFlag = false
 
     override fun shutdown(temp: Boolean) {
+        keepAliveOverlayJob?.cancel()
         if (temp) {
             tempShutdownFlag = true
         }
@@ -152,27 +152,30 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
         }
     }
 
-    private fun attachKeepAliveOverlay(attempt: Int = 1) {
-        if (KeepAliveOverlayCoordinator.acquire(
-                source = KeepAliveOverlayCoordinator.Source.Accessibility,
-                owner = this,
-                context = this,
-                windowType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            )
-        ) {
-            return
-        }
-        // ColorOS 17 上偶发：onServiceConnected 里立刻 addView 会拿到尚未就绪的窗口 token，
-        // 抛 "BadTokenException: token ... is not valid"（2026-10-25/26/31 日志各一次）。
-        // token 通常几百毫秒内就生效，失败就退避重试；acquire 幂等，重复调用不会叠窗口。
-        val delayMillis = KEEP_ALIVE_RETRY_DELAYS.getOrNull(attempt - 1)
-        if (delayMillis == null || destroyed) {
+    private var keepAliveOverlayJob: Job? = null
+
+    private fun attachKeepAliveOverlay() {
+        keepAliveOverlayJob?.cancel()
+        keepAliveOverlayJob = scope.launch {
+            // ColorOS 17 上偶发：onServiceConnected 里立刻 addView 会拿到尚未就绪的窗口 token，
+            // 抛 "BadTokenException: token ... is not valid"（2026-10-25/26/31 日志各一次）。
+            // token 通常几百毫秒内就生效，只对这种失败退避重试；其它失败（权限/窗口类型不合法）
+            // 重试也没用，直接放弃并提示。acquire 幂等，重复调用不会叠窗口。
+            for (attempt in 0..KEEP_ALIVE_RETRY_DELAYS.size) {
+                if (attempt > 0) delay(KEEP_ALIVE_RETRY_DELAYS[attempt - 1])
+                val result = KeepAliveOverlayCoordinator.acquire(
+                    source = KeepAliveOverlayCoordinator.Source.Accessibility,
+                    owner = this@A11yService,
+                    context = this@A11yService,
+                    windowType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                )
+                if (result.isSuccess) return@launch
+                val error = result.exceptionOrNull()
+                LogUtils.d("保活窗口附加失败 attempt=${attempt + 1}", error)
+                if (error !is WindowManager.BadTokenException) break
+            }
             toast(UiStrings.a11y_keep_alive_failed)
-            return
         }
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (!destroyed) attachKeepAliveOverlay(attempt + 1)
-        }, delayMillis)
     }
 
     private fun releaseKeepAliveOverlayAfterHandoff() {
