@@ -53,6 +53,12 @@ android {
         resValues = true
     }
 
+    // Compose 的 Recomposer 会调 android.os.Trace，Android 单测默认的 mockable jar 会抛
+    // "Method beginSection in android.os.Trace not mocked"；组合级单测需要它返回默认值。
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
 
     val gkdStoreFile = buildProperty("GKD_STORE_FILE").orNull
     val gkdSigningConfig = if (gkdStoreFile != null) {
