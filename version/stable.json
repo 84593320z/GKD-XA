@@ -3,7 +3,7 @@
   "versionName": "1.4.9",
   "changelog": "v1.4.9\n\n- 同步上游：拖拽排序与数据更新不再错位（拖拽中刷新/删除也保持一致），删除规则组不再崩\n- 保活窗口只对 BadTokenException 退避重试，且无障碍关闭时取消重试\n- 特权服务断开后自动恢复：Shizuku 重启/被杀后自动重连，失败进 10 分钟冷却\n- 单测补上拖拽回归用例（含组合级）；无数据库迁移，可回退到 v1.4.8",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.9/GKD-XA-v1.4.9.apk",
-  "fileSize": 5854412,
+  "fileSize": 5854408,
   "versionLogs": [
     {
       "name": "1.4.9",
