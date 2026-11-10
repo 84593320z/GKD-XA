@@ -241,15 +241,35 @@ class SubscriptionEditor(subscription: RawSubscription) {
         newGroups: List<RawSubscription.RawAppGroup>,
     ): List<RawSubscription.RawAppGroup> {
         val usedKeys = existingGroups.mapTo(mutableSetOf()) { it.key }
-        return newGroups.map { group ->
-            if (usedKeys.add(group.key)) {
-                group
+        val assignedGroups = newGroups.map { group ->
+            val newKey = if (usedKeys.add(group.key)) {
+                group.key
             } else {
-                val newKey = requireNotNull(usedKeys.maxOrNull()) + 1
-                usedKeys.add(newKey)
-                group.copy(key = newKey)
+                allocateKey(usedKeys)
             }
+            group to newKey
         }
+
+        return assignedGroups.map { (group, newKey) ->
+            group.copy(
+                key = newKey,
+                // 同批追组的 key 会被重排，scopeKeys 里指向同批组的引用要跟着改
+                scopeKeys = group.scopeKeys?.map { scopeKey ->
+                    assignedGroups.find { (candidate, _) ->
+                        candidate !== group && candidate.key == scopeKey
+                    }?.second ?: scopeKey
+                },
+            )
+        }
+    }
+
+    // 取一个没被占用的 key；直接 maxOrNull()+1 在 Int.MAX_VALUE 上会溢出撞号
+    private fun allocateKey(usedKeys: MutableSet<Int>): Int {
+        var candidate = requireNotNull(usedKeys.maxOrNull()) + 1
+        while (!usedKeys.add(candidate)) {
+            candidate++
+        }
+        return candidate
     }
 
     private fun normalizeGlobalGroupKey(

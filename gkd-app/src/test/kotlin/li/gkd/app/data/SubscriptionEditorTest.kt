@@ -153,6 +153,97 @@ class SubscriptionEditorTest {
     }
 
     @Test
+    fun appendingGroupsKeepsScopeKeysThatReferToExistingGroups() {
+        val source = createSubscription(
+            apps = listOf(
+                RawSubscription.RawApp(
+                    id = "app.id",
+                    name = null,
+                    groups = listOf(
+                        createAppGroup(0, "Existing"),
+                        createAppGroup(1, "Existing linked"),
+                    ),
+                ),
+            ),
+        )
+        val appended = createAppGroup(0, "Appended", scopeKeys = listOf(0, 1))
+
+        val edited = source.edit {
+            appendAppGroups(source.apps.single(), listOf(appended))
+        }
+
+        val groups = edited.apps.single().groups
+        assertEquals(listOf(0, 1, 2), groups.map { it.key })
+        assertEquals(listOf(0, 1), groups.last().scopeKeys)
+    }
+
+    @Test
+    fun appendingGroupWithAConflictingKeyKeepsItsExistingScopeReference() {
+        val source = createSubscription(
+            apps = listOf(
+                RawSubscription.RawApp(
+                    id = "app.id",
+                    name = null,
+                    groups = listOf(createAppGroup(0, "Existing")),
+                ),
+            ),
+        )
+        val appended = createAppGroup(1, "Appended", scopeKeys = listOf(0))
+        val edited = source.edit {
+            appendAppGroups(source.apps.single(), listOf(appended.copy(key = 0)))
+        }
+
+        val groups = edited.apps.single().groups
+        assertEquals(listOf(0, 1), groups.map { it.key })
+        assertEquals(listOf(0), groups.last().scopeKeys)
+    }
+
+    @Test
+    fun appendingGroupsRemapsScopeKeysWithinTheSameBatch() {
+        val source = createSubscription(
+            apps = listOf(
+                RawSubscription.RawApp(
+                    id = "app.id",
+                    name = null,
+                    groups = listOf(createAppGroup(0, "Existing")),
+                ),
+            ),
+        )
+        val first = createAppGroup(0, "First", scopeKeys = listOf(1))
+        val second = createAppGroup(1, "Second", scopeKeys = listOf(0))
+
+        val edited = source.edit {
+            appendAppGroups(source.apps.single(), listOf(first, second))
+        }
+
+        val groups = edited.apps.single().groups
+        assertEquals(listOf(0, 1, 2), groups.map { it.key })
+        assertEquals(listOf(2), groups[1].scopeKeys)
+        assertEquals(listOf(1), groups[2].scopeKeys)
+    }
+
+    @Test
+    fun appendingGroupsAvoidsOverflowedKeyCollisions() {
+        val source = createSubscription(
+            apps = listOf(
+                RawSubscription.RawApp(
+                    id = "app.id",
+                    name = null,
+                    groups = listOf(createAppGroup(Int.MAX_VALUE, "Existing")),
+                ),
+            ),
+        )
+
+        val edited = source.edit {
+            appendAppGroups(source.apps.single(), listOf(createAppGroup(Int.MAX_VALUE, "Appended")))
+        }
+
+        val keys = edited.apps.single().groups.map { it.key }
+        assertEquals(2, keys.size)
+        assertEquals(2, keys.toSet().size)
+    }
+
+    @Test
     fun duplicateGroupNamesAreRejectedWhenAppending() {
         val source = createSubscription(
             apps = listOf(
@@ -243,6 +334,7 @@ class SubscriptionEditorTest {
     private fun createAppGroup(
         key: Int,
         name: String,
+        scopeKeys: List<Int>? = null,
     ): RawSubscription.RawAppGroup = RawSubscription.parse(
         """
         {
@@ -251,7 +343,7 @@ class SubscriptionEditorTest {
           version: 0,
           apps: [{
             id: 'app.id',
-            groups: [{ key: $key, name: '$name', rules: [] }],
+            groups: [{ key: $key, name: '$name', scopeKeys: $scopeKeys, rules: [] }],
           }],
         }
         """.trimIndent(),

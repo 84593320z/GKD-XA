@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import com.google.android.accessibility.selecttospeak.SelectToSpeakService
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -24,7 +25,6 @@ import li.gkd.app.a11y.A11yRuntime
 import li.gkd.app.a11y.A11yState
 import li.gkd.app.a11y.currentTopActivity
 import li.gkd.app.a11y.updateTopActivity
-import li.gkd.app.appScope
 import li.gkd.app.platform.lifecycle.LifecycleHooks
 import li.gkd.app.platform.overlay.KeepAliveOverlayCoordinator
 import li.gkd.app.priv.privilegeContextFlow
@@ -156,37 +156,19 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
 
     private fun attachKeepAliveOverlay() {
         keepAliveOverlayJob?.cancel()
-        keepAliveOverlayJob = scope.launch {
-            // ColorOS 17 上偶发：onServiceConnected 里立刻 addView 会拿到尚未就绪的窗口 token，
-            // 抛 "BadTokenException: token ... is not valid"（2026-10-25/26/31 日志各一次）。
-            // token 通常几百毫秒内就生效，只对这种失败退避重试；其它失败（权限/窗口类型不合法）
-            // 重试也没用，直接放弃并提示。acquire 幂等，重复调用不会叠窗口。
-            for (attempt in 0..KEEP_ALIVE_RETRY_DELAYS.size) {
-                if (attempt > 0) delay(KEEP_ALIVE_RETRY_DELAYS[attempt - 1])
-                val result = KeepAliveOverlayCoordinator.acquire(
-                    source = KeepAliveOverlayCoordinator.Source.Accessibility,
-                    owner = this@A11yService,
-                    context = this@A11yService,
-                    windowType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                )
-                if (result.isSuccess) return@launch
-                val error = result.exceptionOrNull()
-                LogUtils.d("保活窗口附加失败 attempt=${attempt + 1}", error)
-                if (error !is WindowManager.BadTokenException) break
-            }
-            toast(UiStrings.a11y_keep_alive_failed)
+        keepAliveOverlayJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            KeepAliveOverlayCoordinator.acquireAccessibility(
+                source = KeepAliveOverlayCoordinator.Source.Accessibility,
+                service = this@A11yService,
+            )
         }
     }
 
     private fun releaseKeepAliveOverlayAfterHandoff() {
-        appScope.launch {
-            KeepAliveOverlayCoordinator.releaseAfterHandoff(
-                source = KeepAliveOverlayCoordinator.Source.Accessibility,
-                owner = this@A11yService,
-                replacement = KeepAliveOverlayCoordinator.Source.Status
-                    .takeIf { StatusService.isRunning.value },
-            )
-        }
+        KeepAliveOverlayCoordinator.releaseAccessibilityAfterHandoff(
+            source = KeepAliveOverlayCoordinator.Source.Accessibility,
+            owner = this@A11yService,
+        )
     }
 
     override fun onCreate() {
@@ -212,8 +194,6 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     }
 
     companion object {
-        private val KEEP_ALIVE_RETRY_DELAYS = longArrayOf(300L, 1_000L, 3_000L)
-
         val a11yCn by lazy { SelectToSpeakService::class.componentName }
         val isRunning: StateFlow<Boolean>
             field = MutableStateFlow(false)

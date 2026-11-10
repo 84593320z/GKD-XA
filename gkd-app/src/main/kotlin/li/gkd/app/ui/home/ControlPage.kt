@@ -59,15 +59,17 @@ import li.gkd.app.feature.log.ActivityLogRoute
 import li.gkd.app.ui.AppConfigRoute
 import li.gkd.app.ui.PrivilegeServiceRoute
 import li.gkd.app.ui.WebViewRoute
+import li.gkd.app.ui.component.GkTooltipIconButtonBox
 import li.gkd.app.ui.component.GroupNameText
 import li.gkd.app.ui.component.PerfIcon
-import li.gkd.app.ui.component.PerfIconButton
 import li.gkd.app.ui.component.PerfTopAppBar
 import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.ui.component.SettingItem
 import li.gkd.app.ui.component.TextSwitch
+import li.gkd.app.ui.component.perfDefaultIconTint
 import li.gkd.app.ui.component.textSize
 import li.gkd.app.ui.component.useScrollBehaviorState
+import li.gkd.app.ui.icon.GkPrivilegeConnectionIcon
 import li.gkd.app.ui.share.statusText
 import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.ui.style.EmptyHeight
@@ -80,6 +82,7 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.squircle.squircleClip
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
@@ -93,6 +96,16 @@ fun useControlPage(): ScaffoldExt {
     val scrollState = useScrollBehaviorState(scrollKey)
     val miuixScrollBehavior = MiuixScrollBehavior()
     val appTitle = stringResource(R.string.app_name)
+    // 顶栏图标要反映「自动化是否在跑」，口径与下方状态卡片保持一致
+    val topBarStore by storeFlow.collectAsStateWithLifecycle()
+    val topBarA11yRunning by A11yService.isRunning.collectAsStateWithLifecycle()
+    val topBarUiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()
+    val topBarTopAppId by topAppIdFlow.collectAsStateWithLifecycle()
+    val serviceConnected = if (topBarStore.useA11y || actualA11yScopeAppList.contains(topBarTopAppId)) {
+        topBarA11yRunning
+    } else {
+        topBarUiAutomation != null
+    }
     ResetPageScrollOnRequest(BottomNavItem.Dashboard) {
         scrollKey.intValue++
     }
@@ -104,14 +117,22 @@ fun useControlPage(): ScaffoldExt {
                 titleText = appTitle,
                 miuixScrollBehavior = miuixScrollBehavior,
                 actions = {
-                    PerfIconButton(
-                        imageVector = PerfIcon.RocketLaunch,
-                        onClickLabel = "前往工作模式页面",
-                        contentDescription = "工作模式",
-                        onClick = throttle {
-                            mainVm.navigatePage(li.gkd.app.feature.settings.WorkModeRoute)
-                        },
-                    )
+                    GkTooltipIconButtonBox(contentDescription = "工作模式") {
+                        MiuixIconButton(
+                            modifier = Modifier.semantics {
+                                onClick(label = "前往工作模式页面", action = null)
+                            },
+                            onClick = throttle {
+                                mainVm.navigatePage(li.gkd.app.feature.settings.WorkModeRoute)
+                            },
+                        ) {
+                            GkPrivilegeConnectionIcon(
+                                connected = serviceConnected,
+                                contentDescription = "工作模式",
+                                tint = perfDefaultIconTint(),
+                            )
+                        }
+                    }
                 },
             )
         },

@@ -39,6 +39,7 @@ import li.gkd.app.data.selfAppInfo
 import li.gkd.app.notif.NotificationChannels
 import li.gkd.app.platform.lifecycle.MainActivityVisibility
 import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
+import li.gkd.app.platform.overlay.KeepAliveOverlayCoordinator
 import li.gkd.app.priv.PrivilegeOwnerLifecycle
 import li.gkd.app.priv.initPrivilege
 import li.gkd.app.priv.requestPrivilegeRecovery
@@ -263,6 +264,8 @@ class App : Application() {
     private fun initializeRuntimeComponents() {
         initToast()
         AppStore.initialize()
+        // 保活窗口由应用级协调器持有，不再绑在常驻通知服务的生命周期上
+        KeepAliveOverlayCoordinator.initialize()
         appScope.launchLogged(Dispatchers.IO) {
             ExposeService.initCommandFile()
         }
