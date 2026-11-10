@@ -1,10 +1,15 @@
 {
-  "versionCode": 149,
-  "versionName": "1.4.9",
-  "changelog": "v1.4.9\n\n- 同步上游：拖拽排序与数据更新不再错位（拖拽中刷新/删除也保持一致），删除规则组不再崩\n- 保活窗口只对 BadTokenException 退避重试，且无障碍关闭时取消重试\n- 特权服务断开后自动恢复：Shizuku 重启/被杀后自动重连，失败进 10 分钟冷却\n- 单测补上拖拽回归用例（含组合级）；无数据库迁移，可回退到 v1.4.8",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.9/GKD-XA-v1.4.9.apk",
+  "versionCode": 150,
+  "versionName": "1.4.10",
+  "changelog": "v1.4.10\n\n- 跨订阅复制规则组：key 冲突时重排编号，组间联动跟着重映射，不再指到别的订阅\n- 保活窗口改由应用级协调器持有，常驻通知服务被杀不再带走窗口\n- 工作模式入口换成会点火的火箭图标，读屏会念出运行状态\n- 无数据库迁移，可回退到 v1.4.9",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.10/GKD-XA-v1.4.10.apk",
   "fileSize": 5854408,
   "versionLogs": [
+    {
+      "name": "1.4.10",
+      "code": 150,
+      "desc": "- 跨订阅复制规则组不再串号（key 重排 + 联动重映射）\n- 保活窗口与常驻通知服务解耦，服务被杀不再带走窗口\n- 工作模式入口换成火箭点火动画图标\n- 无数据库迁移，可回退 1.4.9"
+    },
     {
       "name": "1.4.9",
       "code": 149,
