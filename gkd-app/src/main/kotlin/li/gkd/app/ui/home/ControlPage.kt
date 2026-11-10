@@ -80,9 +80,9 @@ import li.gkd.db.RuleGroupType
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.squircle.squircleClip
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
@@ -96,16 +96,6 @@ fun useControlPage(): ScaffoldExt {
     val scrollState = useScrollBehaviorState(scrollKey)
     val miuixScrollBehavior = MiuixScrollBehavior()
     val appTitle = stringResource(R.string.app_name)
-    // 顶栏图标要反映「自动化是否在跑」，口径与下方状态卡片保持一致
-    val topBarStore by storeFlow.collectAsStateWithLifecycle()
-    val topBarA11yRunning by A11yService.isRunning.collectAsStateWithLifecycle()
-    val topBarUiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()
-    val topBarTopAppId by topAppIdFlow.collectAsStateWithLifecycle()
-    val serviceConnected = if (topBarStore.useA11y || actualA11yScopeAppList.contains(topBarTopAppId)) {
-        topBarA11yRunning
-    } else {
-        topBarUiAutomation != null
-    }
     ResetPageScrollOnRequest(BottomNavItem.Dashboard) {
         scrollKey.intValue++
     }
@@ -117,6 +107,19 @@ fun useControlPage(): ScaffoldExt {
                 titleText = appTitle,
                 miuixScrollBehavior = miuixScrollBehavior,
                 actions = {
+                    // 状态读取放在 actions 内部：无障碍/自动化状态一变只重组顶栏这一小块，
+                    // 不会顺着 useControlPage 把整页（状态卡片、应用列表）一起重组。
+                    val topBarStore by storeFlow.collectAsStateWithLifecycle()
+                    val topBarA11yRunning by A11yService.isRunning.collectAsStateWithLifecycle()
+                    val topBarUiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()
+                    val topBarTopAppId by topAppIdFlow.collectAsStateWithLifecycle()
+                    // 口径与下方状态卡片的 serviceRunning 保持一致
+                    val serviceConnected =
+                        if (topBarStore.useA11y || actualA11yScopeAppList.contains(topBarTopAppId)) {
+                            topBarA11yRunning
+                        } else {
+                            topBarUiAutomation != null
+                        }
                     GkTooltipIconButtonBox(contentDescription = "工作模式") {
                         MiuixIconButton(
                             modifier = Modifier.semantics {
@@ -128,7 +131,12 @@ fun useControlPage(): ScaffoldExt {
                         ) {
                             GkPrivilegeConnectionIcon(
                                 connected = serviceConnected,
-                                contentDescription = "工作模式",
+                                // Tooltip 只说入口，读屏要能听出当前状态
+                                contentDescription = if (serviceConnected) {
+                                    "工作模式，运行中"
+                                } else {
+                                    "工作模式，未运行"
+                                },
                                 tint = perfDefaultIconTint(),
                             )
                         }

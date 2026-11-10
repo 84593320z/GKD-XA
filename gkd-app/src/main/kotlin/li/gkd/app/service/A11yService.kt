@@ -9,7 +9,6 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import com.google.android.accessibility.selecttospeak.SelectToSpeakService
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -156,7 +155,11 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
 
     private fun attachKeepAliveOverlay() {
         keepAliveOverlayJob?.cancel()
-        keepAliveOverlayJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+        // 这里刻意用默认的 CoroutineStart：UNDISPATCHED 会把第一次 addView 塞回
+        // onServiceConnected 回调里同步执行，正是 ColorOS 17 上抛 "BadTokenException: token ... is not valid"
+        // 的场景（2026-10-25/26/31 日志各一次）。让协程等当前回调结束再跑，第一次尝试
+        // 通常就能拿到已生效的 token，重试退避只作为兜底。
+        keepAliveOverlayJob = scope.launch {
             KeepAliveOverlayCoordinator.acquireAccessibility(
                 source = KeepAliveOverlayCoordinator.Source.Accessibility,
                 service = this@A11yService,

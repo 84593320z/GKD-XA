@@ -41,7 +41,17 @@ object KeepAliveOverlayCoordinator {
     private val applicationOverlay = MutableStateFlow<AttachedOverlay?>(null)
     private val accessibilityOverlay = MutableStateFlow<AttachedOverlay?>(null)
 
+    @Volatile
+    private var initialized = false
+
+    /**
+     * 只应调用一次（App.initializeRuntimeComponents）。重复调用会起第二个 collector，
+     * 两个 collector 交替 acquire/release 让窗口抖动，所以这里自己挡住。
+     */
+    @Synchronized
     fun initialize() {
+        if (initialized) return
+        initialized = true
         appScope.launch {
             try {
                 combine(
