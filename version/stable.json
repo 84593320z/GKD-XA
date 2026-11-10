@@ -3,7 +3,7 @@
   "versionName": "1.4.10",
   "changelog": "v1.4.10\n\n- 跨订阅复制规则组：key 冲突时重排编号，组间联动跟着重映射，不再指到别的订阅\n- 保活窗口改由应用级协调器持有，常驻通知服务被杀不再带走窗口\n- 工作模式入口换成会点火的火箭图标，读屏会念出运行状态\n- 无数据库迁移，可回退到 v1.4.9",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.10/GKD-XA-v1.4.10.apk",
-  "fileSize": 5854408,
+  "fileSize": 5852032,
   "versionLogs": [
     {
       "name": "1.4.10",
