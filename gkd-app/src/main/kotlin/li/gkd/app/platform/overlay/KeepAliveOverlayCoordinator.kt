@@ -191,7 +191,9 @@ object KeepAliveOverlayCoordinator {
                 gravity = Gravity.START or Gravity.TOP
                 width = 1
                 height = 1
-                alpha = 0f
+                // 刻意不设 alpha：窗口是 1x1、format 已经是 TRANSLUCENT 且 View 没有背景，
+                // 本来就画不出像素。保活窗口靠「窗口存在」生效，把 alpha 调成 0 换不来观感，
+                // 却可能让某些 ROM 把窗口当不可见处理。v1.4.9 起一直是默认 alpha，实测可用。
                 packageName = context.packageName
             }
             windowManager.addView(view, layoutParams)
