@@ -3,13 +3,16 @@ package li.gkd.app.priv
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import li.gkd.aidl.IInstallResultListener
 import li.gkd.aidl.IUserService
 import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.accessibilityservice.IAccessibilityServiceClient
 import android.app.AppOpsManager
 import android.app.AppOpsManagerHidden
+import android.content.ComponentName
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.os.DeadObjectException
@@ -17,6 +20,7 @@ import android.os.IBinder
 import android.os.Process
 import com.hjq.permissions.permission.dangerous.GetInstalledAppsPermission
 import li.gkd.app.META
+import li.gkd.app.MainActivity
 import li.gkd.app.app
 import li.gkd.app.data.UserInfo
 import li.gkd.app.permission.PermissionStates
@@ -42,6 +46,23 @@ class PrivilegeContext private constructor(
     private val userService = IUserService.Stub.asInterface(userServiceConnection.binder)
     private var taskStackListenerRegistered = false
     private var writeSecureSettingsAttempted = false
+
+    /**
+     * 为特权安装创建结果回调 sender（上游 8225f46a）：安装成功后由服务端进程里的
+     * InstallRestartReceiver 用它拉起 MainActivity 并把结果回传给 listener。
+     */
+    fun createInstallResultSender(
+        callingPackage: String,
+        listener: IInstallResultListener,
+    ): IntentSender =
+        userService.createInstallResultSender(
+            Intent.makeRestartActivityTask(
+                ComponentName(META.appId, MainActivity::class.java.name),
+            ),
+            callingPackage,
+            currentUserId,
+            listener,
+        )
 
     private suspend fun initialize() {
         activityManager.value.registerTaskStackListener(CompatTaskStackListener)

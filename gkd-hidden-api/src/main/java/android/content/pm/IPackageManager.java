@@ -10,4 +10,6 @@ public interface IPackageManager extends IInterface {
             throw new RuntimeException();
         }
     }
+
+    IPackageInstaller getPackageInstaller();
 }

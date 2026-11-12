@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.IInterface;
 
@@ -24,6 +25,8 @@ public interface IActivityManager extends IInterface {
 
     @RequiresApi(Build.VERSION_CODES.P)
     List<ActivityManager.RunningTaskInfo> getTasks(int maxNum);
+
+    int startActivityAsUser(IApplicationThread caller, String callingPackage, Intent intent, String resolvedType, IBinder resultTo, String resultWho, int requestCode, int flags, ProfilerInfo profilerInfo, Bundle options, int userId);
 
     void registerTaskStackListener(ITaskStackListener listener);
 

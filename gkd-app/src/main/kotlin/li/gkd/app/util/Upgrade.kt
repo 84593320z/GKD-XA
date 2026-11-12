@@ -39,6 +39,8 @@ import li.gkd.app.META
 import li.gkd.app.MainActivity
 import li.gkd.app.app
 import li.gkd.app.data.backup.BackupManager
+import li.gkd.app.platform.hasPrivilegedInstallCapability
+import li.gkd.app.platform.installPackagePrivileged
 import li.gkd.app.store.FileStateStore
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.component.GkAlertDialog
@@ -199,8 +201,11 @@ class UpdateStatus(val scope: CoroutineScope) {
         }
     }
 
+    private var downloadVersionCode: Int? = null
+
     private fun startDownload(newVersion: NewVersion) {
         if (downloadStatusFlow.value is LoadStatus.Loading) return
+        downloadVersionCode = newVersion.versionCode
         downloadStatusFlow.value = LoadStatus.Loading(0f)
         val apkFile = FolderUtils.sharedDir.resolve("gkd-v${newVersion.versionCode}.apk").apply {
             if (exists()) {
@@ -377,12 +382,35 @@ class UpdateStatus(val scope: CoroutineScope) {
                         },
                         confirmButton = {
                             TextButton(onClick = throttle {
-                                installApk(downloadStatusVal.result)
+                                installDownloadedApk(downloadStatusVal.result)
                             }) {
                                 Text(text = UiStrings.action_install)
                             }
                         })
                 }
+            }
+        }
+    }
+    /**
+     * 安装已下载的更新包：特权可用时先走静默安装（装完自动重启回应用），
+     * 失败则记日志并回退系统安装器（上游 8225f46a 的能力，XA 的兜底策略）。
+     */
+    private fun installDownloadedApk(file: File) {
+        val versionCode = downloadVersionCode
+        if (versionCode == null || !hasPrivilegedInstallCapability()) {
+            installApk(file)
+            return
+        }
+        scope.launch {
+            try {
+                installPackagePrivileged(file, versionCode)
+                downloadStatusFlow.value = null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                LogUtils.d("privileged install failed, fallback to system installer", e)
+                toast("特权安装失败，已改用系统安装")
+                installApk(file)
             }
         }
     }
