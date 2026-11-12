@@ -67,10 +67,13 @@ sealed class ActionPerformer(val action: String) {
                 )
             }
             TrackService.addXyPosition(x, y)
+            // 特权点击也要带 tapTimeout 时长（对齐上游 c8118d0）：duration=0 时
+            // CompatInputManager 走 shell 瞬时 tap，部分应用不认；带时长后走同点 swipe。
+            val tapDurationMillis = ViewConfiguration.getTapTimeout().toLong()
             return ActionResult(
                 action = action,
                 result = if (
-                    privilegeContextFlow.value?.tap(x, y) == true
+                    privilegeContextFlow.value?.tap(x, y, tapDurationMillis) == true
                 ) {
                     true
                 } else {
@@ -79,7 +82,7 @@ sealed class ActionPerformer(val action: String) {
                     path.moveTo(x, y)
                     gestureDescription.addStroke(
                         GestureDescription.StrokeDescription(
-                            path, 0, ViewConfiguration.getTapTimeout().toLong()
+                            path, 0, tapDurationMillis
                         )
                     )
                     A11yService.instance?.dispatchGesture(
