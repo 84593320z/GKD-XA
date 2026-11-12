@@ -24,6 +24,7 @@ import li.gkd.app.util.launchLogged
 import li.gkd.app.util.ToastUtils.toast
 import priv.kit.core.Privilege
 import priv.kit.core.PrivilegeServerInfo
+import priv.kit.core.userservice.PrivilegeUserServiceProcess
 import priv.kit.core.userservice.PrivilegeUserServiceSpec
 import priv.kit.ui.PrivilegeUi
 import priv.kit.ui.PrivilegeUiStartMethod
@@ -38,7 +39,10 @@ private val privilegeContextMutex = Mutex()
 
 private val userServiceSpec = PrivilegeUserServiceSpec(
     serviceClassName = UserService::class.java.name,
-    embedded = true,
+    // priv-kit 0.20 起 embedded 改为 process 枚举；version 随 UserService 实现或
+    // AIDL 契约变更递增（v2：新增 createInstallResultSender），避免复用旧契约的残留服务。
+    version = 2,
+    process = PrivilegeUserServiceProcess.EMBEDDED,
 )
 
 private suspend fun clearPrivilegeContext(context: PrivilegeContext) {
