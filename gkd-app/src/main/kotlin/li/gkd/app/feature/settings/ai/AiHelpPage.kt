@@ -33,6 +33,15 @@ private val HelpParagraphs = listOf(
         "3. 配好多个服务商时，用列表页的勾选框切换当前生效的那个，快照会按当前服务商生成规则并写入本地订阅。",
         "4. 广告弹窗出现时按快照快捷键保存快照，生成结果可在「快照记录」里查看，规则会出现在本地订阅的对应应用分组下。",
     ),
+    "免费额度" to listOf(
+        "AI 规则需要一个大模型的 API Key。下面这些平台注册即可领免费额度，日常生成规则基本够用（额度以各平台当前政策为准）：",
+        "智谱 GLM（https://www.bigmodel.cn/）：注册送 2000 万 Token。",
+        "硅基流动 SiliconFlow（https://cloud.siliconflow.cn/）：注册送 16 元额度。",
+        "七牛云（https://www.qiniu.com/）：注册送 300 万 Token，部分免费模型另有每日免费额度。",
+        "阿里云百炼（https://bailian.console.aliyun.com/cn-beijing/costing-balance/free-quota）：每款模型 100 万 Token 免费额度，90 天重置。",
+        "Kimi（https://platform.kimi.com/console/account）：注册送 15 元额度，约 100 万 Token。",
+        "拿到 Key 后回到「AI 服务商」新建服务商填进去，在详情页点「测试连接」确认能通即可。",
+    ),
     "加强模式" to listOf(
         "双击快照按钮进入加强模式：生成规则后立即执行选择器，若界面没有变化则让模型自动重写，直到命中为止。",
         "加强模式会多次调用接口，Token 消耗高于普通模式，建议只在复杂弹窗上使用。",
