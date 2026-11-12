@@ -17,6 +17,7 @@ import li.gkd.app.data.edit
 import li.gkd.app.domain.rule.CategoryPolicy
 import li.gkd.app.util.LogUtils
 import li.gkd.app.util.MutexState
+import li.gkd.app.util.logNetworkFailure
 import li.gkd.app.util.NetworkUtils
 import li.gkd.app.util.client
 import li.gkd.app.util.distinctByIfAny
@@ -296,12 +297,10 @@ object SubscriptionRepository {
             }
             onStage(SubscriptionAddStage.Downloading)
             val text = try {
-                client.get(url).bodyAsText()
+                fetchSubscriptionText(url, "订阅下载失败 url=$url")
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                e.printStackTrace()
-                LogUtils.d(e)
                 result = failure(
                     reason = SubscriptionResult.FailureReason.Download,
                     detail = e.message,
@@ -313,8 +312,7 @@ object SubscriptionRepository {
             val subscription = try {
                 RawSubscription.parse(text)
             } catch (e: Exception) {
-                e.printStackTrace()
-                LogUtils.d(e)
+                LogUtils.d("订阅解析失败 url=$url", e)
                 result = failure(
                     reason = SubscriptionResult.FailureReason.Parse,
                     detail = e.message,
@@ -526,6 +524,18 @@ object SubscriptionRepository {
         }
     }
 
+    /** 远程订阅的统一下载口径（对齐上游 70f89350）：失败先按传输失败归纳记一行，再原样抛出。 */
+    private suspend fun fetchSubscriptionText(url: String, operation: String): String {
+        try {
+            return client.get(url).bodyAsText()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logNetworkFailure(operation, e)
+            throw e
+        }
+    }
+
     private suspend fun fetchUpdate(entry: SubsEntry): RawSubscription? {
         val item = entry.subsItem
         val current = entry.subscription
@@ -541,12 +551,12 @@ object SubscriptionRepository {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                LogUtils.d("快速检测更新失败", item, e.message)
+                logNetworkFailure("快速检测更新失败 subsId=${item.id}", e)
             }
         }
         val updateUrl = current?.updateUrl ?: itemUpdateUrl
         val text = try {
-            client.get(updateUrl).bodyAsText()
+            fetchSubscriptionText(updateUrl, "订阅下载失败 subsId=${item.id}")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

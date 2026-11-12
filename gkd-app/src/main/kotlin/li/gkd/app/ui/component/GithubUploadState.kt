@@ -36,6 +36,7 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.util.Github.uploadFileToGithub
 import li.gkd.app.util.GithubCookieException
 import li.gkd.app.util.LogUtils
+import li.gkd.app.util.networkFailureSummary
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
 import java.io.File
@@ -180,7 +181,12 @@ class GithubUploadState(
                     pendingFromCookie = items.drop(index)
                     break
                 } catch (e: Exception) {
-                    LogUtils.d(e)
+                    // 传输层失败只记类名，不刷整栈（对齐上游 975c890b）
+                    if (networkFailureSummary(e) != null) {
+                        LogUtils.d(e.javaClass.simpleName)
+                    } else {
+                        LogUtils.d(e)
+                    }
                     request.failures.add(item.label to (e.message ?: e.toString()))
                 }
             }
