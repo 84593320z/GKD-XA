@@ -28,7 +28,6 @@ import li.gkd.app.data.ResolvedRule
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.platform.lifecycle.MainActivityVisibility
 import li.gkd.app.service.A11yService
-import li.gkd.app.service.OverlayWindowService
 import li.gkd.app.store.AppStore.actionCountFlow
 import li.gkd.app.store.AppStore.storeFlow
 import li.songe.codeorigin.CallSite
@@ -46,7 +45,7 @@ object ToastUtils {
             }
             return
         }
-        if (forced || MainActivityVisibility.isVisible || OverlayWindowService.isAnyAlive) {
+        if (forced || MainActivityVisibility.isVisible) {
             Toaster.show(text)
         }
         if (loc.isNotEmpty()) {
