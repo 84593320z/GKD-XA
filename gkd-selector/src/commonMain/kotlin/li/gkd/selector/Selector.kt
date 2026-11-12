@@ -38,8 +38,10 @@ public class Selector internal constructor(
         node: T,
         adapter: NodeAdapter<T>,
         options: MatchOptions = MatchOptions.default,
+        observer: SelectorObserver<T>? = null,
     ): T? {
-        return program.match(MatchContext(node), adapter, options)
+        return if (observer == null) program.match(MatchContext(node), adapter, options)
+        else program.matchExplained(MatchContext(node), adapter, options, observer)
     }
 
     internal val fastQueries: List<FastQuery>
