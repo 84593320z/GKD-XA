@@ -108,7 +108,9 @@ class DbConverters {
         return try {
             json.decodeFromString(value)
         } catch (_: Exception) {
-            emptyList()
+            // 解析失败时保留原始文本而不是静默吞掉（上游 601743b9 的核心诉求）：
+            // 旧格式/损坏的事件日志至少能以原文一条的形式展示和导出，不再整条消失。
+            listOf(value)
         }
     }
 }
