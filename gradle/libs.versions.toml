@@ -1,21 +1,21 @@
 [versions]
-kotlin = "2.4.20"
-serialization = "1.11.0"
-ksp = "2.3.12"
-agp = "9.4.1"
+kotlin = "2.4.21"
+serialization = "1.12.0"
+ksp = "2.3.13"
+agp = "9.5.0"
 compose = "1.12.1"
 room = "3.0.3"
 sqlite = "2.7.1"
-paging = "3.5.1"
+paging = "3.5.3"
 lifecycle = "2.11.0"
-ktor = "3.6.0"
+ktor = "3.6.1"
 atomicfu = "0.33.0"
 coil = "3.6.3"
 telephoto = "0.19.0"
-remap = "0.1.5"
+remap = "0.1.7"
 shizuku = "13.1.5"
 priv-kit = "0.17.7"
-codeorigin = "0.2.1"
+codeorigin = "0.2.3"
 miuix = "0.9.4"
 loc = "0.7.1"
 
@@ -70,7 +70,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 telephoto-zoomable = { module = "me.saket.telephoto:zoomable", version.ref = "telephoto" }
-codeorigin = { module = "li.songe:codeorigin", version.ref = "codeorigin" }
+codeorigin = { module = "li.songe.codeorigin:codeorigin", version.ref = "codeorigin" }
 reorderable = "sh.calvin.reorderable:reorderable:3.1.0"
 exp4j = "net.objecthunter:exp4j:0.4.8"
 toaster = "com.github.getActivity:Toaster:15.0"
