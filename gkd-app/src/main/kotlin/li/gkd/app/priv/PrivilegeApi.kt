@@ -12,6 +12,7 @@ import li.gkd.app.app
 import li.gkd.app.appScope
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
+import li.gkd.app.priv.shizuku.GkdShizukuExternalStartProvider
 import li.gkd.app.service.ExposeService
 import li.gkd.app.service.StatusService
 import li.gkd.app.service.currentAppBlocked
@@ -24,6 +25,9 @@ import li.gkd.app.util.ToastUtils.toast
 import priv.kit.core.Privilege
 import priv.kit.core.PrivilegeServerInfo
 import priv.kit.core.userservice.PrivilegeUserServiceSpec
+import priv.kit.ui.PrivilegeUi
+import priv.kit.ui.PrivilegeUiStartMethod
+import rikka.shizuku.Shizuku
 
 val currentUserId by lazy { android.os.Process.myUserHandle().hashCode() }
 
@@ -124,6 +128,21 @@ fun initPrivilege() {
                 toast(UiStrings.privilege_service_state_update_failed(e.message))
             }
             if (disconnected) requestPrivilegeRecovery()
+        }
+    }
+    // Shizuku 进程（重新）起来时 binder 会到达：若上次正是用 Shizuku 方式启动特权、
+    // 且 Shizuku 当前可拉起，立即绕过冷却恢复（上游 89fc47a，依赖 priv-kit 0.20 的
+    // PrivilegeUi.getLastStartMethod）。其他启动方式（ADB/Root）不触发，避免误恢复。
+    Shizuku.addBinderReceivedListener {
+        appScope.launchLogged(Dispatchers.IO) {
+            val shizukuStartMethod =
+                PrivilegeUiStartMethod.External(GkdShizukuExternalStartProvider.id)
+            if (
+                PrivilegeUi.getLastStartMethod() == shizukuStartMethod &&
+                GkdShizukuExternalStartProvider.snapshot(app).canStart
+            ) {
+                recoverPrivilege(ignoreCooldown = true)
+            }
         }
     }
 }
