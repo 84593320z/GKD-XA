@@ -7,8 +7,8 @@ import li.gkd.app.data.settings.AiModel
 import li.gkd.app.data.settings.newAiProviderId
 import li.gkd.app.store.AppStore.updateSettings
 import li.gkd.app.util.AiProtocolOption
+import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.util.findOption
-import java.net.URI
 import java.util.UUID
 
 /** 列表页角标用的协议简述。 */
@@ -51,9 +51,22 @@ data class AiProviderDraft(
     /** 返回 null 表示合法；否则是给用户的中文提示。 */
     fun validationError(): String? {
         if (name.isBlank()) return "名称不能为空"
-        val uri = runCatching { URI(apiUrl.trim()) }.getOrNull()
-        if (uri == null || uri.scheme !in setOf("http", "https") || uri.host.isNullOrBlank()) {
-            return "API 地址必须是合法的 http/https 地址"
+        // 地址/协议/Key 的细查交给 AiRuleGenerator.validateAiConfig（与 plus 的预检口径一致）：
+        // 格式问题 fixApiUrl 会自动修正，这里只拦改不了的（Azure 路径、协议错配、智谱 v3 等）。
+        // 模型名不查：新建服务商是先保存、再去「模型」页签拉取选择的。
+        // 公网 http 只是提示不是错误，保存/测试不拦（草稿写回时地址原样保留）。
+        val configError = AiRuleGenerator.validateAiConfig(
+            AiConfig(
+                protocol = protocol,
+                endpointMode = endpointMode,
+                apiUrl = apiUrl,
+                apiKey = apiKey,
+                model = model,
+            ),
+            requireModel = false,
+        )
+        if (configError != null && configError != AiRuleGenerator.PUBLIC_HTTP_HINT) {
+            return configError
         }
         headers.forEach { header ->
             val name = header.name.trim()
