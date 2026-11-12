@@ -119,8 +119,12 @@ object AppStore {
     }
 
     fun updateAutomatorMode(value: Int) {
+        // 只改模式、不顺带关 enableAutomator（对齐上游 c95137c2）：以前选模式会把总开关
+        // 一起清掉，但 applyAutomatorMode 的 requestSync 又会按新模式把服务拉起来，
+        // 结果服务在跑、enableAutomator 却是 false——fixRestartAutomatorService 的门、
+        // 特权 owner 死亡重连、StatusService 的拦截逻辑都看着这个标志，会集体失效。
         updateSettings {
-            it.copy(automatorMode = value, enableAutomator = false)
+            it.copy(automatorMode = value)
         }
     }
 }
