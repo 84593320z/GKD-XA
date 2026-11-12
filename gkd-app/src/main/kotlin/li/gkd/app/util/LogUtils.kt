@@ -9,6 +9,7 @@ import com.hjq.device.compat.DeviceOs
 import li.gkd.app.META
 import li.gkd.app.app
 import li.songe.codeorigin.CallSite
+import java.io.File
 import java.util.concurrent.Executors
 import kotlin.time.Duration.Companion.days
 
@@ -62,10 +63,17 @@ private val deviceInfoText by lazy {
     }
 }
 
+private const val MAX_LOG_ENTRY_BYTES = 64 * 1024
+private const val MAX_LOG_FILE_BYTES = 2 * 1024 * 1024L
+private const val MAX_LOG_TOTAL_BYTES = 16 * 1024 * 1024L
+private const val LOG_TRUNCATED_MARK = "\n...[单条日志超过 64KB，已截断]...\n"
+
 private fun logToFile(tag: String, name: String, loc: String, texts: List<String>, t: Long) {
-    val file = FolderUtils.logFolder.resolve("gkd-${t.format("yyyyMMdd")}.log")
-    val sb = StringBuilder()
-    if (!file.exists()) {
+    val dateText = t.format("yyyyMMdd")
+    val baseFile = FolderUtils.logFolder.resolve("gkd-$dateText.log")
+    if (!baseFile.exists()) {
+        // 沿用原清理逻辑：新一天首次写时，删 7 天前的文件（按 lastModified 判断，
+        // 分片文件同样命中，不会漏删）
         val files = FolderUtils.logFolder.listFiles()
         if (files != null && files.size >= MAX_LOG_KEEP_DAYS) {
             files.forEach {
@@ -74,11 +82,8 @@ private fun logToFile(tag: String, name: String, loc: String, texts: List<String
                 }
             }
         }
-        sb.append("=== Log ===\n")
-        sb.append("Date: ${t.format("yyyy-MM-dd HH:mm:ss.SSS")}\n")
-        sb.append(deviceInfoText)
-        sb.append("=== Log ===\n\n")
     }
+    val sb = StringBuilder()
     sb.append(t.format("HH:mm:ss.SSS"))
     sb.append(" $tag, $name, $loc")
     if (texts.size == 1) {
@@ -91,7 +96,52 @@ private fun logToFile(tag: String, name: String, loc: String, texts: List<String
         }
     }
     sb.append("\n\n")
-    file.appendText(sb.toString())
+    var entry = sb.toString()
+    // 单条上限 64KB（按 UTF-8 字节计），超出截断并留标记
+    var entryBytes = entry.toByteArray(Charsets.UTF_8)
+    if (entryBytes.size > MAX_LOG_ENTRY_BYTES) {
+        val markBytes = LOG_TRUNCATED_MARK.toByteArray(Charsets.UTF_8)
+        entry = String(
+            entryBytes,
+            0,
+            MAX_LOG_ENTRY_BYTES - markBytes.size,
+            Charsets.UTF_8,
+        ) + LOG_TRUNCATED_MARK
+        entryBytes = entry.toByteArray(Charsets.UTF_8)
+    }
+    // 单文件上限 2MB：当天基础文件写满后滚动到 gkd-yyyyMMdd-2.log、-3.log……
+    var file = baseFile
+    var shard = 1
+    while (file.exists() && file.length() + entryBytes.size > MAX_LOG_FILE_BYTES) {
+        shard++
+        file = FolderUtils.logFolder.resolve("gkd-$dateText-$shard.log")
+    }
+    if (!file.exists()) {
+        file.appendText(buildString {
+            append("=== Log ===\n")
+            append("Date: ${t.format("yyyy-MM-dd HH:mm:ss.SSS")}\n")
+            append(deviceInfoText)
+            append("=== Log ===\n\n")
+        })
+    }
+    file.appendText(entry)
+    trimLogFolderTotal(keep = file)
+}
+
+// 日志目录总量上限 16MB：超出时从最旧文件开始删，刚写入的文件不删
+private fun trimLogFolderTotal(keep: File) {
+    val files = FolderUtils.logFolder.listFiles()?.filter { it.isFile } ?: return
+    var totalBytes = files.sumOf { it.length() }
+    if (totalBytes <= MAX_LOG_TOTAL_BYTES) return
+    files.filter { it.absolutePath != keep.absolutePath }
+        .sortedBy { it.lastModified() }
+        .forEach { oldFile ->
+            if (totalBytes <= MAX_LOG_TOTAL_BYTES) return
+            val len = oldFile.length()
+            if (oldFile.delete()) {
+                totalBytes -= len
+            }
+        }
 }
 
 private fun stringify(arg: Any?): String = when (arg) {
