@@ -32,19 +32,19 @@ class AiApiUrlTest {
         // 各家路径版本不同：一律补 /v1 会把智谱、火山、千问的地址拼坏
         assertEquals(
             "https://open.bigmodel.cn/api/paas/v4",
-            AiRuleGenerator.fixApiUrl("https://open.bigmodel.cn/api/paas/v4", "openai"),
+            AiApiUrls.fixApiUrl("https://open.bigmodel.cn/api/paas/v4", "openai"),
         )
         assertEquals(
             "https://ark.cn-beijing.volces.com/api/v3",
-            AiRuleGenerator.fixApiUrl("https://ark.cn-beijing.volces.com/api/v3", "openai"),
+            AiApiUrls.fixApiUrl("https://ark.cn-beijing.volces.com/api/v3", "openai"),
         )
         assertEquals(
             "https://dashscope.aliyuncs.com/compatible-mode/v1",
-            AiRuleGenerator.fixApiUrl("https://dashscope.aliyuncs.com/compatible-mode/v1", "openai"),
+            AiApiUrls.fixApiUrl("https://dashscope.aliyuncs.com/compatible-mode/v1", "openai"),
         )
         assertEquals(
             "https://generativelanguage.googleapis.com/v1beta/openai",
-            AiRuleGenerator.fixApiUrl("https://generativelanguage.googleapis.com/v1beta/openai", "openai"),
+            AiApiUrls.fixApiUrl("https://generativelanguage.googleapis.com/v1beta/openai", "openai"),
         )
     }
 
@@ -52,11 +52,11 @@ class AiApiUrlTest {
     fun hostOnlyInputUsesProviderDefaultPath() {
         assertEquals(
             "https://open.bigmodel.cn/api/paas/v4",
-            AiRuleGenerator.fixApiUrl("open.bigmodel.cn", "openai"),
+            AiApiUrls.fixApiUrl("open.bigmodel.cn", "openai"),
         )
         assertEquals(
             "https://open.bigmodel.cn/api/coding/paas/v4",
-            AiRuleGenerator.fixApiUrl("https://open.bigmodel.cn/api/coding/paas/v4", "openai"),
+            AiApiUrls.fixApiUrl("https://open.bigmodel.cn/api/coding/paas/v4", "openai"),
         )
     }
 
@@ -64,7 +64,7 @@ class AiApiUrlTest {
     fun fullEndpointIsNotAppendedTwice() {
         assertEquals(
             "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-            AiRuleGenerator.resolveEndpoint("https://open.bigmodel.cn/api/paas/v4/chat/completions", "openai"),
+            AiApiUrls.resolveEndpoint("https://open.bigmodel.cn/api/paas/v4/chat/completions", "openai"),
         )
     }
 
@@ -72,12 +72,12 @@ class AiApiUrlTest {
     fun baseUrlGetsChatCompletionsOrMessages() {
         assertEquals(
             "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-            AiRuleGenerator.resolveEndpoint("https://open.bigmodel.cn/api/paas/v4", "openai"),
+            AiApiUrls.resolveEndpoint("https://open.bigmodel.cn/api/paas/v4", "openai"),
         )
         // 智谱的 Anthropic 兼容端点和 Claude Code 一样是 /api/anthropic/v1/messages
         assertEquals(
             "https://open.bigmodel.cn/api/anthropic/v1/messages",
-            AiRuleGenerator.resolveEndpoint("https://open.bigmodel.cn/api/anthropic", "anthropic"),
+            AiApiUrls.resolveEndpoint("https://open.bigmodel.cn/api/anthropic", "anthropic"),
         )
     }
 
@@ -85,7 +85,7 @@ class AiApiUrlTest {
     fun responsesModeAppendsResponsesSuffix() {
         assertEquals(
             "https://api.openai.com/v1/responses",
-            AiRuleGenerator.resolveEndpoint(
+            AiApiUrls.resolveEndpoint(
                 "https://api.openai.com/v1",
                 "openai",
                 AiEndpointMode.RESPONSES,
@@ -98,15 +98,15 @@ class AiApiUrlTest {
         // 少了 scheme、多个斜杠、全角符号、结尾句号都是常见粘贴错误
         assertEquals(
             "https://open.bigmodel.cn/api/paas/v4",
-            AiRuleGenerator.fixApiUrl("open.bigmodel.cn//api//paas//v4/", "openai"),
+            AiApiUrls.fixApiUrl("open.bigmodel.cn//api//paas//v4/", "openai"),
         )
         assertEquals(
             "https://open.bigmodel.cn/api/paas/v4",
-            AiRuleGenerator.fixApiUrl("https：//open.bigmodel.cn／api／paas／v4。", "openai"),
+            AiApiUrls.fixApiUrl("https：//open.bigmodel.cn／api／paas／v4。", "openai"),
         )
         assertEquals(
             "https://api.openai.com/v1",
-            AiRuleGenerator.fixApiUrl("  \"api.openai.com/v1\"  ", "openai"),
+            AiApiUrls.fixApiUrl("  \"api.openai.com/v1\"  ", "openai"),
         )
     }
 
@@ -114,7 +114,7 @@ class AiApiUrlTest {
     fun repeatedVersionSegmentIsCollapsed() {
         assertEquals(
             "https://api.openai.com/v1",
-            AiRuleGenerator.fixApiUrl("https://api.openai.com/v1/v1", "openai"),
+            AiApiUrls.fixApiUrl("https://api.openai.com/v1/v1", "openai"),
         )
     }
 
@@ -123,7 +123,7 @@ class AiApiUrlTest {
         // /v3/v1 是两个有意义的路径段，不能像 /v1/v1 那样合并
         assertEquals(
             "https://gw.example.com/v3/v1",
-            AiRuleGenerator.fixApiUrl("https://gw.example.com/v3/v1", "openai"),
+            AiApiUrls.fixApiUrl("https://gw.example.com/v3/v1", "openai"),
         )
     }
 
@@ -131,11 +131,11 @@ class AiApiUrlTest {
     fun queryStringIsKeptAfterAppendingEndpoint() {
         assertEquals(
             "https://gw.example.com/v1?key=abc",
-            AiRuleGenerator.fixApiUrl("https://gw.example.com/v1?key=abc", "openai"),
+            AiApiUrls.fixApiUrl("https://gw.example.com/v1?key=abc", "openai"),
         )
         assertEquals(
             "https://gw.example.com/v1/chat/completions?key=abc",
-            AiRuleGenerator.resolveEndpoint("https://gw.example.com/v1?key=abc", "openai"),
+            AiApiUrls.resolveEndpoint("https://gw.example.com/v1?key=abc", "openai"),
         )
     }
 
@@ -143,7 +143,7 @@ class AiApiUrlTest {
     fun ipv6LoopbackKeepsBracketsAndUsesHttp() {
         assertEquals(
             "http://[::1]:8080/v1",
-            AiRuleGenerator.fixApiUrl("[::1]:8080", "openai"),
+            AiApiUrls.fixApiUrl("[::1]:8080", "openai"),
         )
     }
 
@@ -151,16 +151,16 @@ class AiApiUrlTest {
     fun azureDeploymentPathIsNotRewritten() {
         val endpoint =
             "https://r.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21"
-        assertEquals(endpoint, AiRuleGenerator.fixApiUrl(endpoint, "openai"))
-        assertEquals(endpoint, AiRuleGenerator.resolveEndpoint(endpoint, "openai"))
-        assertNull(AiRuleGenerator.validateAiConfig(config(endpoint)))
+        assertEquals(endpoint, AiApiUrls.fixApiUrl(endpoint, "openai"))
+        assertEquals(endpoint, AiApiUrls.resolveEndpoint(endpoint, "openai"))
+        assertNull(AiApiUrls.validateAiConfig(config(endpoint)))
     }
 
     @Test
     fun azureDeploymentWithoutVersionSegmentGetsChatCompletions() {
         assertEquals(
             "https://r.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21",
-            AiRuleGenerator.resolveEndpoint(
+            AiApiUrls.resolveEndpoint(
                 "https://r.openai.azure.com/openai/deployments/gpt-4o?api-version=2024-10-21",
                 "openai",
             ),
@@ -170,12 +170,12 @@ class AiApiUrlTest {
     @Test
     fun azureConfigWithoutApiVersionOrDeploymentIsReported() {
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(
+            AiApiUrls.validateAiConfig(
                 config("https://r.openai.azure.com/openai/deployments/gpt-4o/chat/completions"),
             ),
         )
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(
+            AiApiUrls.validateAiConfig(
                 config("https://r.openai.azure.com/chat/completions?api-version=2024-10-21"),
             ),
         )
@@ -186,11 +186,11 @@ class AiApiUrlTest {
         // 没有路径时 `?` 之后不能并进域名，否则地址会被拼成 ...?key=abc/v1
         assertEquals(
             "https://gw.example.com/v1?key=abc",
-            AiRuleGenerator.fixApiUrl("gw.example.com?key=abc", "openai"),
+            AiApiUrls.fixApiUrl("gw.example.com?key=abc", "openai"),
         )
         assertEquals(
             "https://gw.example.com/v1/chat/completions?key=abc",
-            AiRuleGenerator.resolveEndpoint("gw.example.com?key=abc", "openai"),
+            AiApiUrls.resolveEndpoint("gw.example.com?key=abc", "openai"),
         )
     }
 
@@ -198,7 +198,7 @@ class AiApiUrlTest {
     fun queryOnBareAzureHostIsStillValidated() {
         // 域名里混入查询串会让 Azure 判断失效，这里要求仍能识别出地址不完整
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(
+            AiApiUrls.validateAiConfig(
                 config("https://r.openai.azure.com?api-version=2024-10-21"),
             ),
         )
@@ -208,7 +208,7 @@ class AiApiUrlTest {
     fun azureModelsEndpointUsesOpenAiModelsPath() {
         assertEquals(
             "https://r.openai.azure.com/openai/models?api-version=2024-10-21",
-            AiRuleGenerator.resolveModelsEndpoint(
+            AiApiUrls.resolveModelsEndpoint(
                 "https://r.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21",
                 "openai",
             ),
@@ -219,14 +219,14 @@ class AiApiUrlTest {
     fun gatewayQueryIsKeptForModelList() {
         assertEquals(
             "https://gw.example.com/v1/models?key=abc",
-            AiRuleGenerator.resolveModelsEndpoint("https://gw.example.com/v1?key=abc", "openai"),
+            AiApiUrls.resolveModelsEndpoint("https://gw.example.com/v1?key=abc", "openai"),
         )
     }
 
     @Test
     fun anthropicMismatchIsDetectedEvenWithQuery() {
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(
+            AiApiUrls.validateAiConfig(
                 config("https://api.openai.com/v1/chat/completions?key=abc", "anthropic"),
             ),
         )
@@ -236,7 +236,7 @@ class AiApiUrlTest {
     fun azureChinaDeploymentPathIsNotRewritten() {
         assertEquals(
             "https://r.openai.azure.cn/openai/deployments/gpt-4o",
-            AiRuleGenerator.fixApiUrl("https://r.openai.azure.cn/openai/deployments/gpt-4o", "openai"),
+            AiApiUrls.fixApiUrl("https://r.openai.azure.cn/openai/deployments/gpt-4o", "openai"),
         )
     }
 
@@ -245,11 +245,11 @@ class AiApiUrlTest {
         // Ollama 这类本机服务通常没有 TLS，默认 https 会直接连不上
         assertEquals(
             "http://localhost:11434/v1",
-            AiRuleGenerator.fixApiUrl("localhost:11434", "openai"),
+            AiApiUrls.fixApiUrl("localhost:11434", "openai"),
         )
         assertEquals(
             "http://192.168.1.10:8000/v1",
-            AiRuleGenerator.fixApiUrl("192.168.1.10:8000/v1", "openai"),
+            AiApiUrls.fixApiUrl("192.168.1.10:8000/v1", "openai"),
         )
     }
 
@@ -257,34 +257,34 @@ class AiApiUrlTest {
     fun modelListEndpointFallsBackToBaseUrl() {
         assertEquals(
             "https://open.bigmodel.cn/api/paas/v4/models",
-            AiRuleGenerator.resolveModelsEndpoint("https://open.bigmodel.cn/api/paas/v4/chat/completions", "openai"),
+            AiApiUrls.resolveModelsEndpoint("https://open.bigmodel.cn/api/paas/v4/chat/completions", "openai"),
         )
     }
 
     @Test
     fun zhipuConfigPassesValidationAfterNormalization() {
-        assertNull(AiRuleGenerator.validateAiConfig(config("open.bigmodel.cn")))
+        assertNull(AiApiUrls.validateAiConfig(config("open.bigmodel.cn")))
     }
 
     @Test
     fun mismatchedEndpointsAreReported() {
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(config("https://open.bigmodel.cn/api/anthropic", "openai")),
+            AiApiUrls.validateAiConfig(config("https://open.bigmodel.cn/api/anthropic", "openai")),
         )
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(config("https://api.openai.com/v1/chat/completions", "anthropic")),
+            AiApiUrls.validateAiConfig(config("https://api.openai.com/v1/chat/completions", "anthropic")),
         )
         // 智谱有 Anthropic 端点，但填的是 OpenAI 路径
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(config("https://open.bigmodel.cn/api/paas/v4", "anthropic")),
+            AiApiUrls.validateAiConfig(config("https://open.bigmodel.cn/api/paas/v4", "anthropic")),
         )
         // DeepSeek 没有 Anthropic 兼容端点
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(config("https://api.deepseek.com/v1", "anthropic")),
+            AiApiUrls.validateAiConfig(config("https://api.deepseek.com/v1", "anthropic")),
         )
         // 智谱旧版 /v3 不是 OpenAI 兼容接口
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(config("https://open.bigmodel.cn/api/paas/v3")),
+            AiApiUrls.validateAiConfig(config("https://open.bigmodel.cn/api/paas/v3")),
         )
     }
 
@@ -292,10 +292,10 @@ class AiApiUrlTest {
     fun responsesUrlRequiresResponsesMode() {
         // XA 支持 Responses：地址已经是 /responses 时，端点模式也得是 Responses
         assertNotNull(
-            AiRuleGenerator.validateAiConfig(config("https://api.openai.com/v1/responses")),
+            AiApiUrls.validateAiConfig(config("https://api.openai.com/v1/responses")),
         )
         assertNull(
-            AiRuleGenerator.validateAiConfig(
+            AiApiUrls.validateAiConfig(
                 config(
                     "https://api.openai.com/v1/responses",
                     endpointMode = AiEndpointMode.RESPONSES,
