@@ -19,7 +19,8 @@ import li.gkd.app.core.state.Loadable
 class CrashReportVm(
     initialCrashDataList: List<CrashData>,
 ) : BaseViewModel() {
-    var expandedCrashId by mutableStateOf(initialCrashDataList.firstOrNull()?.id)
+    // 详情改走全屏弹窗（对齐上游 344efde8）：长堆栈不再把列表条目撑爆
+    var selectedCrash by mutableStateOf<CrashData?>(null)
         private set
 
     val crashDataState: StateFlow<Loadable<List<CrashData>>>
@@ -51,12 +52,13 @@ class CrashReportVm(
             crashData.delete()
         }
         if (deleted) {
+            // 先关弹窗再改列表，避免弹窗子树还引用着已删除条目
+            if (selectedCrash?.id == crashData.id) {
+                selectedCrash = null
+            }
             crashDataState.value = Loadable.Ready(
                 crashDataState.value.value.orEmpty().filterNot { it.id == crashData.id },
             )
-            if (expandedCrashId == crashData.id) {
-                expandedCrashId = null
-            }
         } else {
             reloadAfterDeleteFailure()
             error(UiStrings.crash_report_delete_failed)
@@ -71,7 +73,7 @@ class CrashReportVm(
         crashDataState.value = Loadable.Ready(
             withContext(Dispatchers.IO) { loadCrashDataList() },
         )
-        expandedCrashId = null
+        selectedCrash = null
         if (!deleted) {
             error(UiStrings.crash_reports_delete_partially_failed)
         }
@@ -83,7 +85,11 @@ class CrashReportVm(
         )
     }
 
-    fun toggleCrash(crashId: Long) {
-        expandedCrashId = if (expandedCrashId == crashId) null else crashId
+    fun showCrash(crashData: CrashData) {
+        selectedCrash = crashData
+    }
+
+    fun dismissCrash() {
+        selectedCrash = null
     }
 }

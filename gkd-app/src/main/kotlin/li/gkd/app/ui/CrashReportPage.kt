@@ -5,7 +5,6 @@ import li.gkd.app.ui.share.launchUi
 import li.gkd.app.MainViewModel
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
 import top.yukonga.miuix.kmp.basic.Card
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -39,7 +38,6 @@ import kotlinx.serialization.Serializable
 import li.gkd.app.text.UiStrings
 import li.gkd.app.data.CrashData
 import li.gkd.app.core.state.Loadable
-import li.gkd.app.ui.share.noRippleClickable
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.itemVerticalPadding
 import li.gkd.app.ui.style.scaffoldPadding
@@ -48,9 +46,9 @@ import li.gkd.app.util.ISSUES_URL
 import li.gkd.app.util.format
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkCopyTextCard
 import li.gkd.app.ui.component.GkEmptyState
-import li.gkd.app.ui.component.GkExpandableSection
 import li.gkd.app.ui.component.GkFixedTimeText
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
@@ -73,7 +71,6 @@ fun CrashReportPage() {
     val scrollBehavior = pageScrollState.scrollBehavior
     val listState = pageScrollState.listState
     pageScrollState.ResetOnChange(crashDataList.isNotEmpty())
-    val expandedCrashId = vm.expandedCrashId
     GkPageScaffold(
         externalScrollBehavior = scrollBehavior,
         topBar = {
@@ -139,22 +136,9 @@ fun CrashReportPage() {
                 items = crashDataList,
                 key = { it.id },
             ) { crashData ->
-                val expanded = expandedCrashId == crashData.id
                 CrashReportCard(
                     crashData = crashData,
-                    expanded = expanded,
-                    onToggle = {
-                        vm.toggleCrash(crashData.id)
-                    },
-                    onDelete = throttle {
-                        mainVm.confirmDelete(
-                            title = UiStrings.crash_report_delete,
-                            text = UiStrings.crash_report_delete_confirmation,
-                        ) {
-                            vm.deleteCrash(crashData)
-                            toast(UiStrings.delete_success)
-                        }
-                    },
+                    onClick = { vm.showCrash(crashData) },
                 )
             }
             item(key = "crash-report-footer") {
@@ -168,14 +152,98 @@ fun CrashReportPage() {
             }
         }
     }
+
+    vm.selectedCrash?.let { crashData ->
+        CrashReportDialog(
+            crashData = crashData,
+            onDismiss = { vm.dismissCrash() },
+            onDelete = throttle {
+                vm.dismissCrash()
+                mainVm.confirmDelete(
+                    title = UiStrings.crash_report_delete,
+                    text = UiStrings.crash_report_delete_confirmation,
+                ) {
+                    vm.deleteCrash(crashData)
+                    toast(UiStrings.delete_success)
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun CrashReportDialog(
+    crashData: CrashData,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val exceptionName = crashData.name.substringAfterLast('.').ifBlank { UiStrings.exception_unknown }
+    val supportingColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
+    GkAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = exceptionName) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 520.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                crashData.message?.takeIf { it.isNotBlank() }?.let { message ->
+                    Text(text = message, style = MiuixTheme.textStyles.body2)
+                }
+                Text(
+                    text = UiStrings.crash_device_description(crashData.device),
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = supportingColor,
+                )
+                Text(
+                    text = UiStrings.android_version_description(crashData.androidVersionName, crashData.androidVersionCode),
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = supportingColor,
+                )
+                Text(
+                    text = UiStrings.crash_app_description(crashData.versionName, crashData.versionCode),
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = supportingColor,
+                )
+                Text(
+                    text = UiStrings.crash_thread_description(crashData.thread),
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = supportingColor,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = UiStrings.stack_trace,
+                    style = MiuixTheme.textStyles.subtitle,
+                )
+                GkCopyTextCard(
+                    text = crashData.stackTrace,
+                    modifier = Modifier.heightIn(max = 320.dp),
+                    containerColor = MiuixTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    textStyle = MiuixTheme.textStyles.footnote1,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = UiStrings.action_close)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDelete) {
+                Text(text = UiStrings.crash_report_delete)
+            }
+        },
+    )
 }
 
 @Composable
 private fun CrashReportCard(
     crashData: CrashData,
-    expanded: Boolean,
-    onToggle: () -> Unit,
-    onDelete: () -> Unit,
+    onClick: () -> Unit,
 ) {
     val exceptionName = crashData.name.substringAfterLast('.').ifBlank { UiStrings.exception_unknown }
     val message = crashData.message?.takeIf { it.isNotBlank() }
@@ -188,124 +256,48 @@ private fun CrashReportCard(
             .padding(horizontal = itemHorizontalPadding / 2)
             .fillMaxWidth(),
         colors = surfaceCardColors,
+        onClick = onClick,
     ) {
-        GkExpandableSection(
-            expanded = expanded,
-            onToggle = onToggle,
-            expandLabel = UiStrings.crash_details_expand,
-            collapseLabel = UiStrings.crash_details_collapse,
-            header = { indicator ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = exceptionName,
-                            modifier = Modifier.weight(1f),
-                            style = MiuixTheme.textStyles.title3,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        indicator()
-                    }
-                    Text(
-                        text = message ?: UiStrings.exception_message_empty,
-                        style = MiuixTheme.textStyles.body2,
-                        color = if (message == null) {
-                            MiuixTheme.colorScheme.onSurfaceVariantActions
-                        } else {
-                            MiuixTheme.colorScheme.onSurface
-                        },
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = UiStrings.crash_version_thread(crashData.versionName, crashData.versionCode, crashData.thread),
-                            modifier = Modifier.weight(1f),
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = supportingColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        GkFixedTimeText(
-                            text = timeText,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = supportingColor,
-                        )
-                    }
-                }
-            },
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            HorizontalDivider()
-            Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+            Text(
+                text = exceptionName,
+                style = MiuixTheme.textStyles.title3,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = message ?: UiStrings.exception_message_empty,
+                style = MiuixTheme.textStyles.body2,
+                color = if (message == null) {
+                    MiuixTheme.colorScheme.onSurfaceVariantActions
+                } else {
+                    MiuixTheme.colorScheme.onSurface
+                },
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            text = UiStrings.crash_device_description(crashData.device),
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = supportingColor,
-                        )
-                        Text(
-                            text = UiStrings.android_version_description(crashData.androidVersionName, crashData.androidVersionCode),
-                            modifier = Modifier.padding(end = 56.dp),
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = supportingColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = UiStrings.crash_app_description(crashData.versionName, crashData.versionCode),
-                            modifier = Modifier.padding(end = 56.dp),
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = supportingColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = UiStrings.crash_thread_description(crashData.thread),
-                            modifier = Modifier.padding(end = 56.dp),
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = supportingColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    Box(modifier = Modifier.align(Alignment.BottomEnd)) {
-                        GkIconButton(
-                            imageVector = GkIcons.Delete,
-                            onClick = onDelete,
-                            contentDescription = UiStrings.crash_report_delete_current,
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = UiStrings.stack_trace,
-                    style = MiuixTheme.textStyles.subtitle,
+                    text = UiStrings.crash_version_thread(crashData.versionName, crashData.versionCode, crashData.thread),
+                    modifier = Modifier.weight(1f),
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = supportingColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                GkCopyTextCard(
-                    text = crashData.stackTrace,
-                    modifier = Modifier.heightIn(max = 320.dp),
-                    containerColor = MiuixTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    textStyle = MiuixTheme.textStyles.footnote1,
+                Spacer(modifier = Modifier.width(8.dp))
+                GkFixedTimeText(
+                    text = timeText,
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = supportingColor,
                 )
             }
         }
