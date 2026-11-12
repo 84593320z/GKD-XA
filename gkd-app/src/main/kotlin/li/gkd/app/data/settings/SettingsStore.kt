@@ -66,6 +66,11 @@ data class AiConfig(
      * null 表示还没撞过。按服务商各存一份，老 store.json 缺这个字段时回落 null（不影响解析）。
      */
     val maxTokenCeiling: Int? = null,
+    /**
+     * 该服务商是否拒绝过思考参数：拒绝过就不再发送（见 AiThinkingUtils）。
+     * 老 store.json 缺这个字段时回落 false（不影响解析）。
+     */
+    val thinkingRejected: Boolean = false,
 ) {
     val isAnthropic get() = protocol == "anthropic"
 

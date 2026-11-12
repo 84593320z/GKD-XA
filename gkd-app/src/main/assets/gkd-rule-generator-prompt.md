@@ -172,9 +172,12 @@
 
 ## fastQuery 快速查询
 
-设 `fastQuery: true` 时，首个属性选择器必须含 `[id='xxx']`、`[vid='xxx']` 或 `[text='xxx']`（必须用 `=` 精确匹配，不能用 `^=`、`*=` 等）。
+设 `fastQuery: true` 时，目标属性选择器的**第一个表达式**必须是下列之一，或它们用 `||` 连接：
 
-如果首个属性选择器不满足此格式，不要设置 fastQuery。
+- `[id='xxx']`、`[vid='xxx']`（只能用 `=` 精确匹配）
+- `[text='xxx']`（除 `=` 外还可用 `^=`、`*=`、`$=`）
+
+第一个表达式不是 `id`/`vid`/`text` 时，不要设置 fastQuery；用 `!` 取反会取消内部的快速查询。选择器不满足格式时开不开都不影响匹配，只是没有加速效果。
 
 ---
 
@@ -183,12 +186,14 @@
 1. **读取快照元数据**：提取 appId、appName、activityId
 2. **分析节点树**：识别所有弹窗、广告、关闭按钮等可操作元素
 3. **确定目标节点**：找到需要点击的关闭/跳过/拒绝按钮
-4. **编写选择器**：
+4. **确认 `@` 落在可点击的那一层**：目标节点 `clickable: false` 时，按下文「点击目标必须落在可点击的那一层」找可点击的父/子节点作 `@`、目标只作锚点；确实没有才用 `action: "clickCenter"` 兜底
+5. **编写选择器**：
    - 优先用 `vid` 或 `id`（唯一性强，支持 fastQuery）
    - 其次用 `text` 或 `desc`（支持 fastQuery 需用 `=` 精确匹配）
    - 目标节点无有效属性时，通过周围节点关系定位
-5. **验证选择器唯一性**：确保选择器在当前节点树中只匹配到目标节点
-6. **组装规则**：填入规则格式，附上 snapshotUrls
+6. **验证选择器唯一性**：在节点树里心算一遍，确保只匹配到目标节点；命中多个就追加 `visibleToUser`、`childCount`、`index`、尺寸或关系约束
+7. **收紧误触面**：文字模糊匹配必须配 `text.length` 上限；全局性强的规则加 `activityIds`、`matchTime`、`actionMaximum`
+8. **组装规则**：填入规则格式，附上 snapshotUrls
 
 ---
 
@@ -221,6 +226,102 @@ TextView[text="开通会员"] - @TextView[visibleToUser=true][index=0]
 // 找到有"广告"文字的兄弟节点旁边的关闭按钮
 @ImageView < FrameLayout - LinearLayout > [text="广告"]
 ```
+
+---
+
+## 点击目标必须落在可点击的那一层
+
+这是最容易出错的地方，务必先做这一步再写选择器。
+
+GKD 默认 `action: "click"` 的规则是：**目标节点 `clickable=true` 就先发无障碍节点点击，返回 false 才回退到坐标点击**。所以 `@` 必须落在真正处理点击事件的那一层，而不是它旁边的文字上。
+
+**如果目标节点 `clickable: false`，不要在它上面直接写 `@`**，按顺序处理：
+
+1. **在快照里定位这个节点**：优先用 `id`（vid）精确匹配；没有 id 就用 `name` + `text`/`desc` + `left/top/right/bottom` 坐标一起对。
+2. **沿父链向上找最近的 `clickable: true` 祖先**，把它作为 `@`，目标节点只当锚点：
+   ```
+   @[clickable=true] >(1,2) [vid="close_view"]
+   @[clickable=true] >n TextView[text="关闭"][visibleToUser=true]
+   ```
+   层级用 `>(1,2)` 这类**有界范围**，不要用 `>n`——否则可能匹配到整页级别的可点击大容器，点到屏幕空白处。
+3. **向上没有可点击祖先**，就看它的子节点里有没有 `clickable: true` 的（部分容器把点击代理给子 View）：
+   ```
+   @[clickable=true] <n [vid="dialog_root"]
+   ```
+4. **上下都没有**：说明点击由别处处理或只认触摸事件，此时 `@` 用目标节点本身，并**显式写 `action: "clickCenter"`**：
+   ```
+   { "matches": "TextView[text=\"关闭\"][visibleToUser=true]", "action": "clickCenter" }
+   ```
+
+**什么时候显式写 `action`**（其余情况都不要写，交给默认的 `click`）：
+
+- 目标节点 `clickable: false`，且找不到可点击的父/子节点 → `action: "clickCenter"`。
+- 目标 `clickable=true` 但无障碍点击无效（应用只认触摸事件、或点击由父控件代理）→ `action: "clickCenter"`。
+- 确实需要长按 → `action: "longClick"`。
+
+**不要**把 `@` 放在非可点击的文字上却指望它响应父控件的监听：无障碍点击发给非 `clickable` 节点通常无效；而给一个 `clickable=true` 的文字节点发节点点击，事件会被这个节点吞掉、传不到父控件。
+
+`clickCenter` 是**真实坐标点击**，走系统正常触摸分发，事件会冒泡到父控件——所以它是「监听在父控件」场景的兜底。代价是它点的是那个坐标上**最上层**的视图：目标被遮挡时会点到盖住它的节点。
+
+---
+
+## 按其他控件的状态决定要不要点
+
+选择器不只能描述「点哪个节点」，还能描述「满足什么状态才点」。
+
+### 能用的状态就这些
+
+字符串：`id`、`vid`、`name`、`text`、`desc`
+布尔：`clickable`、`focusable`、`checkable`、`checked`、`editable`、`longClickable`、`visibleToUser`
+整数：`left`、`top`、`right`、`bottom`、`width`、`height`、`childCount`、`index`、`depth`
+
+**只有这些。** 下列属性在选择器里不存在，写了会让规则在真机上直接匹配失败，不要使用：
+
+`selected`、`enabled`、`scrollable`、`stateDescription`、`hintText`、`tooltipText`、`paneTitle`、`inputType`、`textSelectionStart`、`error`、`actions`。
+
+需要判断「禁用」「选中」这类状态时，改用能用的属性——很多应用会把状态写进文字或描述（「已开启」「已选中」「未连接」），用 `text` / `desc` 判断即可；实在表达不了就不要硬写不存在的属性。
+
+### 开关 / 复选框
+
+`checkable=true` 表示这是开关类控件，`checked` 是它当前的状态。`checked` 可能为 `null`（不是开关、或系统没上报），而 `null` 不参与除 `=`/`!=` 外的任何比较，所以：
+
+- 只在开着时点：`[checkable=true][checked=true]`
+- 只在关着时点：`[checkable=true][checked=false]`
+- 连「状态未知」也算没开：`[checkable=true][checked!=true]`
+
+注意 `checked` **常常不在可点击的那一层**：设置页普遍是「整行 clickable + 里面一个 Switch」，行的 `checked` 是 false 或 null，状态在子节点上。这时把两者分开写：
+
+```
+// 点那一行，但要求里面有个开着的开关
+@[clickable=true] >n [checkable=true][checked=true]
+```
+
+不需要为了「只点一次」加 `actionMaximum`：GKD 每次无障碍事件都重新匹配，点完状态变了、条件自然不再成立。
+
+### 条件可以来自别的节点，也可以叠加多个
+
+关系操作符把多个节点的状态串起来，就是「好几个状态同时满足才操作」：
+
+```
+// 同一节点上叠加多个状态
+[text="自动更新"][checkable=true][checked=true][visibleToUser=true]
+
+// 只有当「自动更新」开着、且「确认」按钮可点击时，才点确认
+[checkable=true][checked=true] -n @[clickable=true] >n [text="确认"]
+
+// 弹窗可见 且 里面的开关是关的 才点它
+@[checkable=true][checked=false] >n [text="会员弹窗"][visibleToUser=true]
+```
+
+写这类规则前先确认方向：**是「开着才点」还是「关着才点」**。方向写反就是天天误触。
+
+---
+
+## 规则组命名约定
+
+组名用 `类别-场景` 的形式，类别沿用社区订阅的约定：`开屏广告`、`全屏广告`、`局部广告`、`分段广告`、`更新提示`、`评价提示`、`通知提示`、`定位提示`、`青少年模式`、`权限提示`、`功能类`。例如 `全屏广告-会员活动弹窗`、`分段广告-信息流卡片广告`、`功能类-自动查看原图`。
+
+`desc` 写清楚规则点了什么，例如「点击右上角 x 按钮」「点击[对此内容不感兴趣]」。
 
 ---
 
@@ -271,6 +372,39 @@ TextView[text="开通会员"] - @TextView[visibleToUser=true][index=0]
 }
 ```
 
+### 多步关闭（preKeys 串联）
+
+先点卡片上的 x、再在弹出的菜单里点「不感兴趣」，用 `preKeys` 把两步串起来：
+
+```json
+{
+  "key": 4,
+  "name": "分段广告-信息流卡片广告",
+  "desc": "点击 x -> 选择不感兴趣",
+  "matchRoot": true,
+  "fastQuery": true,
+  "activityIds": ".MainActivity",
+  "rules": [
+    {
+      "key": 1,
+      "name": "点击右上角x按钮",
+      "matches": "[text*=\"广告\"] +n @[vid=\"close_view\"][childCount=0]",
+      "snapshotUrls": "https://i.gkd.li/i/xxxxx"
+    },
+    {
+      "key": 2,
+      "name": "点击[不感兴趣]",
+      "preKeys": [1],
+      "anyMatches": [
+        "@[clickable=true] >(1,2) [text=\"不感兴趣\"][visibleToUser=true]",
+        "[text=\"不感兴趣\"][clickable=true][visibleToUser=true]"
+      ],
+      "snapshotUrls": "https://i.gkd.li/i/xxxxx"
+    }
+  ]
+}
+```
+
 ### 更新提示
 
 ```json
@@ -279,6 +413,40 @@ TextView[text="开通会员"] - @TextView[visibleToUser=true][index=0]
   "name": "更新提示",
   "rules": [{
     "matches": "Button[desc=\"我再想想\"][visibleToUser=true]",
+    "snapshotUrls": "https://i.gkd.li/i/xxxxx"
+  }]
+}
+```
+
+### 选中节点不可点击（监听在父控件）
+
+目标是文字节点、`clickable: false`，它的父容器才是可点击的：
+
+```json
+{
+  "key": 5,
+  "name": "全屏广告-活动弹窗",
+  "desc": "点击关闭按钮",
+  "fastQuery": true,
+  "actionMaximum": 1,
+  "resetMatch": "app",
+  "rules": [{
+    "matches": "@[clickable=true] >(1,2) [text=\"关闭\"][visibleToUser=true]",
+    "snapshotUrls": "https://i.gkd.li/i/xxxxx"
+  }]
+}
+```
+
+快照里上下都找不到可点击节点时，才用坐标点击兜底：
+
+```json
+{
+  "key": 6,
+  "name": "全屏广告-活动弹窗",
+  "desc": "点击关闭按钮（点击由父控件处理）",
+  "rules": [{
+    "matches": "[text=\"关闭\"][visibleToUser=true]",
+    "action": "clickCenter",
     "snapshotUrls": "https://i.gkd.li/i/xxxxx"
   }]
 }

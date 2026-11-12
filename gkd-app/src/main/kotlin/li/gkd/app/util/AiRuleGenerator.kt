@@ -104,6 +104,134 @@ data class ResponsesRequest(
     val max_output_tokens: Int = 4096,
 )
 
+private const val PROTOCOL_ANTHROPIC = "anthropic"
+
+/**
+ * 各家兼容接口的默认路径。用户只填域名（或少了版本段）时据此补全，
+ * 避免一律补 `/v1` —— 智谱是 `/api/paas/v4`、火山是 `/api/v3`、千问是 `/compatible-mode/v1`。
+ */
+private class ApiProviderPreset(
+    val host: String,
+    val openAiPath: String,
+    val anthropicPath: String? = null,
+)
+
+private val apiProviderPresets = listOf(
+    ApiProviderPreset("open.bigmodel.cn", "/api/paas/v4", "/api/anthropic"),
+    ApiProviderPreset("bigmodel.cn", "/api/paas/v4", "/api/anthropic"),
+    ApiProviderPreset("api.z.ai", "/api/paas/v4", "/api/anthropic"),
+    ApiProviderPreset("dashscope.aliyuncs.com", "/compatible-mode/v1"),
+    ApiProviderPreset("dashscope-intl.aliyuncs.com", "/compatible-mode/v1"),
+    ApiProviderPreset("ark.cn-beijing.volces.com", "/api/v3"),
+    ApiProviderPreset("generativelanguage.googleapis.com", "/v1beta/openai"),
+    ApiProviderPreset("api.deepseek.com", "/v1"),
+    ApiProviderPreset("api.moonshot.cn", "/v1"),
+    ApiProviderPreset("api.moonshot.ai", "/v1"),
+    ApiProviderPreset("api.siliconflow.cn", "/v1"),
+    ApiProviderPreset("api.siliconflow.com", "/v1"),
+    ApiProviderPreset("openrouter.ai", "/api/v1"),
+    ApiProviderPreset("api.groq.com", "/openai/v1"),
+    ApiProviderPreset("api.mistral.ai", "/v1"),
+    ApiProviderPreset("api.x.ai", "/v1"),
+    ApiProviderPreset("api.minimaxi.com", "/v1"),
+    ApiProviderPreset("api.minimax.chat", "/v1"),
+    ApiProviderPreset("api.anthropic.com", "/v1", "/v1"),
+    ApiProviderPreset("api.openai.com", "/v1"),
+)
+
+/** 路径里的版本段：`/v1`、`/api/v3`、`/api/paas/v4`、`/v1beta`、`/compatible-mode/v1` */
+private val apiVersionSegment = Regex("""(?:^|/)v\d+(?:beta|alpha)?(?=/|$)""", RegexOption.IGNORE_CASE)
+
+/** 完整的聊天端点后缀；出现这些后缀时不再拼接 */
+private val endpointSuffixes = listOf("/chat/completions", "/messages", "/completions", "/responses")
+
+private val apiUrlScheme = Regex("""^https?:/*""", RegexOption.IGNORE_CASE)
+
+/** 粘贴地址时常见的全角符号与包裹字符 */
+private fun cleanApiUrlInput(raw: String): String = raw
+    .replace("\uFEFF", "")
+    .replace("\u200B", "")
+    .filterNot { it.isWhitespace() }
+    .replace('：', ':')
+    .replace('／', '/')
+    .replace('．', '.')
+    // 不能 trim 方括号：IPv6 的 [::1]:8080 会被破坏
+    .trim('"', '\'', '`', '“', '”', '‘', '’', '<', '>', ',', '，', '、', '(', ')', '（', '）')
+    .trimEnd('/', '.', '。', ',', '，', ';', '；', '、')
+
+private fun apiHostOf(url: String): String {
+    val rest = url.substringAfter("://", url).trimStart('/')
+    // authority 只到路径/查询/锚点为止，`host?key=abc` 这种写法也要能取到域名
+    val authority = rest.substringBefore('/').substringBefore('?').substringBefore('#')
+    return if (authority.startsWith("[")) {
+        authority.substringBefore("]") + "]"
+    } else {
+        authority.substringBefore(':').lowercase()
+    }
+}
+
+/** 本机 / 局域网的地址默认用 http，其余默认 https */
+private fun isLocalApiHost(host: String): Boolean {
+    val name = host.trim('[', ']').lowercase()
+    if (name == "localhost" || name == "::1" || name == "0.0.0.0") return true
+    if (name.endsWith(".local") || name.endsWith(".lan")) return true
+    val octets = name.split('.')
+    if (octets.size != 4) return false
+    val parts = octets.map { it.toIntOrNull() ?: return false }
+    return parts[0] == 10 || parts[0] == 127 ||
+        (parts[0] == 192 && parts[1] == 168) ||
+        (parts[0] == 172 && parts[1] in 16..31)
+}
+
+private fun findProviderPreset(host: String): ApiProviderPreset? = apiProviderPresets
+    .filter { host == it.host || host.endsWith(".${it.host}") }
+    .maxByOrNull { it.host.length }
+
+/** Azure OpenAI 走 `/openai/deployments/<部署名>/...`，路径不能按通用规则补 `/v1` */
+private fun isAzureApiHost(host: String): Boolean =
+    host.endsWith("openai.azure.com") || host.endsWith("openai.azure.cn")
+
+private fun providerDefaultPath(host: String, protocol: String): String? {
+    val preset = findProviderPreset(host) ?: return null
+    return if (protocol == PROTOCOL_ANTHROPIC) preset.anthropicPath else preset.openAiPath
+}
+
+private fun isFullApiEndpoint(path: String): Boolean = endpointSuffixes.any { path.endsWith(it) }
+
+/** 路径与查询串分开，拼接端点时要把 `?api-version=` 这类参数保留在后面 */
+private fun String.splitQuery(): Pair<String, String> {
+    val index = indexOfFirst { it == '?' || it == '#' }
+    return if (index < 0) this to "" else substring(0, index) to substring(index)
+}
+
+/** 只合并完全相同的相邻版本段（`/v1/v1`），`/v3/v1` 这种有意义的不同版本保持原样 */
+private fun collapseRepeatedVersionSegments(path: String): String {
+    if (path.isEmpty()) return path
+    val result = ArrayList<String>()
+    path.split('/').forEach { segment ->
+        val previous = result.lastOrNull()
+        val duplicated = previous != null &&
+            previous.equals(segment, ignoreCase = true) &&
+            apiVersionSegment.matches(segment)
+        if (!duplicated) result += segment
+    }
+    return result.joinToString("/")
+}
+
+/** 选了 anthropic 协议，但地址其实是服务方的 OpenAI 路径（或该服务方根本没有 Anthropic 端点） */
+private fun anthropicProtocolHint(url: String, protocol: String): String? {
+    if (protocol != PROTOCOL_ANTHROPIC) return null
+    val host = apiHostOf(url)
+    val preset = findProviderPreset(host) ?: return null
+    val anthropicPath = preset.anthropicPath
+        ?: return "${preset.host} 没有 Anthropic 兼容端点，请把协议切换为 openai"
+    if (anthropicPath == preset.openAiPath) return null
+    if (url.substringAfter("://").contains(preset.openAiPath)) {
+        return "该地址是 OpenAI 兼容路径，Anthropic 协议应填 https://${preset.host}$anthropicPath"
+    }
+    return null
+}
+
 object AiRuleGenerator {
 
     val isGenerating = MutableStateFlow(false)
@@ -128,32 +256,139 @@ object AiRuleGenerator {
         text
     }
 
+    /**
+     * 把用户输入整理成可用的 API 地址：补 scheme、去多余斜杠、去重复版本段，
+     * 并按服务方补默认路径（智谱 `/api/paas/v4`、火山 `/api/v3` 等）。
+     * 已经粘了完整端点（`/chat/completions`、`/messages`）时只做清洗，不再改动路径。
+     * Azure 的 deployment 路径原样保留，补 `/v1` 反而会 404。
+     */
     fun fixApiUrl(url: String, protocol: String): String {
-        var fixed = url.trim().trimEnd('/')
-        // If URL already contains a full path, don't modify
-        if (fixed.contains("/chat/completions") || fixed.contains("/messages")) {
-            return fixed
+        val cleaned = cleanApiUrlInput(url)
+        if (cleaned.isEmpty()) return ""
+        val hasScheme = apiUrlScheme.containsMatchIn(cleaned)
+        val explicitScheme = when {
+            cleaned.startsWith("https:", ignoreCase = true) -> "https"
+            cleaned.startsWith("http:", ignoreCase = true) -> "http"
+            else -> null
         }
-        // If URL already ends with /v1, keep it
-        if (fixed.endsWith("/v1")) {
-            return fixed
+        val rest = if (hasScheme) {
+            apiUrlScheme.replaceFirst(cleaned, "").trimStart('/')
+        } else {
+            cleaned.trimStart('/')
         }
-        // If URL already contains /v1 somewhere, don't add it again
-        if (fixed.contains("/v1/")) {
-            return fixed
+        if (rest.isEmpty()) return ""
+        // 先把查询串/锚点从地址里切出来：`host?key=abc` 这种没有路径的写法
+        // 否则整串会被当成 authority，域名解析和 Azure 判断都会失效
+        val queryIndex = rest.indexOfFirst { it == '?' || it == '#' }
+        val address = if (queryIndex < 0) rest else rest.substring(0, queryIndex)
+        val tail = if (queryIndex < 0) "" else rest.substring(queryIndex)
+        val authority = address.substringBefore('/')
+        if (authority.isEmpty()) return ""
+        val host = apiHostOf("https://$authority")
+        val scheme = explicitScheme ?: if (isLocalApiHost(host)) "http" else "https"
+
+        val pathOnly = address.substringAfter('/', "")
+        val collapsed = if (pathOnly.isEmpty()) {
+            ""
+        } else {
+            "/" + pathOnly.split('/').filter { it.isNotEmpty() }.joinToString("/")
         }
-        return "$fixed/v1"
+        val deduped = collapseRepeatedVersionSegments(collapsed)
+        val azure = isAzureApiHost(host)
+
+        val defaultPath = providerDefaultPath(host, protocol)
+        val path = when {
+            // Azure 的 deployment 路径原样保留，补 /v1 反而会 404
+            azure -> deduped
+            deduped.isEmpty() -> defaultPath ?: "/v1"
+            defaultPath != null && !apiVersionSegment.containsMatchIn(deduped) &&
+                (deduped == defaultPath || defaultPath.startsWith("$deduped/")) -> defaultPath
+            else -> deduped
+        }
+        val finalPath = when {
+            azure -> path
+            isFullApiEndpoint(path) -> path
+            apiVersionSegment.containsMatchIn(path) -> path
+            else -> "$path/v1"
+        }
+        return "$scheme://$authority$finalPath$tail"
     }
 
-    private fun buildApiEndpoint(config: AiConfig): String {
-        val baseUrl = fixApiUrl(config.apiUrl, config.protocol)
-        return when (config.protocol) {
-            "anthropic" -> "$baseUrl/messages"
-            else -> if (config.endpointMode == AiEndpointMode.RESPONSES) {
-                "$baseUrl/responses"
-            } else {
-                "$baseUrl/chat/completions"
-            }
+    /**
+     * 实际会请求的地址；已是完整端点就原样返回。
+     * 查询串（如 Azure 的 api-version）保留在拼接的端点后缀之后。
+     */
+    fun resolveEndpoint(
+        apiUrl: String,
+        protocol: String,
+        endpointMode: String = AiEndpointMode.CHAT,
+    ): String {
+        val baseUrl = fixApiUrl(apiUrl, protocol)
+        if (baseUrl.isEmpty()) return baseUrl
+        val (path, query) = baseUrl.splitQuery()
+        if (isFullApiEndpoint(path)) return baseUrl
+        val suffix = when {
+            protocol == PROTOCOL_ANTHROPIC -> "/messages"
+            endpointMode == AiEndpointMode.RESPONSES -> "/responses"
+            else -> "/chat/completions"
+        }
+        return "$path$suffix$query"
+    }
+
+    /** 模型列表接口；用户粘完整端点时先退回到它的 base。Azure 走 `/openai/models`。 */
+    fun resolveModelsEndpoint(apiUrl: String, protocol: String): String {
+        val (path, query) = fixApiUrl(apiUrl, protocol).splitQuery()
+        val host = apiHostOf(path)
+        if (isAzureApiHost(host)) {
+            val scheme = path.substringBefore("://", "https")
+            val authority = path.substringAfter("://", path).substringBefore('/')
+            return "$scheme://$authority/openai/models$query"
+        }
+        val modelsBase = endpointSuffixes.fold(path) { acc, suffix -> acc.removeSuffix(suffix) }
+        return "$modelsBase/models$query"
+    }
+
+    private fun buildApiEndpoint(config: AiConfig): String =
+        resolveEndpoint(config.apiUrl, config.protocol, config.endpointMode)
+
+    /** 公网明文 http 的提示文案；[validateAiConfig] 会返回它，保存/测试时不当作硬错误拦截。 */
+    const val PUBLIC_HTTP_HINT = "API 地址建议使用 https（公网明文 http 可能被服务方拒绝）"
+
+    /**
+     * 常见配置错误的本地预检，返回错误提示；null 表示通过。
+     * 地址的格式问题（缺 http、多余斜杠、版本段重复）已经由 [fixApiUrl] 自动修正，这里只提示改不了的部分。
+     * [requireModel] 为 false 时不查模型名（新建服务商还没拉模型列表时用）。
+     */
+    fun validateAiConfig(config: AiConfig, requireModel: Boolean = true): String? {
+        val raw = config.apiUrl.trim()
+        val url = fixApiUrl(config.apiUrl, config.protocol)
+        val endpoint = resolveEndpoint(config.apiUrl, config.protocol, config.endpointMode)
+        val protocolHint = anthropicProtocolHint(url, config.protocol)
+        val endpointPath = endpoint.splitQuery().first
+        val azure = isAzureApiHost(apiHostOf(url))
+        val key = config.apiKey
+        return when {
+            raw.isEmpty() -> "请填写 API 地址"
+            url.isEmpty() || !url.startsWith("http") -> "API 地址无效，请检查域名和端口"
+            url.startsWith("http://") && !isLocalApiHost(apiHostOf(url)) -> PUBLIC_HTTP_HINT
+            // Azure 的路径是 /openai/deployments/<部署名>/chat/completions?api-version=...
+            azure && (!endpointPath.contains("/openai/deployments/") ||
+                !endpointPath.endsWith("/chat/completions")) ->
+                "Azure OpenAI 地址需为 https://<资源名>.openai.azure.com/openai/deployments/<部署名>/chat/completions"
+            azure && !endpoint.contains("api-version=") ->
+                "Azure OpenAI 地址需带 ?api-version=2024-xx-xx"
+            endpointPath.endsWith("/responses") && config.endpointMode != AiEndpointMode.RESPONSES ->
+                "该地址是 /responses 端点，请把端点模式切换为 Responses API"
+            apiHostOf(url).endsWith("bigmodel.cn") && url.contains("/api/paas/v3") ->
+                "智谱 OpenAI 兼容接口是 /api/paas/v4，/v3 是旧版非兼容接口"
+            config.protocol != PROTOCOL_ANTHROPIC && url.contains("/anthropic", ignoreCase = true) ->
+                "该地址是 Anthropic 兼容端点，请把协议切换为 anthropic"
+            protocolHint != null -> protocolHint
+            config.protocol == PROTOCOL_ANTHROPIC && endpointPath.endsWith("/chat/completions") ->
+                "该地址是 OpenAI 兼容端点，请把协议切换为 openai"
+            key.contains(' ') -> "API Key 中含空格，绝大多数服务方 Key 不含空格"
+            requireModel && config.model.isBlank() -> "模型名称为空"
+            else -> null
         }
     }
 
@@ -163,11 +398,13 @@ object AiRuleGenerator {
             val name = header.name.trim()
             if (name.isNotEmpty()) header(name, header.value)
         }
-        when (config.protocol) {
-            "anthropic" -> {
+        when {
+            config.protocol == PROTOCOL_ANTHROPIC -> {
                 header("x-api-key", config.apiKey)
                 header("anthropic-version", config.anthropicVersion.ifBlank { AiConfig.DEFAULT_ANTHROPIC_VERSION })
             }
+            // Azure OpenAI 用 api-key 头，不认 Bearer
+            isAzureApiHost(apiHostOf(config.apiUrl)) -> header("api-key", config.apiKey)
             else -> header("Authorization", "Bearer ${config.apiKey}")
         }
     }
@@ -196,12 +433,15 @@ object AiRuleGenerator {
     ): String {
         val maxTokens = maxTokensOverride ?: config.maxTokens
         val systemPrompt = config.systemPrompt.trim().takeIf { it.isNotEmpty() }
-        return when {
+        // 思考参数由 AiThinkingUtils 按模型名翻译，识别不出或被服务端拒绝过就不发
+        val thinkingParams = AiThinkingUtils.buildParams(config)
+        val base = when {
             config.isAnthropic -> json.encodeToString(
                 AnthropicRequest(
                     model = config.model,
                     messages = listOf(AnthropicMessage("user", content)),
-                    temperature = config.temperature,
+                    // Anthropic 协议思考开启时 temperature 必须为 1，其它值会被拒绝
+                    temperature = if (thinkingEnabled(thinkingParams)) 1f else config.temperature,
                     top_p = config.topP,
                     max_tokens = maxTokens,
                     system = systemPrompt,
@@ -230,7 +470,15 @@ object AiRuleGenerator {
                 )
             )
         }
+        if (thinkingParams.isEmpty()) return base
+        LogUtils.d("AI思考参数: model=${config.model} params=$thinkingParams")
+        val merged = JsonObject(json.parseToJsonElement(base).jsonObject + thinkingParams)
+        return json.encodeToString(JsonObject.serializer(), merged)
     }
+
+    /** 思考是否真的开启：合并的参数里 thinking.type == enabled */
+    private fun thinkingEnabled(params: Map<String, JsonElement>): Boolean =
+        (params["thinking"] as? JsonObject)?.get("type")?.jsonPrimitive?.content == "enabled"
 
     /** 只做一次 max_tokens=1 的最小对话，返回错误摘要；无错误时返回 "ok"。 */
     suspend fun testConnection(config: AiConfig): Result<String> = runCatching {
@@ -262,11 +510,59 @@ object AiRuleGenerator {
     }
 
     /** 拉取远端模型：各家字段名不统一，能解析出上下文长度与推理能力就一并记录。 */
+    /**
+     * 把连接/拉取失败翻成人话：只看异常文案里的关键特征分类，
+     * 分不出类时返回通用提示，原始信息由调用方附在后面。
+     * 来源：gkd-plus 4500dbb 的 analyzeConnectionError，按 XA 文案微调。
+     */
+    fun analyzeConnectionError(e: Throwable): String {
+        val msg = e.message.orEmpty()
+        val lower = msg.lowercase()
+        return when {
+            lower.contains("model_not_found") || lower.contains("no available") ||
+                msg.contains("无可用") || msg.contains("模型不存在") ->
+                "模型不可用：当前 Key 没有这个模型的权限，或服务商还没上架它。"
+
+            lower.contains("401") || lower.contains("403") ||
+                lower.contains("unauthorized") || lower.contains("invalid api key") ||
+                lower.contains("invalid_api_key") || lower.contains("authentication") ->
+                "鉴权失败：API Key 无效、已过期，或没有这个模型的权限。"
+
+            lower.contains("402") || lower.contains("insufficient") ||
+                msg.contains("余额不足") || msg.contains("欠费") ->
+                "余额不足：请到服务商控制台确认账户余额。"
+
+            lower.contains("429") || lower.contains("rate limit") || lower.contains("rate_limit") ||
+                msg.contains("限流") || msg.contains("请求过于频繁") ->
+                "请求太频繁被限流了，等一会儿再试。"
+
+            lower.contains("404") || lower.contains("not found") ->
+                "接口不存在：多半是 API 地址填错了，检查地址与路径是否完整。"
+
+            lower.contains("max_tokens") || lower.contains("max tokens") ->
+                "输出上限被拒绝：请在服务商配置里调小 Max Tokens 再试。"
+
+            lower.contains("timeout") || lower.contains("timed out") || msg.contains("超时") ->
+                "连接超时：网络太慢或服务商无响应，稍后再试。"
+
+            lower.contains("unable to resolve host") || lower.contains("no address associated") ||
+                lower.contains("unknownhost") ->
+                "域名解析失败：设备当前连不上这个地址，检查网络或地址拼写。"
+
+            lower.contains("ssl") || lower.contains("certificate") || lower.contains("handshake") ->
+                "证书错误：多半是地址协议写错（http/https），或服务商证书有问题。"
+
+            lower.contains("http 5") ->
+                "服务方错误：接口在服务商那边出错了，稍后再试。"
+
+            else -> "连接失败：检查 API 地址、Key 和网络后再试。"
+        }
+    }
+
     suspend fun fetchModels(config: AiConfig): Result<List<AiModel>> = runCatching {
-        val baseUrl = fixApiUrl(config.apiUrl, config.protocol)
         val httpClient = createHttpClient()
         try {
-            val response = httpClient.get("$baseUrl/models") {
+            val response = httpClient.get(resolveModelsEndpoint(config.apiUrl, config.protocol)) {
                 applyAiHeaders(config)
             }
             val body = response.bodyAsText()
@@ -603,6 +899,19 @@ $previousRule
         return newCeiling
     }
 
+    /** 记住这个服务商拒绝思考参数，返回带标记的配置；写盘模式与 recordCeiling 一致。 */
+    private fun recordThinkingRejected(config: AiConfig): AiConfig {
+        val marked = config.copy(thinkingRejected = true)
+        updateSettings { store ->
+            store.copy(
+                aiProviders = store.aiProviders.map {
+                    if (it.id == config.id) it.copy(thinkingRejected = true) else it
+                },
+            )
+        }
+        return marked
+    }
+
     /**
      * 一次 AI 调用：先按自适应预算发请求，
      * 截断（finishReason == length）就翻倍重试一次，被服务端拒绝就记下上限并回退重试一次，
@@ -637,7 +946,12 @@ $previousRule
         }
     }
 
-    private suspend fun postAiRequest(config: AiConfig, userContent: String, budget: Int): AiReply {
+    private suspend fun postAiRequest(
+        config: AiConfig,
+        userContent: String,
+        budget: Int,
+        thinkingRetry: Boolean = true,
+    ): AiReply {
         val endpoint = buildApiEndpoint(config)
         val stream = config.streamChatCompletions
         val requestBody = buildRequestBody(config, userContent, maxTokensOverride = budget, stream = stream)
@@ -655,6 +969,15 @@ $previousRule
                 LogUtils.d("AI Response (first 3000 chars): ${body.take(3000)}")
                 val hint = errorHint(body)
                 val message = "HTTP ${response.status.value} $hint".trim()
+                // 发了思考参数却被服务端拒绝：记住这件事并降级重试一次，之后不再发送
+                if (thinkingRetry &&
+                    AiThinkingUtils.buildParams(config).isNotEmpty() &&
+                    AiThinkingUtils.isThinkingRejection(Exception(message))
+                ) {
+                    LogUtils.d("AI思考参数被拒绝，降级重试: $message")
+                    val rejected = recordThinkingRejected(config)
+                    return postAiRequest(rejected, userContent, budget, thinkingRetry = false)
+                }
                 // 只有「max_tokens 过大 / 参数非法」这一类错误才触发回退，其它错误维持原样抛出
                 if (AiTokenBudget.isTokenLimitRejection(hint.ifBlank { body })) {
                     throw AiTokenLimitReject(budget, message)

@@ -84,7 +84,10 @@ fun AiProviderModelsTab(provider: AiConfig) {
                 AiSection(title = "模型管理") {
                     BasicComponent(
                         title = if (fetching) "拉取中…" else "从远端拉取模型",
-                        summary = "读取 ${provider.apiUrl.ifBlank { "（未填写地址）" }}/models",
+                        summary = "读取 ${
+                            if (provider.apiUrl.isBlank()) "（未填写地址）"
+                            else AiRuleGenerator.resolveModelsEndpoint(provider.apiUrl, provider.protocol)
+                        }",
                         enabled = !fetching,
                         startAction = { AiRowIcon(imageVector = GkIcons.ArrowDownward) },
                         onClick = throttle {
@@ -105,7 +108,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
                                             "拉取成功：远端 ${remote.size} 个，新增 $added，共 ${merged.size} 个"
                                         }
                                     }.onFailure { e ->
-                                        message = "拉取失败：${e.message}"
+                                        message = "拉取失败：${AiRuleGenerator.analyzeConnectionError(e)}（${e.message}）"
                                     }
                                 fetching = false
                             }

@@ -169,7 +169,13 @@ private fun AiProviderConfigTab(
     var status by remember { mutableStateOf<String?>(null) }
 
     val protocolOption = AiProtocolOption.objects.findOption(draft.protocol)
+    // 预览实际会请求的模型列表地址（地址补全/Azure 路径都在 AiRuleGenerator 里算）
     val baseUrl = draft.apiUrl.ifBlank { protocolOption.placeholder }
+    val modelsEndpoint = if (draft.apiUrl.isBlank()) {
+        "$baseUrl/models"
+    } else {
+        AiRuleGenerator.resolveModelsEndpoint(draft.apiUrl, draft.protocol)
+    }
 
     fun buildDraftProvider(): AiConfig = draft.toProvider(provider)
 
@@ -270,7 +276,7 @@ private fun AiProviderConfigTab(
                 AiRowDivider(hasLeading = false)
                 BasicComponent(
                     title = if (testing) "测试连接中…" else "测试连接",
-                    summary = testResult ?: "读取 $baseUrl/models，并把返回的模型合并进模型列表",
+                    summary = testResult ?: "读取 $modelsEndpoint，并把返回的模型合并进模型列表",
                     enabled = !testing,
                     onClick = throttle {
                         val error = draft.validationError()
@@ -294,7 +300,7 @@ private fun AiProviderConfigTab(
                                         "连接成功：远端 ${remote.size} 个，新增 $added"
                                     }
                                 }.onFailure { e ->
-                                    testResult = "连接失败：${e.message}"
+                                    testResult = "连接失败：${AiRuleGenerator.analyzeConnectionError(e)}（${e.message}）"
                                 }
                             testing = false
                         }

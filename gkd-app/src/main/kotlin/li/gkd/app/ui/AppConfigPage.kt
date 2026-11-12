@@ -5,9 +5,11 @@ import li.gkd.app.MainViewModel
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -49,6 +51,9 @@ import li.gkd.app.util.findOption
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.db.ActionLog
 import li.gkd.db.LOCAL_SUBS_ID
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.TextButton
+import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
 import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkBatchActionMenuItem
@@ -162,6 +167,8 @@ fun AppConfigPage(route: AppConfigRoute) {
             }
         }
     }
+    var showAddChooser by remember { mutableStateOf(false) }
+    var showSimpleRule by remember { mutableStateOf(false) }
     val pageScrollState = rememberListScrollState()
     val scrollBehavior = pageScrollState.scrollBehavior
     val listState = pageScrollState.listState
@@ -202,15 +209,7 @@ fun AppConfigPage(route: AppConfigRoute) {
         floatingActionButton = {
             GkAnimatedFloatingActionButton(
                 visible = !isSelectedMode,
-                onClick = {
-                    mainVm.navigatePage(
-                        UpsertRuleGroupRoute(
-                            subsId = LOCAL_SUBS_ID,
-                            groupKey = null,
-                            appId = appId
-                        )
-                    )
-                },
+                onClick = { showAddChooser = true },
                 imageVector = GkIcons.Add,
                 contentDescription = UiStrings.rule_add
             )
@@ -435,5 +434,60 @@ fun AppConfigPage(route: AppConfigRoute) {
                     }
                 }
         }
+    }
+
+    // 加号先二选一：简易规则当场生成，完整规则进原有编辑页（与 plus 的展开菜单等价）
+    if (showAddChooser) {
+        GkAlertDialog(
+            onDismissRequest = { showAddChooser = false },
+            title = { Text(text = UiStrings.rule_add) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    BasicComponent(
+                        title = UiStrings.rule_add_simple,
+                        summary = UiStrings.simple_rule_simple_desc,
+                        onClick = {
+                            showAddChooser = false
+                            showSimpleRule = true
+                        },
+                    )
+                    BasicComponent(
+                        title = UiStrings.rule_add_full,
+                        summary = UiStrings.simple_rule_full_desc,
+                        onClick = {
+                            showAddChooser = false
+                            mainVm.navigatePage(
+                                UpsertRuleGroupRoute(
+                                    subsId = LOCAL_SUBS_ID,
+                                    groupKey = null,
+                                    appId = appId
+                                )
+                            )
+                        },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    text = UiStrings.simple_rule_cancel,
+                    onClick = { showAddChooser = false },
+                )
+            },
+        )
+    }
+    if (showSimpleRule) {
+        SimpleRuleDialog(
+            onDismissRequest = { showSimpleRule = false },
+            onSubmit = { text, id, backToClose ->
+                scope.launchUi {
+                    val error = vm.addSimpleRule(text, id, backToClose)
+                    if (error == null) {
+                        showSimpleRule = false
+                    } else {
+                        toast(error)
+                    }
+                }
+            },
+        )
     }
 }
