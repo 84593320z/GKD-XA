@@ -757,11 +757,9 @@
     <string name="simple_rule_example_content">文字：弹窗上出现的文字，如「跳过」「关闭」「我知道了」。\nID：控件的 resource-id，如 com.example:id/close（填写时优先于文字）。\n\n生成规则：界面出现匹配元素时\n- 未开启返回键关闭 → 点击该元素\n- 开启返回键关闭 → 按返回键\n\n例：文字填「跳过」，即可自动点击「跳过」按钮。</string>
     <string name="simple_rule_example_title">输入示例</string>
     <string name="simple_rule_full_desc">打开完整编辑页，逐项配置规则组</string>
-    <string name="simple_rule_id_hint">用于定位弹窗的控件 ID</string>
     <string name="simple_rule_id_label">ID</string>
     <string name="simple_rule_input_required">请至少填写文字或 ID</string>
     <string name="simple_rule_simple_desc">只填文字或控件 ID，快速生成一条规则</string>
-    <string name="simple_rule_text_hint">用于定位弹窗的文字</string>
     <string name="simple_rule_text_label">文字</string>
     <string name="simple_rule_title">简易规则</string>
     <string name="snapshot_activity_switch_missing">未检测到界面切换，捕获失败</string>

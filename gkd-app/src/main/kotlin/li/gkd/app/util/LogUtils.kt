@@ -109,10 +109,25 @@ private fun logToFile(tag: String, name: String, loc: String, texts: List<String
         ) + LOG_TRUNCATED_MARK
         entryBytes = entry.toByteArray(Charsets.UTF_8)
     }
-    // 单文件上限 2MB：当天基础文件写满后滚动到 gkd-yyyyMMdd-2.log、-3.log……
-    var file = baseFile
+    // 单文件上限 2MB：写满后滚动到 gkd-yyyyMMdd-2.log、-3.log……
+    // 从当天现有分片的最大编号接着写：总量修剪可能删掉中间分片，
+    // 若按「第一个缺号」选文件，会重建旧编号导致编号序与时间序对不上。
     var shard = 1
-    while (file.exists() && file.length() + entryBytes.size > MAX_LOG_FILE_BYTES) {
+    FolderUtils.logFolder.listFiles()?.forEach { existing ->
+        val number = when {
+            existing.name == baseFile.name -> 1
+            existing.name.startsWith("gkd-$dateText-") && existing.name.endsWith(".log") ->
+                existing.name.removePrefix("gkd-$dateText-").removeSuffix(".log").toIntOrNull()
+            else -> null
+        }
+        if (number != null && number > shard) shard = number
+    }
+    var file = if (shard == 1) {
+        baseFile
+    } else {
+        FolderUtils.logFolder.resolve("gkd-$dateText-$shard.log")
+    }
+    if (file.exists() && file.length() + entryBytes.size > MAX_LOG_FILE_BYTES) {
         shard++
         file = FolderUtils.logFolder.resolve("gkd-$dateText-$shard.log")
     }
@@ -128,8 +143,15 @@ private fun logToFile(tag: String, name: String, loc: String, texts: List<String
     trimLogFolderTotal(keep = file)
 }
 
-// 日志目录总量上限 16MB：超出时从最旧文件开始删，刚写入的文件不删
+private var lastTrimAtMillis = 0L
+
+// 日志目录总量上限 16MB：超出时从最旧文件开始删，刚写入的文件不删。
+// 总量是软性护栏：扫描整个目录有开销，节流到最多每 5 秒查一次，
+// 高频写日志时允许短暂小幅超出。
 private fun trimLogFolderTotal(keep: File) {
+    val now = android.os.SystemClock.elapsedRealtime()
+    if (now - lastTrimAtMillis < 5_000) return
+    lastTrimAtMillis = now
     val files = FolderUtils.logFolder.listFiles()?.filter { it.isFile } ?: return
     var totalBytes = files.sumOf { it.length() }
     if (totalBytes <= MAX_LOG_TOTAL_BYTES) return

@@ -397,11 +397,16 @@ class UpdateStatus(val scope: CoroutineScope) {
      */
     private fun installDownloadedApk(file: File) {
         val versionCode = downloadVersionCode
-        if (versionCode == null || !hasPrivilegedInstallCapability()) {
+        if (versionCode == null) {
             installApk(file)
             return
         }
-        scope.launch {
+        // 能力检查要问特权服务（Binder IPC），别在点击所在的主线程同步做，挪进协程
+        scope.launch(Dispatchers.IO) {
+            if (!hasPrivilegedInstallCapability()) {
+                installApk(file)
+                return@launch
+            }
             try {
                 installPackagePrivileged(file, versionCode)
                 downloadStatusFlow.value = null

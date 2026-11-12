@@ -151,10 +151,27 @@ object AiProviders {
         return id
     }
 
+    /**
+     * 思考参数被拒的降级标记只对「当时的模型+端点」有效：用户换了模型、地址、协议或
+     * 端点模式后必须清零重试，否则一次误判会让该服务商永远不再发送思考参数。
+     */
+    private fun AiConfig.clearedIfTargetChanged(old: AiConfig): AiConfig =
+        if (
+            thinkingRejected &&
+            (model != old.model || apiUrl != old.apiUrl ||
+                protocol != old.protocol || endpointMode != old.endpointMode)
+        ) {
+            copy(thinkingRejected = false)
+        } else {
+            this
+        }
+
     fun save(config: AiConfig) {
         updateSettings { store ->
             store.copy(
-                aiProviders = store.aiProviders.map { if (it.id == config.id) config else it },
+                aiProviders = store.aiProviders.map {
+                    if (it.id == config.id) config.clearedIfTargetChanged(it) else it
+                },
                 aiActiveProviderId = store.aiActiveProviderId.ifBlank {
                     config.id.takeIf { config.enabled }.orEmpty()
                 },
@@ -181,7 +198,9 @@ object AiProviders {
     fun mutate(id: String, transform: (AiConfig) -> AiConfig) {
         updateSettings { store ->
             store.copy(
-                aiProviders = store.aiProviders.map { if (it.id == id) transform(it) else it },
+                aiProviders = store.aiProviders.map {
+                    if (it.id == id) transform(it).clearedIfTargetChanged(it) else it
+                },
             )
         }
     }

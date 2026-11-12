@@ -126,6 +126,16 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
         0
     }
     val selectedNodes = state.nodes.filter { it.id in selectedIds }
+    // 有可读标签的节点才进列表；remember 避免每次选中变化都全量重过滤（节点可达数千）
+    val visibleNodes = remember(state.nodes) {
+        state.nodes.filter {
+            it.attr.text?.isNotBlank() == true ||
+                it.attr.desc?.isNotBlank() == true ||
+                it.attr.vid?.isNotBlank() == true ||
+                it.attr.id?.isNotBlank() == true ||
+                it.attr.name?.isNotBlank() == true
+        }
+    }
     val highlightColor = MiuixTheme.colorScheme.primary
 
     GkPageScaffold(topBar = {
@@ -253,13 +263,7 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn(modifier = Modifier.weight(1f)) {
                 items(
-                    items = state.nodes.filter {
-                        it.attr.text?.isNotBlank() == true ||
-                            it.attr.desc?.isNotBlank() == true ||
-                            it.attr.vid?.isNotBlank() == true ||
-                            it.attr.id?.isNotBlank() == true ||
-                            it.attr.name?.isNotBlank() == true
-                    },
+                    items = visibleNodes,
                     key = { it.id },
                 ) { node ->
                     val selected = node.id in selectedIds
@@ -274,7 +278,8 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                                 }
                             }
                             .padding(
-                                start = itemHorizontalPadding + (node.attr.depth * 10).dp,
+                                // 层级缩进封顶，深树节点别把文字挤没
+                                start = itemHorizontalPadding + (node.attr.depth * 10).coerceAtMost(60).dp,
                                 end = itemHorizontalPadding,
                                 top = 8.dp,
                                 bottom = 8.dp,
