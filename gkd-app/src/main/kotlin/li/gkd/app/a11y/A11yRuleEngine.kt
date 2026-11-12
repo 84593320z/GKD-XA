@@ -55,15 +55,37 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
         startQueryJob()
     }
 
+    @Volatile
+    private var lastWindowReadFailureAt = 0L
+
+    @Volatile
+    private var lastWindowReadFailureClass: String? = null
+
     val safeActiveWindow: AccessibilityNodeInfo?
-        get() = try {
-            // 某些应用耗时 554ms
-            // java.lang.SecurityException: Call from user 0 as user -2 without permission INTERACT_ACROSS_USERS or INTERACT_ACROSS_USERS_FULL not allowed.
-            service.windowNodeInfo?.setGeneratedTime()
-        } catch (_: Throwable) {
-            null
-        }.apply {
-            a11yContext.rootCache.value = this
+        get() {
+            var failure: Throwable? = null
+            val root = try {
+                // 某些应用耗时 554ms
+                // java.lang.SecurityException: Call from user 0 as user -2 without permission INTERACT_ACROSS_USERS or INTERACT_ACROSS_USERS_FULL not allowed.
+                service.windowNodeInfo?.setGeneratedTime()
+            } catch (e: Throwable) {
+                failure = e
+                null
+            }
+            if (failure != null) {
+                // 失败原因透传（对齐上游 9d28417a）：以前异常被全吞，快照/匹配失败时分不清是
+                // 跨用户 SecurityException 还是真无根节点。节流：同类异常 60 秒内只记一条。
+                val failureClass = failure.javaClass.name
+                val now = System.currentTimeMillis()
+                if (failureClass != lastWindowReadFailureClass || now - lastWindowReadFailureAt > 60_000L) {
+                    lastWindowReadFailureClass = failureClass
+                    lastWindowReadFailureAt = now
+                    Log.d("A11yRuleEngine", "safeActiveWindow failed: $failureClass: ${failure.message}")
+                }
+            }
+            return root.apply {
+                a11yContext.rootCache.value = this
+            }
         }
 
     private val safeActiveWindowAppId: String?
