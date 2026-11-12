@@ -12,6 +12,7 @@ import android.app.AppOpsManagerHidden
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
+import android.os.DeadObjectException
 import android.os.IBinder
 import android.os.Process
 import com.hjq.permissions.permission.dangerous.GetInstalledAppsPermission
@@ -52,11 +53,21 @@ class PrivilegeContext private constructor(
     suspend fun destroy() {
         try {
             if (taskStackListenerRegistered && Privilege.pingServer()) {
-                activityManager.value.unregisterTaskStackListener(CompatTaskStackListener)
+                try {
+                    activityManager.value.unregisterTaskStackListener(CompatTaskStackListener)
+                } catch (e: DeadObjectException) {
+                    // ping 之后服务端仍可能先死，清理阶段遇到死 Binder 忽略即可，
+                    // 别让它掩盖 create() 清理路径上的原始异常（对齐上游 d3ad0521）
+                    LogUtils.d(e, "destroy: unregisterTaskStackListener 时特权服务已死亡，忽略")
+                }
                 taskStackListenerRegistered = false
             }
         } finally {
-            userServiceConnection.unbind()
+            try {
+                userServiceConnection.unbind()
+            } catch (e: DeadObjectException) {
+                LogUtils.d(e, "destroy: unbind 时特权服务已死亡，忽略")
+            }
         }
     }
 
