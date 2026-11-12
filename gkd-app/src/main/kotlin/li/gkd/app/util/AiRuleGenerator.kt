@@ -433,12 +433,15 @@ object AiRuleGenerator {
     ): String {
         val maxTokens = maxTokensOverride ?: config.maxTokens
         val systemPrompt = config.systemPrompt.trim().takeIf { it.isNotEmpty() }
-        return when {
+        // 思考参数由 AiThinkingUtils 按模型名翻译，识别不出或被服务端拒绝过就不发
+        val thinkingParams = AiThinkingUtils.buildParams(config)
+        val base = when {
             config.isAnthropic -> json.encodeToString(
                 AnthropicRequest(
                     model = config.model,
                     messages = listOf(AnthropicMessage("user", content)),
-                    temperature = config.temperature,
+                    // Anthropic 协议思考开启时 temperature 必须为 1，其它值会被拒绝
+                    temperature = if (thinkingEnabled(thinkingParams)) 1f else config.temperature,
                     top_p = config.topP,
                     max_tokens = maxTokens,
                     system = systemPrompt,
@@ -467,7 +470,15 @@ object AiRuleGenerator {
                 )
             )
         }
+        if (thinkingParams.isEmpty()) return base
+        LogUtils.d("AI思考参数: model=${config.model} params=$thinkingParams")
+        val merged = JsonObject(json.parseToJsonElement(base).jsonObject + thinkingParams)
+        return json.encodeToString(JsonObject.serializer(), merged)
     }
+
+    /** 思考是否真的开启：合并的参数里 thinking.type == enabled */
+    private fun thinkingEnabled(params: Map<String, JsonElement>): Boolean =
+        (params["thinking"] as? JsonObject)?.get("type")?.jsonPrimitive?.content == "enabled"
 
     /** 只做一次 max_tokens=1 的最小对话，返回错误摘要；无错误时返回 "ok"。 */
     suspend fun testConnection(config: AiConfig): Result<String> = runCatching {
@@ -839,6 +850,19 @@ $previousRule
         return newCeiling
     }
 
+    /** 记住这个服务商拒绝思考参数，返回带标记的配置；写盘模式与 recordCeiling 一致。 */
+    private fun recordThinkingRejected(config: AiConfig): AiConfig {
+        val marked = config.copy(thinkingRejected = true)
+        updateSettings { store ->
+            store.copy(
+                aiProviders = store.aiProviders.map {
+                    if (it.id == config.id) it.copy(thinkingRejected = true) else it
+                },
+            )
+        }
+        return marked
+    }
+
     /**
      * 一次 AI 调用：先按自适应预算发请求，
      * 截断（finishReason == length）就翻倍重试一次，被服务端拒绝就记下上限并回退重试一次，
@@ -873,7 +897,12 @@ $previousRule
         }
     }
 
-    private suspend fun postAiRequest(config: AiConfig, userContent: String, budget: Int): AiReply {
+    private suspend fun postAiRequest(
+        config: AiConfig,
+        userContent: String,
+        budget: Int,
+        thinkingRetry: Boolean = true,
+    ): AiReply {
         val endpoint = buildApiEndpoint(config)
         val stream = config.streamChatCompletions
         val requestBody = buildRequestBody(config, userContent, maxTokensOverride = budget, stream = stream)
@@ -891,6 +920,15 @@ $previousRule
                 LogUtils.d("AI Response (first 3000 chars): ${body.take(3000)}")
                 val hint = errorHint(body)
                 val message = "HTTP ${response.status.value} $hint".trim()
+                // 发了思考参数却被服务端拒绝：记住这件事并降级重试一次，之后不再发送
+                if (thinkingRetry &&
+                    AiThinkingUtils.buildParams(config).isNotEmpty() &&
+                    AiThinkingUtils.isThinkingRejection(Exception(message))
+                ) {
+                    LogUtils.d("AI思考参数被拒绝，降级重试: $message")
+                    val rejected = recordThinkingRejected(config)
+                    return postAiRequest(rejected, userContent, budget, thinkingRetry = false)
+                }
                 // 只有「max_tokens 过大 / 参数非法」这一类错误才触发回退，其它错误维持原样抛出
                 if (AiTokenBudget.isTokenLimitRejection(hint.ifBlank { body })) {
                     throw AiTokenLimitReject(budget, message)
