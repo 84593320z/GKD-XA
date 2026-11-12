@@ -1,10 +1,15 @@
 {
-  "versionCode": 151,
-  "versionName": "1.5.0",
-  "changelog": "v1.5.0\n\n- 特权静默安装更新（失败回退系统安装），Shizuku 重启后立即精确恢复\n- 快照可查看/圈选节点，用选中组件生成 AI 规则\n- AI：提示词升级、地址补全支持 Azure、思考参数自适应、简易规则入口\n- 订阅下载报错更准确，文件日志加上限，事件日志解析失败保留原文\n- priv-kit 升 0.20、工具链升版；无数据库迁移，可回退 v1.4.10",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.0/GKD-XA-v1.5.0.apk",
+  "versionCode": 152,
+  "versionName": "1.5.1",
+  "changelog": "v1.5.1\n\n- 修复：思考参数被拒的降级标记换模型/换地址后自动清零，不再永久停发\n- 修复：点「安装」时特权能力检查改到后台线程，不再卡点击\n- 日志分片编号与修剪逻辑修缮，节点圈选页缩进与流畅度优化\n- 无数据库迁移，可回退 v1.5.0",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.1/GKD-XA-v1.5.1.apk",
   "fileSize": 5860348,
   "versionLogs": [
+    {
+      "name": "1.5.1",
+      "code": 152,
+      "desc": "- 思考降级标记可随配置变更复位\n- 安装检查线程修复\n- 日志分片/节点页小修\n- 无数据库迁移，可回退 1.5.0"
+    },
     {
       "name": "1.5.0",
       "code": 151,
