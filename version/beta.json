@@ -1,10 +1,15 @@
 {
-  "versionCode": 150,
-  "versionName": "1.4.10",
-  "changelog": "v1.4.10\n\n- 跨订阅复制规则组：key 冲突时重排编号，组间联动跟着重映射，不再指到别的订阅\n- 保活窗口改由应用级协调器持有，常驻通知服务被杀不再带走窗口\n- 工作模式入口换成会点火的火箭图标，读屏会念出运行状态\n- 无数据库迁移，可回退到 v1.4.9",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.4.10/GKD-XA-v1.4.10.apk",
+  "versionCode": 151,
+  "versionName": "1.5.0",
+  "changelog": "v1.5.0\n\n- 特权静默安装更新（失败回退系统安装），Shizuku 重启后立即精确恢复\n- 快照可查看/圈选节点，用选中组件生成 AI 规则\n- AI：提示词升级、地址补全支持 Azure、思考参数自适应、简易规则入口\n- 订阅下载报错更准确，文件日志加上限，事件日志解析失败保留原文\n- priv-kit 升 0.20、工具链升版；无数据库迁移，可回退 v1.4.10",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.0/GKD-XA-v1.5.0.apk",
   "fileSize": 5852032,
   "versionLogs": [
+    {
+      "name": "1.5.0",
+      "code": 151,
+      "desc": "- 特权静默装更新 + Shizuku 精确恢复\n- 快照节点圈选喂 AI\n- AI 地址/思考/预检增强与简易规则\n- 日志与订阅报错治理\n- 无数据库迁移，可回退 1.4.10"
+    },
     {
       "name": "1.4.10",
       "code": 150,
