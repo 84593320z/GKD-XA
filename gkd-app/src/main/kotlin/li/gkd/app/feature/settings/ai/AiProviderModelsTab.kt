@@ -108,7 +108,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
                                             "拉取成功：远端 ${remote.size} 个，新增 $added，共 ${merged.size} 个"
                                         }
                                     }.onFailure { e ->
-                                        message = "拉取失败：${e.message}"
+                                        message = "拉取失败：${AiRuleGenerator.analyzeConnectionError(e)}（${e.message}）"
                                     }
                                 fetching = false
                             }

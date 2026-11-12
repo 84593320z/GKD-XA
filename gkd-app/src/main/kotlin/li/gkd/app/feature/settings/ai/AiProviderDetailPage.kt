@@ -300,7 +300,7 @@ private fun AiProviderConfigTab(
                                         "连接成功：远端 ${remote.size} 个，新增 $added"
                                     }
                                 }.onFailure { e ->
-                                    testResult = "连接失败：${e.message}"
+                                    testResult = "连接失败：${AiRuleGenerator.analyzeConnectionError(e)}（${e.message}）"
                                 }
                             testing = false
                         }

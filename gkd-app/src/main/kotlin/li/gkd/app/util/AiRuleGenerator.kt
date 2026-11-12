@@ -510,6 +510,55 @@ object AiRuleGenerator {
     }
 
     /** 拉取远端模型：各家字段名不统一，能解析出上下文长度与推理能力就一并记录。 */
+    /**
+     * 把连接/拉取失败翻成人话：只看异常文案里的关键特征分类，
+     * 分不出类时返回通用提示，原始信息由调用方附在后面。
+     * 来源：gkd-plus 4500dbb 的 analyzeConnectionError，按 XA 文案微调。
+     */
+    fun analyzeConnectionError(e: Throwable): String {
+        val msg = e.message.orEmpty()
+        val lower = msg.lowercase()
+        return when {
+            lower.contains("model_not_found") || lower.contains("no available") ||
+                msg.contains("无可用") || msg.contains("模型不存在") ->
+                "模型不可用：当前 Key 没有这个模型的权限，或服务商还没上架它。"
+
+            lower.contains("401") || lower.contains("403") ||
+                lower.contains("unauthorized") || lower.contains("invalid api key") ||
+                lower.contains("invalid_api_key") || lower.contains("authentication") ->
+                "鉴权失败：API Key 无效、已过期，或没有这个模型的权限。"
+
+            lower.contains("402") || lower.contains("insufficient") ||
+                msg.contains("余额不足") || msg.contains("欠费") ->
+                "余额不足：请到服务商控制台确认账户余额。"
+
+            lower.contains("429") || lower.contains("rate limit") || lower.contains("rate_limit") ||
+                msg.contains("限流") || msg.contains("请求过于频繁") ->
+                "请求太频繁被限流了，等一会儿再试。"
+
+            lower.contains("404") || lower.contains("not found") ->
+                "接口不存在：多半是 API 地址填错了，检查地址与路径是否完整。"
+
+            lower.contains("max_tokens") || lower.contains("max tokens") ->
+                "输出上限被拒绝：请在服务商配置里调小 Max Tokens 再试。"
+
+            lower.contains("timeout") || lower.contains("timed out") || msg.contains("超时") ->
+                "连接超时：网络太慢或服务商无响应，稍后再试。"
+
+            lower.contains("unable to resolve host") || lower.contains("no address associated") ||
+                lower.contains("unknownhost") ->
+                "域名解析失败：设备当前连不上这个地址，检查网络或地址拼写。"
+
+            lower.contains("ssl") || lower.contains("certificate") || lower.contains("handshake") ->
+                "证书错误：多半是地址协议写错（http/https），或服务商证书有问题。"
+
+            lower.contains("http 5") ->
+                "服务方错误：接口在服务商那边出错了，稍后再试。"
+
+            else -> "连接失败：检查 API 地址、Key 和网络后再试。"
+        }
+    }
+
     suspend fun fetchModels(config: AiConfig): Result<List<AiModel>> = runCatching {
         val httpClient = createHttpClient()
         try {
