@@ -170,6 +170,15 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                     onSaveToAlbum = { actions.saveToAlbum(snapshot) },
                     onReplace = { actions.replace(snapshot) },
                     onDelete = { actions.delete(snapshot) },
+                    onViewNodes = {
+                        mainVm.navigatePage(
+                            SnapshotNodesRoute(
+                                snapshotId = snapshot.id,
+                                screenWidth = snapshot.screenWidth,
+                                screenHeight = snapshot.screenHeight,
+                            ),
+                        )
+                    },
                 )
             }
         } else {

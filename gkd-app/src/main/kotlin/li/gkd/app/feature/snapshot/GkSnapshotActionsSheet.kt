@@ -57,6 +57,7 @@ fun GkSnapshotActionsSheet(
     onSaveToAlbum: () -> Unit,
     onReplace: () -> Unit,
     onDelete: () -> Unit,
+    onViewNodes: () -> Unit,
 ) {
     fun perform(action: () -> Unit) {
         onDismissRequest()
@@ -86,6 +87,11 @@ fun GkSnapshotActionsSheet(
                     val assetId = snapshot.githubAssetId
                     if (assetId == null) perform(onUpload) else copyText(IMPORT_SHORT_URL + assetId)
                 },
+            )
+            SnapshotActionRow(
+                icon = GkIcons.CenterFocusWeak,
+                title = UiStrings.snapshot_view_nodes,
+                onClick = { perform(onViewNodes) },
             )
             SnapshotActionRow(
                 icon = GkIcons.Share,

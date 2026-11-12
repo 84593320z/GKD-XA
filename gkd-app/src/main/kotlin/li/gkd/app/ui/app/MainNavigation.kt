@@ -45,6 +45,8 @@ import li.gkd.app.ui.ImagePreviewPage
 import li.gkd.app.ui.ImagePreviewRoute
 import li.gkd.app.ui.PrivilegeServicePage
 import li.gkd.app.ui.PrivilegeServiceRoute
+import li.gkd.app.feature.snapshot.SnapshotNodesPage
+import li.gkd.app.feature.snapshot.SnapshotNodesRoute
 import li.gkd.app.feature.snapshot.SnapshotPage
 import li.gkd.app.feature.snapshot.SnapshotPageRoute
 import li.gkd.app.feature.snapshot.SnapshotPreviewPage
@@ -94,6 +96,7 @@ private fun NavEntryBuilder.mainRoutes() {
     entry<PrivilegeServiceRoute> { PrivilegeServicePage() }
     entry<SnapshotPageRoute> { SnapshotPage() }
     entry<SnapshotPreviewRoute> { SnapshotPreviewPage(it) }
+    entry<SnapshotNodesRoute> { SnapshotNodesPage(it) }
     entry<SnapshotSettingsRoute> { SnapshotSettingsPage() }
     entry<A11YScopeAppListRoute> { A11yScopeAppListPage() }
     entry<ActivityLogRoute> { ActivityLogPage() }

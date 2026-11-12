@@ -237,12 +237,17 @@ object AiRuleGenerator {
     val isGenerating = MutableStateFlow(false)
     val pendingCount = MutableStateFlow(0)
 
-    private val taskQueue = Channel<Long>(Channel.UNLIMITED)
+    private data class AiGenerateTask(
+        val snapshotId: Long,
+        val selectedNodeIds: Set<Int> = emptySet(),
+    )
+
+    private val taskQueue = Channel<AiGenerateTask>(Channel.UNLIMITED)
 
     init {
         appScope.launchLogged {
-            for (snapshotId in taskQueue) {
-                processRule(snapshotId)
+            for (task in taskQueue) {
+                processRule(task.snapshotId, task.selectedNodeIds)
             }
         }
     }
@@ -598,20 +603,34 @@ object AiRuleGenerator {
         }
     }
 
-    suspend fun generateRule(snapshotId: Long) {
+    suspend fun generateRule(snapshotId: Long, selectedNodeIds: Set<Int> = emptySet()) {
         val config = storeFlow.value.activeAiProvider()
         if (config == null || !config.usable) {
             ToastUtils.toast("请先在 AI 设置中选择并配置服务商")
             return
         }
         pendingCount.value++
-        taskQueue.send(snapshotId)
+        taskQueue.send(AiGenerateTask(snapshotId, selectedNodeIds))
         if (isGenerating.value) {
             ToastUtils.toast("AI 任务已加入队列（排队中：${pendingCount.value}）")
         }
     }
 
-    private suspend fun processRule(snapshotId: Long) {
+    /** 把用户在快照节点页圈选的组件单独抽出来附在提示词后，引导模型优先围绕它们定位。 */
+    private fun buildSelectedNodesSection(snapshotJson: String, selectedNodeIds: Set<Int>): String {
+        val nodes = runCatching {
+            json.parseToJsonElement(snapshotJson).jsonObject["nodes"]?.jsonArray
+        }.getOrNull() ?: return ""
+        val selected = nodes.filter { entry ->
+            val id = entry.jsonObject["id"]?.jsonPrimitive?.intOrNull
+            id != null && id in selectedNodeIds
+        }
+        if (selected.isEmpty()) return ""
+        return "\n\n用户在截图上圈选了以下目标组件（共 ${selected.size} 个），生成规则时请优先围绕这些组件定位点击目标：\n" +
+            JsonArray(selected).toString()
+    }
+
+    private suspend fun processRule(snapshotId: Long, selectedNodeIds: Set<Int> = emptySet()) {
         val config = storeFlow.value.activeAiProvider()
             ?: run {
                 ToastUtils.toast("请先在 AI 设置中选择并配置服务商")
@@ -624,7 +643,12 @@ object AiRuleGenerator {
             val snapshotJson = withContext(Dispatchers.IO) {
                 SnapshotRepository.snapshotFile(snapshotId).readText()
             }
-            val userContent = "$prompt\n$snapshotJson"
+            val userContent = "$prompt\n$snapshotJson" +
+                if (selectedNodeIds.isNotEmpty()) {
+                    buildSelectedNodesSection(snapshotJson, selectedNodeIds)
+                } else {
+                    ""
+                }
             LogUtils.d("AI generateRule: prompt length=${prompt.length}, snapshot length=${snapshotJson.length}, total=${userContent.length}")
 
             val result = callAiApi(config, userContent)

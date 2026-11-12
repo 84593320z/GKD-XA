@@ -824,6 +824,12 @@
     <string name="snapshot_trigger_config_required">请配置目标应用和特征事件选择器</string>
     <string name="snapshot_upload_changed">快照已更改，链接未写入；请重新上传</string>
     <string name="snapshot_generate_link">生成链接</string>
+    <string name="snapshot_view_nodes">查看/选择节点</string>
+    <string name="snapshot_nodes_title">选择组件</string>
+    <string name="snapshot_nodes_empty">这条快照没有节点数据</string>
+    <string name="snapshot_nodes_hint">点截图或下方列表选择目标组件，用选中组件生成规则时，模型会优先围绕它们定位。</string>
+    <string name="snapshot_nodes_generate">用选中组件生成规则</string>
+    <string name="snapshot_nodes_clear">清空选择</string>
     <string name="snapshot_generate_links_confirmation">将为选中的 %1$s 条快照生成链接。</string>
     <string name="snapshot_upload_privacy_warning">生成链接会将快照的截图和快照数据上传至 GitHub。请确认内容不含隐私信息；截图有敏感内容可先替换。</string>
     <string name="snapshot_view_app">按应用</string>

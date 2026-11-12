@@ -169,6 +169,7 @@ object SnapshotCapture {
         appId: String,
         automatorMode: AutomatorModeOption,
         forcedCropStatusBar: Boolean,
+        keepStatusBar: Boolean = false,
     ): ScreenResult {
         // Android 14+ 的部分 ROM（已在 Android 16 HyperOS 上复现）不会在 FLAG_SECURE
         // 窗口下回调 IWindowManager.captureDisplay 的 listener，读取 buffer 会等待系统 4 秒后超时。
@@ -222,6 +223,7 @@ object SnapshotCapture {
         }
         val processedBitmap = if (
             status == SnapshotScreenshotStatus.Captured &&
+            !keepStatusBar &&
             storeFlow.value.hideSnapshotStatusBar &&
             (forcedCropStatusBar || BarUtils.checkStatusBarVisible() == true)
         ) {
@@ -242,6 +244,9 @@ object SnapshotCapture {
     suspend fun capture(
         forcedCropStatusBar: Boolean = false,
         triggerAiRule: Boolean = true,
+        // 保留状态栏不裁剪（对齐 plus 6417d3d）：后续要在截图上按节点坐标圈选组件时，
+        // 裁过的截图会与节点坐标系错位，需要整屏原图。
+        keepStatusBar: Boolean = false,
     ): ComplexSnapshot {
         val service = A11yRuntime.service ?: throw RpcError(UiStrings.service_unavailable_authorize)
         if (!captureMutex.tryLock()) {
@@ -259,7 +264,7 @@ object SnapshotCapture {
                 val nodes = async(Dispatchers.IO) { info2nodeList(rootNode) }
                 val activityId = async(Dispatchers.IO) { resolveActivityId(appId) }
                 val capturedScreen = async(Dispatchers.Default) {
-                    captureScreen(appId, service.mode, forcedCropStatusBar)
+                    captureScreen(appId, service.mode, forcedCropStatusBar, keepStatusBar)
                 }
                 val result = capturedScreen.await()
                 try {
