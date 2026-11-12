@@ -15,7 +15,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import io.ktor.client.call.body
@@ -34,7 +36,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import li.gkd.app.META
+import li.gkd.app.MainActivity
 import li.gkd.app.app
+import li.gkd.app.data.backup.BackupManager
 import li.gkd.app.store.FileStateStore
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.component.GkAlertDialog
@@ -241,6 +245,8 @@ class UpdateStatus(val scope: CoroutineScope) {
     @Composable
     fun UpgradeDialog() {
         newVersionFlow.collectAsStateWithLifecycle().value?.let { newVersionVal ->
+            val context = LocalContext.current
+            val backupScope = rememberCoroutineScope()
             val text = remember {
                 val logs = newVersionVal.versionLogs.takeWhile { v ->
                     v.code > META.versionCode
@@ -279,6 +285,22 @@ class UpdateStatus(val scope: CoroutineScope) {
                     }
                 },
                 dismissButton = {
+                    // 升级前先备份（对齐上游 98139c4b）：导出后拉起分享，弹窗保留，用户备份完再点下载
+                    TextButton(onClick = throttle {
+                        backupScope.launch {
+                            try {
+                                val file = BackupManager.exportData()
+                                (context as? MainActivity)?.shareFile(file, "分享备份文件")
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                LogUtils.d("export backup before update failed", e)
+                                toast("备份失败：${e.message ?: "未知错误"}")
+                            }
+                        }
+                    }) {
+                        Text(text = "先备份")
+                    }
                     TextButton(onClick = { newVersionFlow.value = null }) {
                         Text(text = UiStrings.action_cancel)
                     }
