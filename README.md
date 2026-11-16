@@ -24,9 +24,9 @@
 
 | | 做法 |
 | ---- | ---- |
-| **底座** | 跟随上游新架构：模块拆分、包名 `li.gkd.app.*`、Navigation3、Room、Ktor 等全部对齐上游 |
+| **底座** | 使用模块拆分、`li.gkd.app.*`、Room 与 Ktor；导航使用 miuix-nav，并按兼容性选择性同步上游 |
 | **界面层** | 不采用上游 UI，而是把**旧版 MIUIX 渲染层原样「翻译」**到新底座上（`Gk*` 骨架 + `Perf*` 组件） |
-| **业务逻辑** | 一律使用新底座的实现，不搬运旧代码 |
+| **业务逻辑** | 保留本分支 AI 与 MIUIX 交互，逐项审查上游实现并补充回归测试 |
 
 换句话说：**你看到的还是老界面，跑的是新内核。**
 
@@ -76,7 +76,7 @@
 
 | 项目 | 说明 |
 | ---- | ---- |
-| 本仓库 | [84593320z/gkd-](https://github.com/84593320z/gkd-) |
+| 本仓库 | [84593320z/GKD-XA](https://github.com/84593320z/GKD-XA) |
 | 直接来源 | [hanchuan8/gkd-miuix](https://github.com/hanchuan8/gkd-miuix)（本融合版在其基础上开发） |
 | 上游 | [gkd-kit/gkd](https://github.com/gkd-kit/gkd) |
 | AI 生成规则 | 移植自 [fjjzy/gkd-plus](https://github.com/fjjzy/gkd-plus)（GPL-3.0） |
@@ -85,7 +85,9 @@
 
 ## 安装
 
-从本仓库 [Releases](https://github.com/84593320z/gkd-/releases) 下载安装包。
+从本仓库 [Releases](https://github.com/84593320z/GKD-XA/releases) 下载安装包。
+
+构建需要 JDK 21 与 Android SDK 37，Gradle wrapper 使用仓库固定版本。发布包需配置固定签名；日常验证可用 `assembleGkdPerf`。升级前请导出备份，Android 不保证能覆盖安装较低版本，v1.5.2 私有目录也不由旧版直接读取。
 
 也可自行编译：
 
@@ -141,4 +143,4 @@
 
 问题与建议请提交到本仓库 Issues：
 
-<https://github.com/84593320z/gkd-/issues>
+<https://github.com/84593320z/GKD-XA/issues>

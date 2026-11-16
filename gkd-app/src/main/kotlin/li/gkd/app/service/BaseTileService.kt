@@ -1,6 +1,9 @@
 package li.gkd.app.service
 
+import android.os.SystemClock
 import android.service.quicksettings.Tile
+import li.gkd.app.appRuntimeReady
+import li.gkd.app.priv.CrashRecovery
 import android.service.quicksettings.TileService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -17,22 +20,31 @@ abstract class BaseTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
-        val timestamp = System.currentTimeMillis()
-        if (timestamp - lastA11yFixTime > 3_000L) {
-            lastA11yFixTime = timestamp
-            fixRestartAutomatorService()
+        qsTile?.apply {
+            state = Tile.STATE_UNAVAILABLE
+            updateTile()
         }
         listeningJob?.cancel()
         listeningJob = serviceScope.launch {
+            appRuntimeReady.await()
+            if (CrashRecovery.isRecoveryBlocked) return@launch
+            val timestamp = SystemClock.elapsedRealtime()
+            if (lastA11yFixTime?.let { timestamp - it > 3_000L } != false) {
+                lastA11yFixTime = timestamp
+                fixRestartAutomatorService()
+            }
             activeFlow.collect { active ->
-                qsTile.state = if (active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-                qsTile.updateTile()
+                qsTile?.apply {
+                    state = if (active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+                    updateTile()
+                }
             }
         }
     }
 
     override fun onClick() {
         super.onClick()
+        if (!appRuntimeReady.isCompleted || CrashRecovery.isRecoveryBlocked) return
         StatusService.autoStart()
         onTileClick()
     }
@@ -49,4 +61,4 @@ abstract class BaseTileService : TileService() {
     }
 }
 
-private var lastA11yFixTime = 0L
+private var lastA11yFixTime: Long? = null

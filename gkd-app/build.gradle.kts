@@ -28,8 +28,8 @@ android {
     namespace = "li.gkd.app"
     defaultConfig {
         applicationId = "li.songe.gkdx"
-        versionCode = 152
-        versionName = "1.5.1"
+        versionCode = 153
+        versionName = "1.5.2"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -268,6 +268,8 @@ dependencies {
     // 因此 navigation3-runtime 与 lifecycle-viewmodel-navigation3 都不再需要。
 
     testImplementation(libs.junit)
+    testImplementation(libs.ktor.client.mock)
+    testImplementation(libs.ktor.server.test.host)
 
     implementation(libs.androidx.concurrent.futures)
 

@@ -94,6 +94,7 @@ private fun AdvancedContent() {
     val store by storeFlow.collectAsStateWithLifecycle()
     val httpServer by HttpService.httpServerFlow.collectAsStateWithLifecycle()
     val localNetworkIps by HttpService.localNetworkIpsFlow.collectAsStateWithLifecycle()
+    val allowHttpLan by HttpService.allowLanFlow.collectAsStateWithLifecycle()
     val buttonServiceRunning by ButtonService.isRunning.collectAsStateWithLifecycle()
     val activityServiceRunning by ActivityService.isRunning.collectAsStateWithLifecycle()
     val eventServiceRunning by EventService.isRunning.collectAsStateWithLifecycle()
@@ -189,10 +190,31 @@ private fun AdvancedContent() {
                             ServiceController.setHttpEnabled(enabled)
                         }
                     }),
-                    onAddressClick = mainVm::openUrl,
+                    onAddressClick = { url -> mainVm.openUrl(url) },
                 )
                 androidx.compose.animation.AnimatedVisibility(visible = showHttpSettingsDialog) {
                     Column {
+                        TextSwitch(
+                            title = "允许局域网调试",
+                            subtitle = "仅在本次运行生效。连接可读取快照、修改规则并操作屏幕；凭据 30 分钟后失效，请只在可信网络使用",
+                            checked = allowHttpLan,
+                            onCheckedChange = scope.launchUiAction { enabled ->
+                                if (!enabled || mainVm.dialogRequests.confirm(
+                                        title = "允许局域网调试",
+                                        text = "持有本次连接凭据的人可读取快照并操作屏幕。HTTP 不加密，请勿在公共 Wi-Fi 开启。",
+                                    )) {
+                                    HttpService.allowLanFlow.value = enabled
+                                }
+                            },
+                        )
+                        if (httpServer != null) {
+                            SettingItem(
+                                title = "复制本次 API 访问凭据",
+                                subtitle = "供可信调试客户端作为 Bearer 凭据使用；关闭服务后失效",
+                                imageVector = GkIcons.ContentCopy,
+                                onClick = { HttpService.sessionToken()?.let { copyText(it) } },
+                            )
+                        }
                         SettingItem(
                             title = UiStrings.http_port,
                             subtitle = store.httpServerPort.toString(),
@@ -328,7 +350,7 @@ private fun HttpServiceItem(
                 .fillMaxWidth()
                 .clickable(
                     onClickLabel = UiStrings.http_view_addresses(type),
-                    onClick = throttle { onAddressClick("http://${host}:${port}") },
+                    onClick = throttle { HttpService.sessionUrl(host, port)?.let(onAddressClick) },
                 )
                 .padding(vertical = 2.dp),
         )
@@ -369,7 +391,7 @@ private fun HttpServiceItem(
                     bottom = itemVerticalPadding,
                 ),
             ) {
-                Text(text = "点击下方链接即可连接")
+                Text(text = "点击链接连接本次调试会话（30 分钟有效，关闭后失效）")
                 addressItem("127.0.0.1", UiStrings.network_local_device)
                 localNetworkIps.forEach { host ->
                     addressItem(host, UiStrings.network_lan)

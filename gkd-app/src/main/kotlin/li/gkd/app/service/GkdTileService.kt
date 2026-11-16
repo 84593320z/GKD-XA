@@ -1,6 +1,9 @@
 package li.gkd.app.service
 
+import android.os.SystemClock
 import android.provider.Settings
+import li.gkd.app.appRuntimeReady
+import li.gkd.app.priv.CrashRecovery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +38,10 @@ import li.songe.codeorigin.CallSite
 import kotlin.time.Duration.Companion.milliseconds
 
 class GkdTileService : BaseTileService() {
-    override val activeFlow = combine(A11yService.isRunning, uiAutomationFlow) { a11y, automator ->
-        a11y || automator != null
+    override val activeFlow by lazy {
+        combine(A11yService.isRunning, uiAutomationFlow) { a11y, automator ->
+            a11y || automator != null
+        }
     }
 
     override fun onTileClick() = switchAutomatorService()
@@ -51,6 +56,8 @@ private fun modifyA11yRun(
     block: suspend () -> Unit,
 ) {
     appScope.launchUi(Dispatchers.IO, loc = loc) {
+        appRuntimeReady.await()
+        if (CrashRecovery.isRecoveryBlocked) return@launchUi
         if (!modifyA11yMutex.tryLock()) return@launchUi
         try {
             block()
@@ -65,6 +72,7 @@ private fun modifyA11yRun(
  * 调用方必须持有 modifyA11yMutex。
  */
 private suspend fun writeA11yServiceEnabled(): Boolean {
+    if (CrashRecovery.isRecoveryBlocked) return false
     val names = app.getSecureA11yServices()
     app.putSecureInt(Settings.Secure.ACCESSIBILITY_ENABLED, 1)
     if (names.contains(A11yService.a11yCn)) { // 当前无障碍异常, 重启服务
@@ -72,6 +80,7 @@ private suspend fun writeA11yServiceEnabled(): Boolean {
         app.putSecureA11yServices(names)
         delay(A11Y_AWAIT_FIX_TIME.milliseconds)
     }
+    if (CrashRecovery.isRecoveryBlocked) return false
     names.add(A11yService.a11yCn)
     app.putSecureA11yServices(names)
     delay(A11Y_AWAIT_START_TIME.milliseconds)
@@ -82,7 +91,7 @@ private suspend fun writeA11yServiceEnabled(): Boolean {
 private suspend fun switchA11yService() {
     if (A11yService.isRunning.value) {
         // 用户在开关上主动关掉：一段时间内不再自动 arm，否则开机/回到前台会和他对着干
-        a11yUserDisabledAt = System.currentTimeMillis()
+        a11yUserDisabledAt = SystemClock.elapsedRealtime()
         A11yService.instance?.disableSelf()
     } else {
         a11yUserDisabledAt = 0L
@@ -141,7 +150,7 @@ private suspend fun fixA11yService() {
             app.putSecureA11yServices(names)
             // 必须等待一段时间, 否则概率不会触发系统重启无障碍
             delay(A11Y_AWAIT_FIX_TIME.milliseconds)
-            if (!currentAppUseA11y) return
+            if (!currentAppUseA11y || CrashRecovery.isRecoveryBlocked) return
         }
         names.add(A11yService.a11yCn)
         app.putSecureA11yServices(names)
@@ -190,6 +199,7 @@ private enum class ArmA11yOutcome {
 }
 
 private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yOutcome {
+    if (CrashRecovery.isRecoveryBlocked) return ArmA11yOutcome.Stop
     if (A11yService.isReady) {
         // 「已经就绪」是这里唯一的静默出口，而导出日志里分不清「跑过发现没事」和「根本没跑」，
         // 排查开机问题时只能靠旁证 —— 补一条只有首轮才打的日志。
@@ -208,7 +218,7 @@ private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yO
     }
     val disabledAt = a11yUserDisabledAt
     if (disabledAt != 0L) {
-        val remaining = A11Y_USER_DISABLED_SUPPRESS_MILLIS - (System.currentTimeMillis() - disabledAt)
+        val remaining = A11Y_USER_DISABLED_SUPPRESS_MILLIS - (SystemClock.elapsedRealtime() - disabledAt)
         if (remaining > 0) {
             LogUtils.d("$loc 用户刚主动关闭无障碍，${remaining}ms 内不自动开启", loc = "armA11yService")
             return ArmA11yOutcome.Stop
@@ -247,6 +257,8 @@ private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yO
  */
 fun armA11yService(@CallSite loc: String = "") {
     appScope.launchUi(Dispatchers.IO, loc = loc) {
+        appRuntimeReady.await()
+        if (CrashRecovery.isRecoveryBlocked) return@launchUi
         if (!armA11yDriverMutex.tryLock()) {
             LogUtils.d("$loc 已有自动开启任务在跑，跳过", loc = "armA11yService")
             return@launchUi
@@ -329,7 +341,7 @@ fun initA11yWhiteAppList() {
     val actualFlow = topAppIdFlow.drop(1)
     appScope.launch(Dispatchers.Main) {
         actualFlow.collect {
-            lastAppIdChangeTime = System.currentTimeMillis()
+            lastAppIdChangeTime = SystemClock.elapsedRealtime()
             if (!currentAppBlocked) {
                 if (currentTopActivity.sameAs(systemRecentCn) && currentAppUseA11y) {
                     // 切换无障碍会造成卡顿，在最近任务界面时，延迟这个卡顿

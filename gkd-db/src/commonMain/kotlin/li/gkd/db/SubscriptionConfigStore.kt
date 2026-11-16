@@ -68,6 +68,18 @@ class SubscriptionConfigStore(private val database: AppDb) {
         )
     }
 
+    /** Diagnostic-only bounded projection. Full backup capture() remains lossless. */
+    suspend fun captureForDiagnostics(limit: Int = 50): SubscriptionConfigSnapshot = database.withReadTransaction {
+        val rows = limit.coerceIn(0, 50)
+        SubscriptionConfigSnapshot(
+            subsItems = database.subsItemDao().queryForDiagnostics(rows),
+            appConfigs = database.subsAppConfigDao().queryForDiagnostics(rows),
+            categoryConfigs = database.subsCategoryConfigDao().queryForDiagnostics(rows),
+            appGroupConfigs = database.subsAppGroupConfigDao().queryForDiagnostics(rows),
+            globalGroupConfigs = database.subsGlobalGroupConfigDao().queryForDiagnostics(rows),
+        )
+    }
+
     // Returns the number of orphaned overrides skipped from older backups.
     suspend fun merge(snapshot: SubscriptionConfigSnapshot): Int = database.withWriteTransaction {
         database.subsItemDao().insertOrIgnore(*snapshot.subsItems.toTypedArray())

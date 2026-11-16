@@ -12,7 +12,9 @@ import androidx.room3.Query
 import androidx.room3.migration.AutoMigrationSpec
 import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(
     tableName = "activity_log",
 )
@@ -27,6 +29,9 @@ data class ActivityLog(
     interface ActivityLogDao {
         @Insert
         suspend fun insert(vararg objects: ActivityLog): List<Long>
+
+        @Query("SELECT id, ctime, CASE WHEN length(app_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE app_id END AS app_id, CASE WHEN length(activity_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE activity_id END AS activity_id FROM activity_log ORDER BY ctime DESC, id DESC LIMIT min(max(:limit, 0), 50) OFFSET max(:offset, 0)")
+        suspend fun queryForDiagnostics(limit: Int, offset: Int = 0): List<ActivityLog>
 
         @Query("SELECT * FROM activity_log ORDER BY ctime DESC ")
         fun pagingSource(): PagingSource<Int, ActivityLog>

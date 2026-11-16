@@ -8,13 +8,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import li.gkd.app.text.UiStrings
-import li.gkd.app.platform.lifecycle.onCreated
 import li.gkd.app.platform.lifecycle.useMainActivityLifecycle
 import li.gkd.app.platform.lifecycle.useLogLifecycle
 import li.gkd.app.permission.PermissionRequests
@@ -39,15 +52,35 @@ class MainActivity : ComponentActivity() {
     private val activityResultHost = ActivityResultRequests.Host(this)
     private val permissionRequestHost = PermissionRequests.Host(this)
 
-    init {
+    private var runtimeInitialized = false
+
+    private fun initializeRuntime() {
+        // Register only after storage and application runtime are ready. LifecycleRegistry
+        // replays the current state, so foreground tracking remains balanced after a slow migration.
         useMainActivityLifecycle()
         useLogLifecycle()
-        onCreated {
-            lifecycleScope.launch {
-                storeFlow.mapState(lifecycleScope) { s -> s.excludeFromRecents }.collect {
-                    app.activityManager.appTasks.forEach { task ->
-                        task.setExcludeFromRecents(it)
-                    }
+        lifecycleScope.launch {
+            storeFlow.mapState(lifecycleScope) { s -> s.excludeFromRecents }.collect {
+                app.activityManager.appTasks.forEach { task ->
+                    task.setExcludeFromRecents(it)
+                }
+            }
+        }
+        applyPredictiveBackEnabled(storeFlow.value.enablePredictiveBack)
+        activityResultHost.bind(mainVm.activityResults)
+        permissionRequestHost.bind(mainVm.permissionRequests)
+        mainVm.registerCurrent()
+        runtimeInitialized = true
+        StatusService.autoStart()
+        if (storeFlow.value.enableBlockA11yAppList) {
+            updateTopTaskAppId(META.appId)
+        }
+        setContent {
+            AppRoot()
+            LaunchedEffect(Unit) {
+                intent?.let {
+                    mainVm.handleIntent(it)
+                    intent = null
                 }
             }
         }
@@ -80,27 +113,39 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         enableEdgeToEdge()
         fixTransparentNavigationBar()
-        applyPredictiveBackEnabled(storeFlow.value.enablePredictiveBack)
         super.onCreate(savedInstanceState)
-        activityResultHost.bind(mainVm.activityResults)
-        permissionRequestHost.bind(mainVm.permissionRequests)
-        mainVm.registerCurrent()
-        addOnNewIntentListener {
-            mainVm.handleIntent(it)
-            intent = null
-        }
-        StatusService.autoStart()
-        if (storeFlow.value.enableBlockA11yAppList) {
-            updateTopTaskAppId(META.appId)
+        addOnNewIntentListener { nextIntent ->
+            intent = nextIntent
+            if (runtimeInitialized) {
+                mainVm.handleIntent(nextIntent)
+                intent = null
+            }
         }
         setContent {
-            AppRoot()
-            LaunchedEffect(null) {
-                intent?.let {
-                    mainVm.handleIntent(it)
-                    intent = null
+            val failure by appStartupFailure.collectAsState()
+            MaterialTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        if (failure == null) {
+                            CircularProgressIndicator()
+                            Text("正在准备应用数据，请稍候…")
+                        } else {
+                            Text("应用数据准备失败")
+                            Text(failure?.message ?: "请稍后重试")
+                            Text("原有数据已保留。请检查存储空间后重试。")
+                            Button(onClick = ::retryAppStartup) { Text("重试") }
+                        }
+                    }
                 }
             }
+        }
+        lifecycleScope.launch {
+            appRuntimeReady.await()
+            initializeRuntime()
         }
     }
 

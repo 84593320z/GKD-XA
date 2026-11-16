@@ -41,6 +41,9 @@ class A11yEventLog(
         @Query("SELECT COUNT(*) FROM a11y_event_log")
         fun count(): Flow<Int>
 
+        @Query("SELECT id, ctime, type, CASE WHEN length(app_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE app_id END AS app_id, CASE WHEN length(name) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE name END AS name, CASE WHEN length(`desc`) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE `desc` END AS `desc`, CASE WHEN length(text) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE text END AS text_preview FROM a11y_event_log ORDER BY ctime DESC, id DESC LIMIT min(max(:limit, 0), 50) OFFSET max(:offset, 0)")
+        suspend fun queryForDiagnostics(limit: Int, offset: Int = 0): List<DiagnosticA11yEventLog>
+
         @Query("SELECT * FROM a11y_event_log ORDER BY ctime DESC ")
         fun pagingSource(): PagingSource<Int, A11yEventLog>
 

@@ -277,7 +277,8 @@ class SubscriptionEditor(subscription: RawSubscription) {
         group: RawSubscription.RawGlobalGroup,
     ): RawSubscription.RawGlobalGroup {
         if (existingGroups.none { it.key == group.key }) return group
-        return group.copy(key = existingGroups.maxOf { it.key } + 1)
+        val newKey = allocateKey(existingGroups.mapTo(mutableSetOf()) { it.key })
+        return group.copy(key = newKey)
     }
 }
 

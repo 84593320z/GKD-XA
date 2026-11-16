@@ -84,23 +84,21 @@ data class AiProviderDraft(
 
     /** 以 [base] 为底写回草稿：保留 id 与模型列表，只有配置字段被覆盖。 */
     fun toProvider(base: AiConfig): AiConfig {
-        val kept = base.headers.filter { draftHeader ->
-            headers.none { it.name.trim() == draftHeader.name }
-        }
         return base.copy(
             name = name.trim(),
             protocol = protocol,
             endpointMode = if (isAnthropic) AiEndpointMode.CHAT else endpointMode,
             apiUrl = apiUrl.trim().trimEnd('/'),
             apiKey = apiKey.trim(),
-            model = model.trim(),
+            // The model tab owns model and models; merge against its latest state.
+            model = base.model,
             anthropicVersion = anthropicVersion.trim().ifBlank { AiConfig.DEFAULT_ANTHROPIC_VERSION },
             systemPrompt = systemPrompt.trim(),
             enabled = enabled,
             temperature = temperature.toFloat(),
             topP = topP.toFloat(),
             maxTokens = maxTokens.toInt(),
-            headers = kept + headers
+            headers = headers
                 .filter { it.name.isNotBlank() }
                 .map { AiHeader(it.name.trim(), it.value.trim()) },
         )

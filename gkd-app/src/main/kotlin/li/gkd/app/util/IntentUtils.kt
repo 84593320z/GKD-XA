@@ -10,6 +10,8 @@ import android.provider.Settings
 import androidx.core.net.toUri
 import li.gkd.app.META
 import li.gkd.app.app
+import li.gkd.app.appRuntimeReady
+import li.gkd.app.priv.CrashRecovery
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.platform.lifecycle.MainActivityVisibility
 import li.songe.codeorigin.CallSite
@@ -67,6 +69,7 @@ object IntentUtils {
         clazz: KClass<T>,
         @CallSite loc: String = "",
     ) {
+        if (!appRuntimeReady.isCompleted || CrashRecovery.isRecoveryBlocked) return
         if (!PermissionStates.notification.checkOrToast(loc = loc)) return
         if (!PermissionStates.foregroundServiceSpecialUse.checkOrToast(loc = loc)) return
         val intent = Intent(app, clazz.java)

@@ -43,8 +43,13 @@ class UpdateChannelMetadataTest {
             val (version, changelog) = readChannel(name)
             val tag = "v${version.versionName}"
 
-            assertTrue("$name.json fileSize 不像真实 APK: ${version.fileSize}",
-                version.fileSize > 1_000_000L)
+            // 0 explicitly means not built yet; the tag pipeline fills the exact artifact values.
+            assertTrue("$name.json fileSize 无效: ${version.fileSize}",
+                version.fileSize == 0L || version.fileSize > 1_000_000L)
+            version.sha256?.let { digest ->
+                assertTrue("$name.json sha256 格式无效", digest.matches(Regex("[a-f0-9]{64}")))
+                assertTrue("$name.json 有哈希时必须有真实文件大小", version.fileSize > 1_000_000L)
+            }
 
             assertTrue("$name.json downloadUrl 与 versionName 不是同一个 tag",
                 version.downloadUrl.contains("/releases/download/$tag/"))

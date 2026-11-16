@@ -16,7 +16,6 @@ import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.util.LogUtils
 import li.gkd.app.util.ScreenUtils
 import li.gkd.app.snapshot.SnapshotCapture
-import li.gkd.app.data.subscription.SubscriptionResult
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.util.UpdateTimeOption
 import li.gkd.app.util.launchLogged
@@ -31,9 +30,7 @@ fun onA11yFeatEvent(event: AccessibilityEvent) = event.run {
     if (event.eventType == STATE_CHANGED) {
         watchCaptureScreenshot()
     }
-    if (event.packageName == launcherAppId) {
-        watchAutoUpdateSubs()
-    }
+    autoSubscriptionRefresh.onEvent(event.packageName, launcherAppId)
 }
 
 private var tempEventSelector = "" to (null as Selector?)
@@ -96,28 +93,13 @@ private fun watchCaptureScreenshot() {
     }
 }
 
-private var lastUpdateSubsTime = 0L
-private var autoRefreshPending = false
-private fun watchAutoUpdateSubs() {
-    val interval = storeFlow.value.updateSubsInterval
-    if (interval <= 0 || autoRefreshPending) return
-    val currentTime = System.currentTimeMillis()
-    if (
-        currentTime - lastUpdateSubsTime <=
-        interval.coerceAtLeast(UpdateTimeOption.Everyday.value)
-    ) return
-    autoRefreshPending = true
-    appScope.launchLogged {
-        try {
-            val result = SubscriptionRepository.refresh()
-            if (result !is SubscriptionResult.Busy) {
-                lastUpdateSubsTime = currentTime
-            }
-        } finally {
-            autoRefreshPending = false
-        }
-    }
-}
+private val autoSubscriptionRefresh = AutoSubscriptionRefresh(
+    interval = { storeFlow.value.updateSubsInterval },
+    minimumInterval = UpdateTimeOption.Everyday.value,
+    now = ::ruleNow,
+    launch = { block -> appScope.launchLogged { block() } },
+    refresh = { SubscriptionRepository.refresh() },
+)
 
 private fun initRuleChangedLog() {
     appScope.launch(Dispatchers.Default) {
@@ -136,7 +118,7 @@ private fun createVolumeReceiver() = object : BroadcastReceiver() {
     var lastVolumeTriggerTime = -1L
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action == volumeChangedAction) {
-            val t = System.currentTimeMillis()
+            val t = ruleNow()
             if (t - lastVolumeTriggerTime > 3000 && !ScreenUtils.isScreenLock()) {
                 lastVolumeTriggerTime = t
                 appScope.launchLogged {
@@ -185,7 +167,7 @@ private val screenStateReceiver = object : BroadcastReceiver() {
             else -> isInteractive
         }
         if (isInteractive) {
-            val t = System.currentTimeMillis()
+            val t = ruleNow()
             if (t - appChangeTime > 500) { // 37.872(a11y) -> 38.228(onReceive)
                 A11yRuntime.onScreenForcedActive()
             }

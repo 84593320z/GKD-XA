@@ -3,6 +3,7 @@ package li.gkd.app.service
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.view.Display
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import li.gkd.app.appRuntimeReady
+import li.gkd.app.priv.CrashRecovery
 import li.gkd.app.text.UiStrings
 import li.gkd.app.a11y.A11yCommonImpl
 import li.gkd.app.a11y.A11yRuleEngine
@@ -77,13 +80,16 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     override val ruleEngine by lazy { A11yRuleEngine(this) }
 
     override fun onInterrupt() {}
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) = ruleEngine.onA11yEvent(event)
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (!connected || destroyed || CrashRecovery.isRecoveryBlocked) return
+        ruleEngine.onA11yEvent(event)
+    }
 
-    private val startTime = System.currentTimeMillis()
+    private val startTime = SystemClock.elapsedRealtime()
     override var justStarted: Boolean = true
         get() {
             if (field) {
-                field = System.currentTimeMillis() - startTime < 3_000
+                field = SystemClock.elapsedRealtime() - startTime < 3_000
             }
             return field
         }
@@ -100,6 +106,8 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
 
     private var destroyed = false
     private var connected = false
+    private var systemConnected = false
+    private var runtimeInitialized = false
 
     val wm by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
 
@@ -176,11 +184,31 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
 
     override fun onCreate() {
         super.onCreate()
-        lifecycleHooks.dispatchCreated()
+        scope.launch {
+            appRuntimeReady.await()
+            if (destroyed) return@launch
+            if (CrashRecovery.isRecoveryBlocked) {
+                disableSelf()
+                return@launch
+            }
+            runtimeInitialized = true
+            lifecycleHooks.dispatchCreated()
+            connectRuntimeIfReady()
+        }
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        systemConnected = true
+        connectRuntimeIfReady()
+    }
+
+    private fun connectRuntimeIfReady() {
+        if (!runtimeInitialized || !systemConnected || connected || destroyed) return
+        if (CrashRecovery.isRecoveryBlocked) {
+            disableSelf()
+            return
+        }
         LogUtils.d("onA11yConnected -> ${this::class.simpleName}")
         instance = this
         attachKeepAliveOverlay()
@@ -192,7 +220,12 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     }
 
     override fun onDestroy() {
-        lifecycleHooks.dispatchDestroyed()
+        destroyed = true
+        scope.cancel()
+        if (runtimeInitialized) {
+            lifecycleHooks.dispatchDestroyed()
+            runtimeInitialized = false
+        }
         super.onDestroy()
     }
 

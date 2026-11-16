@@ -20,7 +20,6 @@ import li.gkd.db.ActionLog
 import li.gkd.app.data.ActionResult
 import li.gkd.db.ActivityLog
 import li.gkd.app.data.AttrInfo
-import li.gkd.app.data.ResetMatchType
 import li.gkd.app.data.ResolvedRule
 import li.gkd.app.data.RuleStatus
 import li.gkd.app.data.insert
@@ -69,7 +68,10 @@ data class TopActivity(
 val activityRuleFlow: StateFlow<ActivityRule>
     get() = A11yState.activityRuleFlow
 
-val topActivityFlow = activityRuleFlow.map { it.topActivity }.distinctUntilChanged()
+// Trigger-history access must not initialize the storage-backed activity state.
+val topActivityFlow by lazy {
+    activityRuleFlow.map { it.topActivity }.distinctUntilChanged()
+}
 val currentTopActivity: TopActivity
     get() = activityRuleFlow.value.topActivity
 
@@ -170,7 +172,8 @@ object A11yState {
         scene: ActivityScene = ActivityScene.A11y,
         @CallSite loc: String = "",
     ): Unit = synchronized(lock) {
-        val t = System.currentTimeMillis()
+        val t = ruleNow()
+        val wallTime = System.currentTimeMillis()
         if (scene == ActivityScene.TaskStack) {
             updateTopTaskAppId(appId)
         }
@@ -204,7 +207,7 @@ object A11yState {
             ActivityLog(
                 appId = appId,
                 activityId = activityId,
-                ctime = t,
+                ctime = wallTime,
             )
         )
         if (tempActivityLogList.size >= 16 || appId == META.appId) {
@@ -229,7 +232,7 @@ object A11yState {
                 val oldAppId = lastAppId
                 lastAppId = appId
                 appScope.launchLogged {
-                    Db.appLastVisitDao.insert(oldAppId, appId, t)
+                    Db.appLastVisitDao.insert(oldAppId, appId, wallTime)
                 }
                 appChangeTime = t
                 ruleSummary.globalRules.forEach { it.resetState(t) }
@@ -237,21 +240,11 @@ object A11yState {
                 newActivityRule.appRules.forEach { it.resetState(t) }
             } else {
                 newActivityRule.currentRules.forEach { r ->
-                    when (r.resetMatchType) {
-                        ResetMatchType.App -> {
-                            if (r.isFirstMatchApp) {
-                                r.resetState(t)
-                            }
-                        }
-
-                        ResetMatchType.Activity -> r.resetState(t)
-                        ResetMatchType.Match -> {
-                            // is new rule
-                            if (!oldActivityRule.currentRules.contains(r)) {
-                                r.resetState(t)
-                            }
-                        }
-                    }
+                    r.resetOnActivityChange(
+                        t = t,
+                        appChangedAt = appChangeTime,
+                        wasMatching = oldActivityRule.currentRules.contains(r),
+                    )
                 }
             }
             activityRuleFlow.value = newActivityRule

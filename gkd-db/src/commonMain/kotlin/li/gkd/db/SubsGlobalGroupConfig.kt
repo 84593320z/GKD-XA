@@ -33,6 +33,9 @@ data class SubsGlobalGroupConfig(
         @Query("SELECT * FROM subs_global_group_config")
         suspend fun queryAll(): List<SubsGlobalGroupConfig>
 
+        @Query("SELECT subs_id, group_key, enable, CASE WHEN length(`exclude`) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE `exclude` END AS `exclude` FROM subs_global_group_config ORDER BY subs_id, group_key LIMIT min(max(:limit, 0), 50)")
+        suspend fun queryForDiagnostics(limit: Int): List<SubsGlobalGroupConfig>
+
         @Query("SELECT * FROM subs_global_group_config WHERE subs_id=:subsId")
         fun queryBySubsId(subsId: Long): Flow<List<SubsGlobalGroupConfig>>
 

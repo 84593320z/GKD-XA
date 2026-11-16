@@ -1,6 +1,9 @@
 package li.gkd.app.service
 
+import android.os.SystemClock
 import androidx.lifecycle.lifecycleScope
+import li.gkd.app.appRuntimeReady
+import li.gkd.app.priv.CrashRecovery
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -121,21 +124,25 @@ class StatusService : LifecycleHookService() {
             field = MutableStateFlow(false)
 
         val needRestart
-            get() = storeFlow.value.enableStatusService
+            get() = appRuntimeReady.isCompleted
+                    && !CrashRecovery.isRecoveryBlocked
+                    && storeFlow.value.enableStatusService
                     && !isRunning.value
                     && PermissionStates.notification.updateAndGet()
                     && PermissionStates.foregroundServiceSpecialUse.updateAndGet()
 
         fun start() = IntentUtils.startForegroundServiceByClass(StatusService::class)
         fun stop() = IntentUtils.stopServiceByClass(StatusService::class)
-        private var lastAutoStart = 0L
+        private var lastAutoStart: Long? = null
         fun autoStart() {
-            if (System.currentTimeMillis() - lastAutoStart < 1000) return
+            if (!appRuntimeReady.isCompleted || CrashRecovery.isRecoveryBlocked) return
+            val now = SystemClock.elapsedRealtime()
+            if (lastAutoStart?.let { now - it < 1000 } == true) return
             // 重启自动打开通知栏状态服务
             // 需要已有服务或前台才能自主启动，否则报错 startForegroundService() not allowed due to mAllowStartForeground false
             if (needRestart) {
                 start()
-                lastAutoStart = System.currentTimeMillis()
+                lastAutoStart = now
             }
         }
     }

@@ -34,6 +34,9 @@ data class SubsAppConfig(
         @Query("SELECT * FROM subs_app_config")
         suspend fun queryAll(): List<SubsAppConfig>
 
+        @Query("SELECT enable, subs_id, CASE WHEN length(app_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE app_id END AS app_id FROM subs_app_config ORDER BY subs_id, app_id LIMIT min(max(:limit, 0), 50)")
+        suspend fun queryForDiagnostics(limit: Int): List<SubsAppConfig>
+
         @Update
         suspend fun update(vararg objects: SubsAppConfig): Int
 

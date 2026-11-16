@@ -36,6 +36,7 @@ class PrivilegeContext private constructor(
     private val userServiceConnection: PrivilegeUserServiceConnection,
 ) {
     val serverLifecycleBinder = serverInfo.lifecycleBinder
+    val installCallbackBinder: IBinder get() = userServiceConnection.binder
     private val packageManager = CompatPackageManager()
     private val userManager = CompatUserManager()
     private val activityManager = CompatActivityManager()

@@ -9,6 +9,8 @@ import java.security.SecureRandom
 import li.gkd.app.text.UiStrings
 import li.gkd.app.app
 import li.gkd.app.appScope
+import li.gkd.app.appRuntimeReady
+import li.gkd.app.priv.CrashRecovery
 import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
 import li.gkd.app.util.LogUtils
@@ -22,6 +24,10 @@ import li.gkd.app.util.ToastUtils.toast
 class ExposeService : Service() {
     override fun onBind(intent: Intent?): Binder? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!appRuntimeReady.isCompleted || CrashRecovery.isRecoveryBlocked) {
+            stopSelf(startId)
+            return START_NOT_STICKY
+        }
         appScope.launchUi {
             try {
                 handleIntent(intent)
@@ -60,6 +66,10 @@ class ExposeService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        if (!appRuntimeReady.isCompleted || CrashRecovery.isRecoveryBlocked) {
+            stopSelf()
+            return
+        }
         NotificationCatalog.expose().startForeground()
     }
 
@@ -70,7 +80,13 @@ class ExposeService : Service() {
             val commandText = template
                 .replace("{service}", ExposeService::class.componentName.flattenToShortString())
                 .replace("{token}", ExternalCallTokens.token)
-            FolderUtils.shFolder.resolve("expose.sh").writeText(commandText)
+            FolderUtils.shFolder.resolve("expose.sh").apply {
+                writeText(commandText)
+                setReadable(false, false)
+                setWritable(false, false)
+                setReadable(true, true)
+                setWritable(true, true)
+            }
         }
 
         fun exposeIntent(expose: Int, data: String? = null): Intent {

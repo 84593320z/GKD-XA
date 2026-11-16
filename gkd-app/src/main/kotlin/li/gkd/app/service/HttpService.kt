@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.hooks.CallFailed
@@ -16,8 +16,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.httpMethod
-import io.ktor.server.request.receive
-import io.ktor.server.request.receiveText
+import io.ktor.server.request.receiveChannel
 import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -28,7 +27,9 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.flow.combine
+import li.gkd.app.util.readBoundedBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,7 +50,7 @@ import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.db.LOCAL_HTTP_SUBS_ID
 import li.gkd.app.util.LogUtils
-import li.gkd.app.util.SERVER_SCRIPT_URL
+import li.gkd.app.app
 import li.gkd.app.snapshot.SnapshotCapture
 import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.data.subscription.SubscriptionRepository
@@ -73,6 +74,8 @@ class HttpService : LifecycleHookService() {
         )
         useStopServiceReceiver()
         onDestroyed {
+            sessionFlow.value = null
+            allowLanFlow.value = false
             if (storeFlow.value.autoClearMemorySubs) {
                 appScope.launchLogged(Dispatchers.IO) {
                     SubscriptionRepository.delete(LOCAL_HTTP_SUBS_ID)
@@ -83,14 +86,20 @@ class HttpService : LifecycleHookService() {
             NotificationCatalog.http(httpServerPortFlow.value).startForeground()
             var startedOnce = false
             lifecycleScope.launchLogged(Dispatchers.IO) {
-                httpServerPortFlow.collectLatest { port ->
+                combine(httpServerPortFlow, allowLanFlow) { port, lan -> port to lan }
+                    .collectLatest { (port, lan) ->
                     if (!NetworkUtils.isPortAvailable(port)) {
                         toast(UiStrings.http_port_occupied(port))
                         stopSelf()
                         return@collectLatest
                     }
+                    val localNetworkIps = if (lan) NetworkUtils.getIpAddressInLocalNetwork() else emptyList()
+                    val session = DebugHttpSession(
+                        port, setOf("127.0.0.1", "localhost") + localNetworkIps,
+                        nanoTime = android.os.SystemClock::elapsedRealtimeNanos,
+                    )
                     val server = try {
-                        createServer(port).apply { start() }
+                        createServer(port, if (lan) "0.0.0.0" else "127.0.0.1", session).apply { start() }
                     } catch (e: Exception) {
                         toast(UiStrings.http_service_start_failed(e.stackTraceToString()))
                         LogUtils.d("HTTP服务启动失败", e)
@@ -98,7 +107,7 @@ class HttpService : LifecycleHookService() {
                         return@collectLatest
                     }
                     httpServerFlow.value = server
-                    val localNetworkIps = NetworkUtils.getIpAddressInLocalNetwork()
+                    sessionFlow.value = session
                     localNetworkIpsFlow.value = localNetworkIps
                     NotificationCatalog.http(port, localNetworkIps).startForeground()
                     if (startedOnce) {
@@ -106,8 +115,10 @@ class HttpService : LifecycleHookService() {
                     }
                     startedOnce = true
                     try {
-                        awaitCancellation()
+                        delay(30 * 60_000L)
+                        stopSelf()
                     } finally {
+                        sessionFlow.compareAndSet(session, null)
                         httpServerFlow.compareAndSet(server, null)
                         server.stop()
                     }
@@ -117,6 +128,15 @@ class HttpService : LifecycleHookService() {
     }
 
     companion object {
+        private val sessionFlow = MutableStateFlow<DebugHttpSession?>(null)
+        val allowLanFlow = MutableStateFlow(false)
+        fun sessionUrl(host: String, port: Int): String? {
+            val session = sessionFlow.value ?: return null
+            if (session.port != port) return null
+            val authority = if (host.contains(':')) "[$host]:$port" else "$host:$port"
+            return "http://$authority/#token=" + session.token
+        }
+        fun sessionToken(): String? = sessionFlow.value?.token
         val httpServerFlow: StateFlow<ServerType?>
             field = MutableStateFlow(null)
         val isRunning: StateFlow<Boolean>
@@ -165,16 +185,24 @@ private val httpSubsItem = SubsItem(
     enableUpdate = false,
 )
 
-private fun createServer(port: Int) = embeddedServer(CIO, port) {
-    install(getKtorCorsPlugin())
+private fun createServer(port: Int, host: String, session: DebugHttpSession) = embeddedServer(CIO, port, host) {
+    install(debugHttpSecurity(session))
     install(getKtorErrorPlugin())
     install(ContentNegotiation) { json(keepNullJson) }
+    val consoleHtml = app.assets.open("debug-console.html").bufferedReader().use { it.readText() }
     routing {
-        get("/") { call.respondText(ContentType.Text.Html) { "<script type='module' src='$SERVER_SCRIPT_URL'></script>" } }
+        get("/") {
+            call.response.header("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+            call.respondText(consoleHtml, ContentType.Text.Html)
+        }
+        post("/session") {
+            call.response.header(HttpHeaders.SetCookie, "${DebugHttpSession.COOKIE}=${session.token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=1800")
+            call.respond(HttpStatusCode.NoContent)
+        }
         route("/api") {
             post("/getServerInfo") { call.respond(ServerInfo()) }
             post("/getSnapshot") {
-                val data = call.receive<ReqId>()
+                val data = keepNullJson.decodeFromString<ReqId>(call.readDebugBody())
                 val fp = SnapshotRepository.snapshotFile(data.id)
                 if (!fp.exists()) {
                     throw RpcError(UiStrings.snapshot_not_found)
@@ -182,7 +210,7 @@ private fun createServer(port: Int) = embeddedServer(CIO, port) {
                 call.respondFile(fp)
             }
             post("/getScreenshot") {
-                val data = call.receive<ReqId>()
+                val data = keepNullJson.decodeFromString<ReqId>(call.readDebugBody())
                 val fp = SnapshotRepository.screenshotFile(data.id)
                 if (!fp.exists()) {
                     throw RpcError(UiStrings.screenshot_not_found)
@@ -203,7 +231,7 @@ private fun createServer(port: Int) = embeddedServer(CIO, port) {
                 call.respond(list)
             }
             post("/deleteSnapshot") {
-                val data = call.receive<ReqId>()
+                val data = keepNullJson.decodeFromString<ReqId>(call.readDebugBody())
                 val allSnapshots = SnapshotRepository.snapshots().first()
                 val snapshot = allSnapshots.find { it.id == data.id }
                 if (snapshot != null) {
@@ -215,7 +243,7 @@ private fun createServer(port: Int) = embeddedServer(CIO, port) {
             }
             post("/updateSubscription") {
                 val subscription =
-                    RawSubscription.parse(call.receiveText(), json5 = false)
+                    RawSubscription.parse(call.readDebugBody(), json5 = false)
                         .copy(
                             id = LOCAL_HTTP_SUBS_ID,
                             name = UiStrings.subscription_memory,
@@ -226,31 +254,17 @@ private fun createServer(port: Int) = embeddedServer(CIO, port) {
                 call.respond(RpcOk())
             }
             post("/execSelector") {
-                val gkdAction = call.receive<GkdAction>()
+                val gkdAction = keepNullJson.decodeFromString<GkdAction>(call.readDebugBody())
                 call.respond(A11yRuntime.execAction(gkdAction))
             }
         }
     }
 }
 
-private fun getKtorCorsPlugin() = createApplicationPlugin(name = "KtorCorsPlugin") {
-    onCall { call ->
-        mapOf(
-            HttpHeaders.AccessControlAllowOrigin to "*",
-            HttpHeaders.AccessControlAllowMethods to "*",
-            HttpHeaders.AccessControlAllowHeaders to "*",
-            HttpHeaders.AccessControlExposeHeaders to "*",
-            "Access-Control-Allow-Private-Network" to "true",
-        ).forEach { (k, v) ->
-            if (!call.response.headers.contains(k)) {
-                call.response.header(k, v)
-            }
-        }
-        if (call.request.httpMethod == HttpMethod.Options) {
-            call.respond("all-cors-ok")
-        }
+private suspend fun io.ktor.server.application.ApplicationCall.readDebugBody(): String =
+    withTimeout(15_000) {
+        receiveChannel().readBoundedBytes(DebugHttpSession.MAX_REQUEST_BYTES).toString(Charsets.UTF_8)
     }
-}
 
 private fun getKtorErrorPlugin() = createApplicationPlugin(name = "KtorErrorPlugin") {
     onCall { call ->

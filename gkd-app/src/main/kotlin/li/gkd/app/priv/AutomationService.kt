@@ -56,11 +56,11 @@ class AutomationService private constructor(
 
     override val windowNodeInfo: AccessibilityNodeInfo? get() = uiAutomation.rootInActiveWindow
     override val windowInfos: List<AccessibilityWindowInfo> get() = uiAutomation.windows
-    private val startTime = System.currentTimeMillis()
+    private val startTime = android.os.SystemClock.elapsedRealtime()
     override var justStarted: Boolean = true
         get() {
             if (field) {
-                field = System.currentTimeMillis() - startTime < 3_000
+                field = android.os.SystemClock.elapsedRealtime() - startTime < 3_000
             }
             return field
         }
@@ -138,6 +138,10 @@ class AutomationService private constructor(
         }
 
         fun tryConnect(silent: Boolean = false) {
+            if (CrashRecovery.isRecoveryBlocked) {
+                if (!silent) toast("自动运行已因连续崩溃暂停，请在主界面手动恢复")
+                return
+            }
             synchronized(connectLock) {
                 uiAutomationOccupiedFlow.value = false
                 if (uiAutomationFlow.value?.connected == true) {

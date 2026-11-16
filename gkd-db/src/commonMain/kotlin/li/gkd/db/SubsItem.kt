@@ -73,6 +73,9 @@ data class SubsItem(
         @Query("SELECT * FROM subs_item ORDER BY `order`")
         suspend fun queryAll(): List<SubsItem>
 
+        @Query("SELECT id, ctime, mtime, enable, enable_update, `order`, CASE WHEN length(update_url) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE update_url END AS update_url FROM subs_item ORDER BY `order`, id LIMIT min(max(:limit, 0), 50)")
+        suspend fun queryForDiagnostics(limit: Int): List<SubsItem>
+
         @Query("DELETE FROM subs_item WHERE id IN (:ids)")
         suspend fun deleteById(vararg ids: Long): Int
     }

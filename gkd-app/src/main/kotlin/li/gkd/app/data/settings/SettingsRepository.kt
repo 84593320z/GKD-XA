@@ -16,10 +16,15 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.util.AppListString
 import li.gkd.app.util.LogUtils
 import li.gkd.app.util.json
+import li.gkd.app.util.isValidAppId
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+
+private fun decodeBackupAppList(text: String): Set<String> = text.lineSequence()
+    .map(String::trim).filter { it.isNotEmpty() && !it.startsWith("#") }
+    .onEach { require(it.isValidAppId()) { "Invalid application id in backup" } }.toSet()
 
 private class PreparedValueRestore(
     val begin: () -> Unit,
@@ -33,6 +38,8 @@ private class PersistedValue<T>(
     private val decode: (String?) -> T,
     private val encode: (T) -> String,
     scope: CoroutineScope,
+    private val stateLock: Any,
+    private val decodeRestore: (String) -> T = { decode(it) },
 ) {
     private data class WriteRequest<T>(
         val version: Long,
@@ -90,11 +97,12 @@ private class PersistedValue<T>(
     fun encodeCurrent(): String = encode(state.value)
 
     fun prepareRestore(text: String): PreparedValueRestore {
-        val restored = decode(text)
+        // Restore validation must never invoke startup recovery on the live file.
+        val restored = decodeRestore(text)
         var started = false
         return PreparedValueRestore(
             begin = {
-                synchronized(this) {
+                synchronized(stateLock) {
                     check(rollbackState == null) { "设置恢复已在进行: $filename" }
                     rollbackState = RollbackState(mutableState.value)
                     started = true
@@ -103,7 +111,7 @@ private class PersistedValue<T>(
                 }
             },
             finish = { committed ->
-                synchronized(this) {
+                synchronized(stateLock) {
                     if (started) {
                         val rollback = checkNotNull(rollbackState).value
                         rollbackState = null
@@ -123,8 +131,7 @@ private class PersistedValue<T>(
         update { value }
     }
 
-    @Synchronized
-    fun update(transform: (T) -> T) {
+    fun update(transform: (T) -> T) = synchronized(stateLock) {
         val value = transform(mutableState.value)
         // Keep later commands on both outcomes, without holding a lock across disk I/O.
         // Like MutableStateFlow.update, transforms must be pure and may run more than once.
@@ -134,7 +141,7 @@ private class PersistedValue<T>(
     }
 
     suspend fun awaitPersistence() {
-        val targetVersion = synchronized(this) { currentVersion }
+        val targetVersion = synchronized(stateLock) { currentVersion }
         val result = writeResult.first { it.version >= targetVersion }
         result.error?.let { throw IOException(UiStrings.settings_write_failed(filename), it) }
     }
@@ -170,6 +177,7 @@ class SettingsRepository(
     defaultBlockMatchAppList: () -> Set<String>,
 ) {
     private val restoreMutex = Mutex()
+    private val stateLock = Any()
 
     private val settingsValue = PersistedValue(
         filename = "store.json",
@@ -185,35 +193,49 @@ class SettingsRepository(
             } ?: defaultSettings()
         },
         encode = { json.encodeToString(it) },
+        decodeRestore = { json.decodeFromString<SettingsStore>(it).migrateAiProviders() },
         scope = scope,
+        stateLock = stateLock,
     )
     private val actionCountValue = PersistedValue(
         filename = "action_count.txt",
         file = storeFolder.resolve("action_count.txt"),
         decode = { it?.toLongOrNull() ?: 0L },
         encode = { it.toString() },
+        decodeRestore = { text ->
+            requireNotNull(text.trim().toLongOrNull()?.takeIf { it >= 0 }) {
+                "Invalid action_count.txt in backup"
+            }
+        },
         scope = scope,
+        stateLock = stateLock,
     )
     private val blockMatchAppListValue = PersistedValue(
         filename = "block_match_app_list.txt",
         file = storeFolder.resolve("block_match_app_list.txt"),
         decode = { it?.let(AppListString::decode) ?: defaultBlockMatchAppList() },
         encode = AppListString::encode,
+        decodeRestore = ::decodeBackupAppList,
         scope = scope,
+        stateLock = stateLock,
     )
     private val blockA11yAppListValue = PersistedValue(
         filename = "block_a11y_app_list.txt",
         file = storeFolder.resolve("block_a11y_app_list.txt"),
         decode = { it?.let(AppListString::decode) ?: emptySet() },
         encode = AppListString::encode,
+        decodeRestore = ::decodeBackupAppList,
         scope = scope,
+        stateLock = stateLock,
     )
     private val a11yScopeAppListValue = PersistedValue(
         filename = "a11y_scope_app_list.txt",
         file = storeFolder.resolve("a11y_scope_app_list.txt"),
         decode = { it?.let(AppListString::decode) ?: setOf("com.tencent.mm") },
         encode = AppListString::encode,
+        decodeRestore = ::decodeBackupAppList,
         scope = scope,
+        stateLock = stateLock,
     )
 
     val settings: StateFlow<SettingsStore> = settingsValue.state
@@ -254,13 +276,13 @@ class SettingsRepository(
 
     fun replaceA11yScopeAppList(value: Set<String>) = a11yScopeAppListValue.replace(value)
 
-    fun exportBackupEntries(): Map<String, String> = mapOf(
+    fun exportBackupEntries(): Map<String, String> = synchronized(stateLock) { mapOf(
         settingsValue.filename to settingsValue.encodeCurrent(),
         actionCountValue.filename to actionCountValue.encodeCurrent(),
         blockMatchAppListValue.filename to blockMatchAppListValue.encodeCurrent(),
         blockA11yAppListValue.filename to blockA11yAppListValue.encodeCurrent(),
         a11yScopeAppListValue.filename to a11yScopeAppListValue.encodeCurrent(),
-    )
+    ) }
 
     /** Persists imported values before [block]; on failure, rolls back while retaining later commands. */
     suspend fun <T> withBackupRestore(entries: Map<String, String>, block: suspend () -> T): T =

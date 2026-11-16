@@ -111,6 +111,8 @@ class SnapshotRepositoryTest {
 
         override fun query(): Flow<List<Snapshot>> = flowOf(emptyList())
 
+        override suspend fun queryForDiagnostics(limit: Int, since: Long, until: Long, offset: Int): List<Snapshot> = emptyList()
+
         override suspend fun deleteGithubAssetId(id: Long) = Unit
 
         override suspend fun markUploadedIfPending(id: Long, assetId: Int): Int {

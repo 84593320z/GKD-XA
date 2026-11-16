@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -91,8 +92,9 @@ fun AiProviderModelsTab(provider: AiConfig) {
                         enabled = !fetching,
                         startAction = { AiRowIcon(imageVector = GkIcons.ArrowDownward) },
                         onClick = throttle {
-                            if (!provider.usable) {
-                                toast("请先在「配置」页填写地址、Key 并保存")
+                            val error = AiRuleGenerator.validateAiConfig(provider, requireModel = false)
+                            if (error != null && error != AiRuleGenerator.PUBLIC_HTTP_HINT) {
+                                toast(error)
                                 return@throttle
                             }
                             fetching = true
@@ -100,12 +102,13 @@ fun AiProviderModelsTab(provider: AiConfig) {
                             scope.launchLogged {
                                 AiRuleGenerator.fetchModels(provider)
                                     .onSuccess { remote ->
-                                        val (merged, added) = mergeAiModels(provider.models, remote)
-                                        saveModels(merged)
+                                        AiProviders.mutate(provider.id) { latest ->
+                                            latest.copy(models = mergeAiModels(latest.models, remote).first)
+                                        }
                                         message = if (remote.isEmpty()) {
                                             "接口未返回模型列表"
                                         } else {
-                                            "拉取成功：远端 ${remote.size} 个，新增 $added，共 ${merged.size} 个"
+                                            "拉取成功：已合并远端 ${remote.size} 个模型"
                                         }
                                     }.onFailure { e ->
                                         message = "拉取失败：${AiRuleGenerator.analyzeConnectionError(e)}（${e.message}）"
@@ -181,12 +184,15 @@ fun AiProviderModelsTab(provider: AiConfig) {
                 }
             } else {
                 val visible = if (selectionMode) provider.models else filtered
-                item(key = "models") {
-                    AiSection(title = listTitle) {
-                        visible.forEachIndexed { index, model ->
-                            if (index > 0) {
-                                AiRowDivider(hasLeading = false)
-                            }
+                item(key = "models_title") {
+                    Text(
+                        text = listTitle,
+                        style = MiuixTheme.textStyles.footnote1,
+                        modifier = Modifier.padding(start = 28.dp, top = 12.dp, bottom = 2.dp),
+                    )
+                }
+                items(visible, key = { "model:${it.modelId}" }) { model ->
+                    PreferenceGroup {
                             ModelRow(
                                 provider = provider,
                                 model = model,
@@ -205,7 +211,6 @@ fun AiProviderModelsTab(provider: AiConfig) {
                                 },
                                 onSetCurrent = { setModelId(model.modelId) },
                             )
-                        }
                     }
                 }
             }

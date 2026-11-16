@@ -1,5 +1,7 @@
 package li.gkd.app
 
+import android.app.Activity
+import android.app.AlertDialog
 import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.app.Application
@@ -17,6 +19,8 @@ import android.hardware.display.DisplayManager
 import android.hardware.input.InputManager
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
+import android.os.Bundle
+import android.os.SystemClock
 import android.os.PowerManager
 import android.os.Process.killProcess
 import android.os.Process.myPid
@@ -29,7 +33,13 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import li.gkd.app.a11y.initA11yFeat
 import li.gkd.app.data.CrashData
@@ -41,6 +51,8 @@ import li.gkd.app.platform.lifecycle.MainActivityVisibility
 import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
 import li.gkd.app.platform.overlay.KeepAliveOverlayCoordinator
 import li.gkd.app.priv.PrivilegeOwnerLifecycle
+import li.gkd.app.priv.CrashRecovery
+import li.gkd.app.priv.CrashHandlerGate
 import li.gkd.app.priv.initPrivilege
 import li.gkd.app.priv.requestPrivilegeRecovery
 import li.gkd.app.service.ExposeService
@@ -58,10 +70,15 @@ import li.gkd.app.util.ToastUtils.toast
 import li.gkd.db.Db
 import li.gkd.db.initialize
 import org.lsposed.hiddenapibypass.HiddenApiBypass
-import kotlin.time.Duration.Companion.milliseconds
 
 
 val appScope by lazy { MainScope() }
+
+/** Services and UI may await this without touching settings or migrated paths first. */
+val appRuntimeReady = CompletableDeferred<Unit>()
+private val startupFailure = MutableStateFlow<Throwable?>(null)
+val appStartupFailure: StateFlow<Throwable?> = startupFailure
+fun retryAppStartup() = app.beginStartup()
 
 private lateinit var innerApp: App
 val app: App
@@ -118,6 +135,8 @@ class App : Application() {
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
+        installCrashHandler()
+        CrashRecovery.initialize()
         if (AndroidTarget.P) {
             HiddenApiBypass.addHiddenApiExemptions("L")
         }
@@ -191,11 +210,11 @@ class App : Application() {
         permission,
     ) == PackageManager.PERMISSION_GRANTED
 
-    val startTime = System.currentTimeMillis()
+    val startTime = SystemClock.elapsedRealtime()
     var justStarted: Boolean = true
         get() {
             if (field) {
-                field = System.currentTimeMillis() - startTime < START_WAIT_TIME
+                field = SystemClock.elapsedRealtime() - startTime < START_WAIT_TIME
             }
             return field
         }
@@ -221,44 +240,108 @@ class App : Application() {
             windowManager.defaultDisplay
         }
 
+    private var startupJob: Job? = null
+    private val crashHandler = CrashHandlerGate()
+
     override fun onCreate() {
         super.onCreate()
-        Db.initialize(this, FolderUtils.dbFolder.resolve("gkd.db").absolutePath)
-        LogUtils.d()
-        installCrashHandler()
-        initializeRuntimeComponents()
+        registerRecoveryPrompt()
+        beginStartup()
+    }
+
+    @Synchronized
+    internal fun beginStartup() {
+        if (appRuntimeReady.isCompleted || startupJob?.isActive == true) return
+        startupFailure.value = null
+        startupJob = appScope.launch(Dispatchers.IO) {
+            try {
+                FolderUtils.initializeStorage()
+                Db.initialize(this@App, FolderUtils.dbFolder.resolve("gkd.db").absolutePath)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                CrashRecovery.saveEmergencyEvidence(Thread.currentThread(), error)
+                startupFailure.value = error
+                return@launch
+            }
+            // Only migration/database preparation is retried in-process. Runtime registration
+            // starts once; an unexpected failure here goes through the crash fuse instead of
+            // registering observers/receivers twice on a retry.
+            withContext(Dispatchers.Main) {
+                initializeRuntimeComponents()
+                appRuntimeReady.complete(Unit)
+            }
+            LogUtils.d("Application runtime initialized")
+        }
     }
 
     private fun installCrashHandler() {
-        Thread.setDefaultUncaughtExceptionHandler { t, e ->
-            toast(e.message ?: e.toString())
-            LogUtils.d("UncaughtExceptionHandler", t, e)
-            val mtime = System.currentTimeMillis()
-            appScope.launchLogged(Dispatchers.IO) {
-                try {
-                    CrashData(
-                        id = mtime,
-                        mtime = mtime,
-                        device = deviceInfoDesc,
-                        androidVersionCode = android.os.Build.VERSION.SDK_INT,
-                        androidVersionName = android.os.Build.VERSION.RELEASE,
-                        versionCode = META.versionCode,
-                        versionName = META.versionName,
-                        name = e::class.java.name,
-                        message = e.message,
-                        thread = t.name,
-                        stackTrace = Log.getStackTraceString(e),
-                    ).save()
-                    delay(1500.milliseconds)
-                    if (MainActivityVisibility.isVisible) {
-                        startLaunchActivity()
-                        PrivilegeOwnerLifecycle.prepareAppRestart()
+        Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+            crashHandler.handle(
+                writeCrash = {
+                    CrashRecovery.recordCrash(thread, error)
+                    runCatching {
+                        if (FolderUtils.isStorageReady) {
+                            val now = System.currentTimeMillis()
+                            CrashData(
+                                id = now,
+                                mtime = now,
+                                device = deviceInfoDesc,
+                                androidVersionCode = android.os.Build.VERSION.SDK_INT,
+                                androidVersionName = android.os.Build.VERSION.RELEASE,
+                                versionCode = META.versionCode,
+                                versionName = META.versionName,
+                                name = error::class.java.name,
+                                message = error.message,
+                                thread = thread.name,
+                                stackTrace = Log.getStackTraceString(error),
+                            ).save()
+                            LogUtils.d("UncaughtExceptionHandler", thread, error)
+                            if (!LogUtils.flush(1_000L)) Log.e("GkdCrash", "Crash log flush timed out")
+                        }
+                    }.onFailure { Log.e("GkdCrash", "Unable to save structured crash", it) }
+                    if (!CrashRecovery.isRecoveryBlocked && MainActivityVisibility.isVisible && appRuntimeReady.isCompleted) {
+                        runCatching {
+                            PrivilegeOwnerLifecycle.prepareAppRestart(passiveTimeoutMillis = 1_000L)
+                            startLaunchActivity()
+                        }.onFailure { Log.e("GkdCrash", "Unable to request app restart", it) }
                     }
-                } finally {
-                    killProcess(myPid())
-                }
-            }
+                },
+                terminate = { killProcess(myPid()) },
+            )
         }
+    }
+
+    private fun registerRecoveryPrompt() {
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            private var prompted = false
+            override fun onActivityResumed(activity: Activity) {
+                if (activity !is MainActivity || prompted || !CrashRecovery.isRecoveryBlocked) return
+                prompted = true
+                AlertDialog.Builder(activity)
+                    .setTitle("自动恢复已暂停")
+                    .setMessage("应用短时间内连续崩溃，已暂停自动重启和特权重连。可以先检查配置或导出日志，再手动恢复。")
+                    .setNegativeButton("保持暂停", null)
+                    .setPositiveButton("恢复自动运行") { _, _ ->
+                        appScope.launch(Dispatchers.IO) {
+                            try {
+                                appRuntimeReady.await()
+                                CrashRecovery.resumeAutomaticRecovery()
+                            } catch (error: Exception) {
+                                CrashRecovery.saveEmergencyEvidence(Thread.currentThread(), error)
+                                toast("恢复失败：" + (error.message ?: "未知错误"))
+                            }
+                        }
+                    }
+                    .show()
+            }
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+            override fun onActivityStarted(activity: Activity) = Unit
+            override fun onActivityPaused(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) { if (activity is MainActivity) prompted = false }
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        })
     }
 
     private fun initializeRuntimeComponents() {

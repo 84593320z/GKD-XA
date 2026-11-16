@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.stateIn
 import li.gkd.app.app
 import li.gkd.app.contentObserver
+import li.gkd.app.domain.rule.OwnedResource
 import li.gkd.app.service.A11yService
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.mapState
@@ -78,7 +79,7 @@ const val MAX_DESCENDANTS_SIZE = 4096
 
 private const val A11Y_NODE_TIME_KEY = "generatedTime"
 fun AccessibilityNodeInfo.setGeneratedTime(): AccessibilityNodeInfo {
-    extras.putLong(A11Y_NODE_TIME_KEY, System.currentTimeMillis())
+    extras.putLong(A11Y_NODE_TIME_KEY, ruleNow())
     return this
 }
 
@@ -88,7 +89,7 @@ fun AccessibilityNodeInfo.isExpired(expiryMillis: Long): Boolean {
         // https://github.com/gkd-kit/gkd/issues/759
         return true
     }
-    return (System.currentTimeMillis() - generatedTime) > expiryMillis
+    return (ruleNow() - generatedTime) > expiryMillis
 }
 
 val selectorTypeModel by lazy { createDefaultSelectorTypeModel() }
@@ -115,15 +116,33 @@ fun AccessibilityEvent?.isUseful(): Boolean {
     return (this != null && packageName != null && className != null && eventType and interestedEvents != 0)
 }
 
-data class A11yEvent(
+class A11yEvent(
     val type: Int,
     val time: Long,
     val appId: String,
     val name: String,
-    val event: AccessibilityEvent,
-) {
-    val safeSource: AccessibilityNodeInfo?
-        get() = event.safeSource
+    event: AccessibilityEvent,
+) : AutoCloseable {
+    @Suppress("DEPRECATION")
+    private val snapshot = OwnedResource(event) { it.recycle() }
+
+    @Suppress("DEPRECATION")
+    suspend fun readSource(): AccessibilityNodeInfo? {
+        val owned = snapshot.take() ?: return null
+        return A11yBlockingCalls.source.run(
+            timeoutMillis = 300,
+            onDiscard = { it.recycleUnused() },
+            onNotStarted = { owned.recycle() },
+        ) {
+            try {
+                owned.safeSource
+            } finally {
+                owned.recycle()
+            }
+        }
+    }
+
+    override fun close() = snapshot.close()
 
     fun sameAs(other: A11yEvent): Boolean {
         if (other === this) return true
@@ -131,15 +150,16 @@ data class A11yEvent(
     }
 }
 
-// AccessibilityEvent 的 clear 方法会在后续时间被 某些系统 调用导致内部数据丢失, 导致异步子线程获取到的数据不一致
+// Clone while the callback still owns the framework event; source is read off-thread.
+@Suppress("DEPRECATION")
 fun AccessibilityEvent.toA11yEvent(): A11yEvent? {
     val appId = packageName ?: return null
     val b = className ?: return null
     return A11yEvent(
         type = eventType,
-        time = System.currentTimeMillis(),
+        time = ruleNow(),
         appId = appId.toString(),
         name = b.toString(),
-        event = this,
+        event = AccessibilityEvent.obtain(this),
     )
 }

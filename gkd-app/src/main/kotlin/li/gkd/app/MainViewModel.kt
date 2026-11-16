@@ -331,8 +331,12 @@ class MainViewModel : BaseViewModel() {
                 return@launchUi
             }
             toast(UiStrings.backup_import_progress)
-            withContext(Dispatchers.IO) { BackupManager.importData(uri) }
-            toast(UiStrings.import_success)
+            val result = withContext(Dispatchers.IO) { BackupManager.importData(uri) }
+            toast(when {
+                result.refreshError != null -> "备份已导入，但刷新失败，请重启应用"
+                result.skippedCount > 0 -> UiStrings.backup_import_skipped_config_count(result.skippedCount)
+                else -> UiStrings.import_success
+            })
         }
     }
 

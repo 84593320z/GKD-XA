@@ -7,13 +7,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,6 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.draw.clipToBounds
+import kotlinx.coroutines.CancellationException
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
@@ -95,7 +98,8 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
     val mainVm = MainViewModel.requireCurrent()
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf(NodesUiState()) }
-    var selectedIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    var selectedIds by remember(route.snapshotId) { mutableStateOf<Set<Int>>(emptySet()) }
+    var includeAllNodes by remember(route.snapshotId) { mutableStateOf(false) }
 
     LaunchedEffect(route.snapshotId) {
         state = withContext(Dispatchers.IO) {
@@ -114,6 +118,8 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                     imageHeight = options.outHeight,
                     loaded = true,
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 NodesUiState(loaded = true, error = e.message ?: e.toString())
             }
@@ -167,12 +173,13 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                 }
                 return@Column
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(route.screenWidth.toFloat() / route.screenHeight)
-                    .background(Color.Black),
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxWidth().weight(1.2f).background(Color.Black),
+                contentAlignment = Alignment.Center,
             ) {
+                val ratio = state.imageWidth.coerceAtLeast(1).toFloat() / state.imageHeight.coerceAtLeast(1)
+                val imageWidth = minOf(maxWidth, maxHeight * ratio)
+                Box(Modifier.size(imageWidth, imageWidth / ratio).clipToBounds()) {
                 AsyncImage(
                     model = SnapshotRepository.screenshotFile(route.snapshotId),
                     contentDescription = null,
@@ -223,6 +230,7 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                     }
                 }
             }
+            }
             Text(
                 text = UiStrings.snapshot_nodes_hint,
                 modifier = Modifier.padding(horizontal = itemHorizontalPadding, vertical = 8.dp),
@@ -251,16 +259,23 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                     onClick = {
                         val ids = selectedIds
                         scope.launch {
-                            AiRuleGenerator.generateRule(route.snapshotId, ids)
+                            if (AiRuleGenerator.generateRule(route.snapshotId, ids, includeAllNodes)) {
+                                mainVm.popPage()
+                            }
                         }
-                        mainVm.popPage()
                     },
                     enabled = selectedIds.isNotEmpty(),
                 ) {
                     Text(text = UiStrings.snapshot_nodes_generate)
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = itemHorizontalPadding),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Checkbox(checked = includeAllNodes, onCheckedChange = { includeAllNodes = it })
+                Text("保留完整节点树", style = MiuixTheme.textStyles.footnote1)
+            }
             LazyColumn(modifier = Modifier.weight(1f)) {
                 items(
                     items = visibleNodes,

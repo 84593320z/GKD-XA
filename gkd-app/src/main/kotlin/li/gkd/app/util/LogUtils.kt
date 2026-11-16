@@ -10,7 +10,8 @@ import li.gkd.app.META
 import li.gkd.app.app
 import li.songe.codeorigin.CallSite
 import java.io.File
-import java.util.concurrent.Executors
+import li.gkd.app.data.backup.SerialLogWriter
+import li.gkd.app.data.backup.DiagnosticFiles
 import kotlin.time.Duration.Companion.days
 
 object LogUtils {
@@ -22,7 +23,7 @@ object LogUtils {
     ) {
         val name = Thread.currentThread().name
         val actualLoc = loc.removePrefix("li.gkd.app.")
-        val texts = args.map { stringify(it) }
+        val texts = args.map { DiagnosticFiles.redact(stringify(it)) }
         if (META.debuggable) {
             val msg = buildString {
                 append("$name, $actualLoc")
@@ -38,13 +39,19 @@ object LogUtils {
             Log.d(tag, msg)
         }
         val t = System.currentTimeMillis()
-        logFileExecutor.run {
+        logFileExecutor.execute {
             logToFile(tag, name, actualLoc, texts, t)
         }
     }
+
+    /** Wait for prior queued records; historical write loss does not prevent future draining. */
+    fun flush(timeoutMillis: Long = 5_000): Boolean = logFileExecutor.flush(timeoutMillis)
+
+    internal fun flushStatus(timeoutMillis: Long = 5_000): li.gkd.app.data.backup.LogFlushStatus =
+        logFileExecutor.flushStatus(timeoutMillis)
 }
 
-private val logFileExecutor = Executors.newSingleThreadExecutor()
+private val logFileExecutor = SerialLogWriter { Log.e("GkdLog", "Log persistence failed", it) }
 private const val MAX_LOG_KEEP_DAYS = 7
 val deviceInfoDesc by lazy {
     listOf(

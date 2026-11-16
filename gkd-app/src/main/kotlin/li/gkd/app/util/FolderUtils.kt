@@ -17,17 +17,31 @@ import li.gkd.app.priv.currentUserId
 import java.io.File
 
 object FolderUtils {
-    private val filesDir: File by lazy {
-        val markFile = app.filesDir.resolve(".gkd")
-        if (markFile.isFile) {
-            app.filesDir
-        } else {
-            // fix #1333
-            app.getExternalFilesDir(null) ?: app.filesDir.also {
-                markFile.createNewFile()
-            }
-        }
+    @Volatile private var storageRoot: File? = null
+
+    val isStorageReady: Boolean get() = storageRoot != null
+
+    @WorkerThread
+    @Synchronized
+    fun initializeStorage() {
+        if (storageRoot != null) return
+        @Suppress("DEPRECATION")
+        val packageInfo = app.packageManager.getPackageInfo(app.packageName, 0)
+        storageRoot = li.gkd.app.data.backup.PrivateStorageMigration.migrate(
+            app.filesDir, app.getExternalFilesDir(null),
+            allowEmptyInitialization = packageInfo.firstInstallTime > 0 &&
+                packageInfo.firstInstallTime == packageInfo.lastUpdateTime,
+            syncDirectory = { directory ->
+                val descriptor = android.system.Os.open(
+                    directory.absolutePath, android.system.OsConstants.O_RDONLY, 0,
+                )
+                try { android.system.Os.fsync(descriptor) } finally { android.system.Os.close(descriptor) }
+            },
+        )
     }
+
+    private val filesDir: File
+        get() = checkNotNull(storageRoot) { "Private storage must be initialized before use" }
 
     val dbFolder: File
         get() = filesDir.resolve("db").autoMk()
@@ -49,7 +63,7 @@ object FolderUtils {
     val privateStoreFolder: File
         get() = app.filesDir.resolve("private-store").autoMk()
 
-    private val cacheDir by lazy { app.externalCacheDir ?: app.cacheDir }
+    private val cacheDir by lazy { app.cacheDir }
     val coilCacheDir: File
         get() = cacheDir.resolve("coil").autoMk()
     val sharedDir: File
@@ -58,9 +72,7 @@ object FolderUtils {
         get() = cacheDir.resolve("temp").autoMk()
 
     fun createGkdTempDir(): File {
-        return tempDir
-            .resolve(System.currentTimeMillis().toString())
-            .apply { mkdirs() }
+        return java.nio.file.Files.createTempDirectory(tempDir.toPath(), "gkd-").toFile()
     }
 
     private fun removeExpired(dir: File) {
@@ -107,109 +119,51 @@ object FolderUtils {
         val othersApps: List<AppInfo> = AppInfoRepository.otherUserAppInfoMapFlow.value.values.toList(),
     )
 
-    private const val MASKED_SECRET = "********"
+    fun redactSensitiveText(text: String): String = li.gkd.app.data.backup.DiagnosticFiles.redact(text)
 
-    private val jsonApiKeyRegex = Regex("""(?i)("api[-_]?key"\s*:\s*")[^"]*(")""")
-    private val plainApiKeyRegex = Regex("""(?i)\b(api[-_ ]?key\s*[=:]\s*)[^\s,}"']+""")
-    private val bearerTokenRegex = Regex("""(?i)\b(authorization\s*[:=]\s*bearer\s+)[^\s,}"']+""")
-    private val xApiKeyRegex = Regex("""(?i)\b(x-api-key\s*[:=]\s*)[^\s,}"']+""")
-    private val redactableLogFileExtensions = setOf("json", "txt", "log")
-
-    fun redactSensitiveText(text: String): String {
-        return text
-            .replace(jsonApiKeyRegex) { result -> result.groupValues[1] + MASKED_SECRET + result.groupValues[2] }
-            .replace(plainApiKeyRegex) { result -> result.groupValues[1] + MASKED_SECRET }
-            .replace(bearerTokenRegex) { result -> result.groupValues[1] + MASKED_SECRET }
-            .replace(xApiKeyRegex) { result -> result.groupValues[1] + MASKED_SECRET }
-    }
-
-    private fun File.redactSensitiveLogFiles() {
-        if (isDirectory) {
-            listFiles()?.forEach { it.redactSensitiveLogFiles() }
-            return
-        }
-        if (!isFile || extension.lowercase() !in redactableLogFileExtensions) return
-        val oldText = runCatching { readText() }.getOrNull() ?: return
-        val newText = redactSensitiveText(oldText)
-        if (newText != oldText) {
-            writeText(newText)
-        }
-    }
-
-    private fun File.copyToLogTemp(tempDir: File): File {
-        val target = tempDir.resolve(name)
-        copyRecursively(target, overwrite = true)
-        target.redactSensitiveLogFiles()
-        return target
-    }
-
-    @WorkerThread
-    fun buildLogFile(snapshotDays: Int = 0): File {
+    suspend fun buildLogFile(snapshotDays: Int = 0): File = withContext(Dispatchers.IO) {
+        require(snapshotDays >= 0)
+        val logStatus = LogUtils.flushStatus()
+        check(logStatus.drained) { "日志仍在写入，请稍后重试导出" }
+        val capturedAt = System.currentTimeMillis()
+        val since = if (snapshotDays > 0) capturedAt - snapshotDays.toLong() * 86_400_000L else null
         val tempDir = createGkdTempDir()
-        val files = listOf(dbFolder, storeFolder, subsFolder, logFolder, crashFolder).filter {
-            it.list()?.isNotEmpty() == true
-        }.map { it.copyToLogTemp(tempDir) }.toMutableList()
-        // 快照里是截图，默认绝不带上；只有用户在这次导出里明确选了范围才拷。
-        if (snapshotDays > 0) {
-            val since = System.currentTimeMillis() + (-snapshotDays.toLong() * 86_400_000L)
-            val snapshotDir = tempDir.resolve("snapshot").apply { mkdirs() }
-            snapshotFolder.listFiles()?.filter { it.lastModified() >= since }?.forEach { source ->
-                source.copyTo(snapshotDir.resolve(source.name), overwrite = true)
-            }
-            if (snapshotDir.list()?.isEmpty() == true) {
-                snapshotDir.delete()
-            } else {
-                files.add(snapshotDir)
-            }
-        }
-        tempDir.resolve("source-paths.txt").also { file ->
-            app.assets.open(file.name).use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-            files.add(file)
-        }
-        tempDir.resolve("apps.json").also {
-            it.writeText(json.encodeToString(AppJsonData()))
-            files.add(it)
-        }
-        tempDir.resolve("permission.txt").also {
-            val grantedPermissions = PermissionStates.all.filter { state -> state.value }
-            if (grantedPermissions.isNotEmpty()) {
-                it.appendText("已授权\n" + grantedPermissions.joinToString("\n") { state -> state.name })
-                it.appendText("\n\n")
-            }
-            val deniedPermissions = PermissionStates.all.filter { state -> !state.value }
-            if (deniedPermissions.isNotEmpty()) {
-                it.appendText("未授权\n" + deniedPermissions.joinToString("\n") { state -> state.name })
-                it.appendText("\n\n")
-            }
-            if (AppInfoRepository.appListAuthAbnormalFlow.value) {
-                it.appendText("其它\n")
-                it.appendText("读取应用列表权限异常")
-            }
-            it.appendText("\n")
-            files.add(it)
-        }
-        val formattedJson = Json(from = json) {
-            prettyPrint = true
-        }
-        tempDir.resolve("gkd.json").also {
-            it.writeText(formattedJson.encodeToString(META))
-            files.add(it)
-        }
-        val logZipFile = ExportFileNames.reserve(
-            sharedDir,
-            "log-${ExportFileNames.timestamp(System.currentTimeMillis())}",
-            "zip",
-        )
+        val budget = li.gkd.app.data.backup.DiagnosticBudget()
         try {
-            ZipUtils.zipFiles(files, logZipFile)
-            return logZipFile
-        } catch (e: Throwable) {
-            logZipFile.delete()
-            throw e
+            li.gkd.app.data.backup.BackupManager.writeDiagnostics(tempDir, budget, since, capturedAt)
+            listOf(logFolder, crashFolder, app.noBackupFilesDir.resolve("crash-mirror")).forEach { source ->
+                li.gkd.app.data.backup.DiagnosticFiles.copyTree(source, tempDir.resolve(source.name), budget = budget)
+            }
+            // Screenshots are included only for the range chosen for this export.
+            li.gkd.app.data.backup.DiagnosticFiles.copySnapshots(
+                snapshotFolder, tempDir.resolve("snapshot"), since, capturedAt, budget,
+            )
+            budget.writeProducedText(tempDir.resolve("source-paths.txt")) { output ->
+                app.assets.open("source-paths.txt").use { it.copyTo(output) }
+            }
+            budget.writeJson(tempDir.resolve("apps.json"), json, AppJsonData())
+            budget.writeText(tempDir.resolve("permission.txt"), buildString {
+                val granted = PermissionStates.all.filter { it.value }
+                if (granted.isNotEmpty()) append("已授权\n" + granted.joinToString("\n") { it.name } + "\n\n")
+                val denied = PermissionStates.all.filter { !it.value }
+                if (denied.isNotEmpty()) append("未授权\n" + denied.joinToString("\n") { it.name } + "\n\n")
+                if (AppInfoRepository.appListAuthAbnormalFlow.value) append("其它\n读取应用列表权限异常\n")
+            })
+            val formattedJson = Json(from = json) { prettyPrint = true }
+            budget.writeJson(tempDir.resolve("gkd.json"), formattedJson, META)
+            tempDir.resolve("diagnostic-export.txt").writeText(
+                listOfNotNull(budget.summary(), logStatus.diagnosticWarning()).joinToString("\n"),
+            )
+            val logZipFile = ExportFileNames.reserve(
+                sharedDir, "log-${ExportFileNames.timestamp(System.currentTimeMillis())}", "zip",
+            )
+            try {
+                check(ZipUtils.zipFiles(tempDir.listFiles().orEmpty().toList(), logZipFile)) { "日志压缩失败" }
+                logZipFile
+            } catch (e: Throwable) {
+                logZipFile.delete()
+                throw e
+            }
         } finally {
             tempDir.deleteRecursively()
         }

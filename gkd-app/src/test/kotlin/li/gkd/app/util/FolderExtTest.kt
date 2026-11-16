@@ -39,7 +39,7 @@ class FolderExtTest {
         assertTrue(redacted.contains("apiKey=********"))
         assertTrue(redacted.contains("api key: ********"))
         assertTrue(redacted.contains("x-api-key: ********"))
-        assertTrue(redacted.contains("Authorization: Bearer ********"))
+        assertTrue(redacted.contains("Authorization: ********"))
         assertTrue(redacted.contains("other=value"))
     }
 

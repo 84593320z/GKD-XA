@@ -2,155 +2,119 @@ name: Build-Release
 
 on:
   push:
-    tags:
-      - v*
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          distribution: 'zulu'
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: zulu
           java-version: '21'
-
-      - uses: gradle/actions/setup-gradle@v5
-        with:
-          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
-
-      # 与 Build-Apk 同一道门禁，且排在 keystore 落盘之前：任一测试失败就不写明文口令、
-      # 不打 APK。正常发版靠「release commit 推 main 顺带触发 Build-Apk」间接覆盖，
-      # 但给旧提交直接打 tag 的走法会绕过去，所以发布管线自己也跑一遍。
-      - name: 单元测试（发布门禁）
+      - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
+      - name: Validate tagged source metadata
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python3 scripts/release_metadata.py validate --tag "$TAG"
+      - name: Run all regression gates before loading signing secrets
         run: |
-          chmod 777 ./gradlew
-          ./gradlew gkd-app:testGkdDebugUnitTest gkd-selector:jvmTest
-
-      - name: write gkd secrets info
+          python3 -B -m unittest discover -s scripts -p "test_*.py"
+          chmod +x ./gradlew
+          ./gradlew gkd-app:testGkdDebugUnitTest gkd-selector:jvmTest gkd-db:jvmTest --stacktrace
+      - name: Build with the repository release key
         env:
           GKD_STORE_FILE_BASE64: ${{ secrets.GKD_STORE_FILE_BASE64 }}
           GKD_STORE_PASSWORD: ${{ secrets.GKD_STORE_PASSWORD }}
           GKD_KEY_ALIAS: ${{ secrets.GKD_KEY_ALIAS }}
           GKD_KEY_PASSWORD: ${{ secrets.GKD_KEY_PASSWORD }}
         run: |
-          if [ -z "$GKD_STORE_FILE_BASE64" ]; then
-            echo "::error::仓库未配置 GKD_STORE_FILE_BASE64 等签名 Secrets。Release 必须用固定 keystore 签名，否则每次 runner 的 debug 签名互不兼容、版本之间无法覆盖安装。"
-            exit 1
-          fi
-          echo "$GKD_STORE_FILE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/gkd.jks"
-          echo "GKD_STORE_FILE=$GITHUB_WORKSPACE/gkd.jks" >> gradle.properties
-          echo "GKD_STORE_PASSWORD=$GKD_STORE_PASSWORD" >> gradle.properties
-          echo "GKD_KEY_ALIAS=$GKD_KEY_ALIAS" >> gradle.properties
-          echo "GKD_KEY_PASSWORD=$GKD_KEY_PASSWORD" >> gradle.properties
-
-      - run: chmod 777 ./gradlew
-      # 只出 APK：bundlePlayRelease 要多跑一遍 R8，发版时间翻倍，而 AAB 仅上架 Google Play 才用得到
-      - run: ./gradlew gkd-app:assembleGkdRelease
-
-      - uses: actions/upload-artifact@v7
+          set -euo pipefail
+          : "${GKD_STORE_FILE_BASE64:?Release signing key is required}"
+          : "${GKD_STORE_PASSWORD:?Release signing password is required}"
+          : "${GKD_KEY_ALIAS:?Release signing alias is required}"
+          : "${GKD_KEY_PASSWORD:?Release key password is required}"
+          export GKD_STORE_FILE="$RUNNER_TEMP/gkd-release.jks"
+          trap 'rm -f "$GKD_STORE_FILE"' EXIT
+          umask 077
+          printf '%s' "$GKD_STORE_FILE_BASE64" | base64 --decode > "$GKD_STORE_FILE"
+          ./gradlew gkd-app:assembleGkdRelease --no-configuration-cache --stacktrace
+      - name: Verify and package the exact signed APK
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python3 scripts/release_metadata.py package --tag "$TAG" --apk gkd-app/build/outputs/apk/gkd/release/gkd-app-gkd-release.apk
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release
-          path: gkd-app/build/outputs/apk/gkd/release
-
-      - uses: actions/upload-artifact@v7
+          path: release/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
         with:
-          name: outputs
-          path: gkd-app/build/outputs
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: CHANGELOG.md
-          path: CHANGELOG.md
+          name: verification-reports
+          path: |
+            **/build/test-results/**
+            **/build/reports/tests/**
+            gkd-app/build/outputs/mapping/gkdRelease/**
+          if-no-files-found: warn
 
   release:
     needs: build
-    permissions: write-all
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
-      # 本分支的发布代码在 main；仓库默认分支可能仍指向旧的 miuix-ai。
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: main
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: outputs
-          path: outputs
-
-      - uses: actions/download-artifact@v8
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release
           path: release
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: CHANGELOG.md
-
-      - run: ls -R
-
-      - id: create_release
-        uses: actions/create-release@v1
+      - name: Publish all verified assets atomically from a draft
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          body_path: ./CHANGELOG.md
-          prerelease: ${{ contains(github.ref_name, 'beta') }}
-
-      - uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/gkd-app-gkd-release.apk
-          asset_name: GKD-XA-${{ github.ref_name }}.apk
-          asset_content_type: application/vnd.android.package-archive
-
-      # gradle 构建不是字节可复现的，fileSize 只能取这个附件自己的真实字节数；
-      # 只改数字，不动 JSON 其余排版。downloadUrl 不指向本次 tag 的文件一律跳过，避免大小和地址不匹配。
-      - name: backfill real fileSize
-        continue-on-error: true
-        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
-          TARGET_BRANCH: main
         run: |
-          set -u
-          SIZE=$(wc -c < release/gkd-app-gkd-release.apk | tr -d ' ')
-          echo "本次附件真实大小: $SIZE 字节"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          changed=0
-          for f in version/stable.json version/beta.json; do
-            [ -f "$f" ] || continue
-            if ! grep -q "releases/download/$TAG/" "$f"; then
-              echo "::warning::$f 的 downloadUrl 不指向 $TAG，跳过回填；发版时记得同步更新 version/*.json"
-              continue
-            fi
-            sed -i -E "s#(\"fileSize\"[[:space:]]*:[[:space:]]*)[0-9]+#\1$SIZE#" "$f"
-            if git diff --quiet -- "$f"; then
-              echo "$f 已是 $SIZE，无需提交"
-              continue
-            fi
-            git add "$f"
-            changed=1
-          done
-          if [ "$changed" = 1 ]; then
-            git commit -m "chore(version): 回填 $TAG 附件真实 fileSize=$SIZE [skip ci]"
-            git push origin "HEAD:refs/heads/$TARGET_BRANCH"
-            echo "已推送到 $TARGET_BRANCH"
+          set -euo pipefail
+          (cd release && sha256sum --check SHA256SUMS)
+          if gh release view "$TAG" --json isDraft > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
+            python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1]))["isDraft"] else "Release already published; assets will not be overwritten")' "$RUNNER_TEMP/release-state.json"
           else
-            echo "没有需要回填的文件"
+            gh release create "$TAG" --verify-tag --draft --title "GKD-XA $TAG" --notes-file release/RELEASE_NOTES.md
           fi
-
-      - run: zip -r outputs.zip outputs
-      - uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh release upload "$TAG" "release/GKD-XA-$TAG.apk" release/SHA256SUMS release/release-manifest.json release/stable.json release/beta.json --clobber
+          if [[ "$TAG" == *beta* ]]; then
+            gh release edit "$TAG" --draft=false --prerelease
+          else
+            gh release edit "$TAG" --draft=false --latest
+          fi
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: outputs.zip
-          asset_name: outputs-${{ github.ref_name }}.zip
-          asset_content_type: application/zip
+          ref: main
+          path: metadata-main
+      - name: Backfill only matching main channel metadata
+        run: |
+          set -euo pipefail
+          python3 scripts/release_metadata.py backfill --root metadata-main --manifest release/release-manifest.json
+          cd metadata-main
+          if ! git diff --quiet -- version/stable.json version/beta.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add version/stable.json version/beta.json
+            git commit -m 'chore(version): bind channel metadata to verified release artifact [skip ci]'
+            git push origin HEAD:main
+          fi

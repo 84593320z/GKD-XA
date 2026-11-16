@@ -1,10 +1,15 @@
 {
-  "versionCode": 152,
-  "versionName": "1.5.1",
-  "changelog": "v1.5.1\n\n- 修复：思考参数被拒的降级标记换模型/换地址后自动清零，不再永久停发\n- 修复：点「安装」时特权能力检查改到后台线程，不再卡点击\n- 日志分片编号与修剪逻辑修缮，节点圈选页缩进与流畅度优化\n- 无数据库迁移，可回退 v1.5.0",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.1/GKD-XA-v1.5.1.apk",
-  "fileSize": 5861128,
+  "versionCode": 153,
+  "versionName": "1.5.2",
+  "changelog": "v1.5.2\n\n- 修复 AI 规则验证、协议响应、队列与预算\n- 修复匹配事件、动作结果和单调时钟\n- 严格备份导入、私有存储迁移、诊断脱敏与启动保护\n- 调试 HTTP 会话鉴权、更新包身份校验、崩溃熔断\n- 升级前请导出备份；旧版无法直接读取新的私有目录",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.2/GKD-XA-v1.5.2.apk",
+  "fileSize": 0,
   "versionLogs": [
+    {
+      "name": "1.5.2",
+      "code": 153,
+      "desc": "- 修复 AI 规则验证、协议响应、队列与预算\n- 修复匹配事件、动作结果和单调时钟\n- 严格备份导入、私有存储迁移、诊断脱敏与启动保护\n- 调试 HTTP 会话鉴权、更新包身份校验、崩溃熔断\n- 升级前请导出备份；旧版无法直接读取新的私有目录"
+    },
     {
       "name": "1.5.1",
       "code": 152,

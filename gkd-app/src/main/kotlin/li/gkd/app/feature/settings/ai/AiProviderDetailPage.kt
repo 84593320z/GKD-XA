@@ -452,7 +452,7 @@ private fun AiProviderConfigTab(
                             status = "已创建，切到「模型」页签拉取模型"
                             toast("已创建服务商 ${config.name}")
                         } else {
-                            AiProviders.save(config)
+                            AiProviders.mutate(provider.id) { latest -> draft.toProvider(latest) }
                             status = if (config.enabled) {
                                 "已保存"
                             } else {

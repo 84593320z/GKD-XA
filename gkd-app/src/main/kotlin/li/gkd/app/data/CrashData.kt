@@ -25,9 +25,17 @@ data class CrashData(
     val filename get() = "gkd_crash-" + mtime.format("yyyyMMdd_HHmmss") + ".json"
     fun save() {
         val text = json.encodeToString(this)
-        FolderUtils.crashFolder.resolve(filename).writeText(text)
-        FolderUtils.crashTempFolder.resolve(filename).writeText(text)
-        trimCrashDataFiles()
+        var failure: Exception? = null
+        // Attempt both destinations: a full/unavailable primary must not prevent the mirror.
+        listOf({ FolderUtils.crashFolder }, { FolderUtils.crashTempFolder }).forEach { destination ->
+            try {
+                destination().resolve(filename).writeText(text)
+            } catch (error: Exception) {
+                if (failure == null) failure = error else failure?.addSuppressed(error)
+            }
+        }
+        runCatching { trimCrashDataFiles() }
+        failure?.let { throw it }
     }
 
     fun delete(): Boolean = listOf(

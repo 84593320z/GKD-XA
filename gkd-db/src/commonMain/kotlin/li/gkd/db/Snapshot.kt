@@ -35,6 +35,9 @@ data class Snapshot(
         @Delete
         suspend fun delete(vararg users: Snapshot): Int
 
+        @Query("SELECT id, CASE WHEN length(app_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE app_id END AS app_id, CASE WHEN length(activity_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE activity_id END AS activity_id, screen_height, screen_width, is_landscape, github_asset_id FROM snapshot WHERE id >= :since AND id <= :until ORDER BY id DESC LIMIT min(max(:limit, 0), 50) OFFSET max(:offset, 0)")
+        suspend fun queryForDiagnostics(limit: Int, since: Long = Long.MIN_VALUE, until: Long = Long.MAX_VALUE, offset: Int = 0): List<Snapshot>
+
         @Query("SELECT * FROM snapshot ORDER BY id DESC")
         fun query(): Flow<List<Snapshot>>
 

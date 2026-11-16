@@ -15,4 +15,5 @@ public interface IPackageInstaller extends IInterface {
     int createSession(PackageInstaller.SessionParams params, String installerPackageName, String attributionTag, int userId);
     IPackageInstallerSession openSession(int sessionId);
     void abandonSession(int sessionId);
+    PackageInstaller.SessionInfo getSessionInfo(int sessionId);
 }

@@ -556,14 +556,14 @@ data class RawSubscription(
                 val selector = when (val result = Selector.compile(source)) {
                     is SelectorCompileResult.Success -> result.value
                     is SelectorCompileResult.Failure -> {
-                        LogUtils.d("非法选择器", source, result.error.toString())
+                        LogUtils.d("选择器校验失败（正文已省略）")
                         return UiStrings.selector_invalid_detail(source, result.error.message)
                     }
                 }
                 when (val result = selector.validateType(selectorTypeModel)) {
                     is SelectorTypeResult.Success -> cacheMap[source] = result.value
                     is SelectorTypeResult.Failure -> {
-                        LogUtils.d("非法选择器", source, result.error.toString())
+                        LogUtils.d("选择器校验失败（正文已省略）")
                         return UiStrings.selector_invalid_detail(source, result.error.message)
                     }
                 }
@@ -616,8 +616,8 @@ data class RawSubscription(
                             null
                         }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
+                    LogUtils.d("位置表达式校验失败（正文已省略）")
                     null
                 }
             } else {

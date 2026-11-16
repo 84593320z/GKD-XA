@@ -3,6 +3,8 @@ package li.gkd.app.util
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.HttpTimeout
+import java.util.concurrent.TimeUnit
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -29,8 +31,18 @@ val client by lazy {
         install(ContentNegotiation) {
             json(json, ContentType.Any)
         }
+        install(HttpTimeout) {
+            connectTimeoutMillis = 15_000
+            socketTimeoutMillis = 30_000
+            requestTimeoutMillis = 120_000
+        }
         engine {
-            clientCacheSize = 0
+            clientCacheSize = 8
+            config {
+                connectTimeout(15, TimeUnit.SECONDS)
+                readTimeout(30, TimeUnit.SECONDS)
+                writeTimeout(30, TimeUnit.SECONDS)
+            }
         }
     }
 }

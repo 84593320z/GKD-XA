@@ -35,6 +35,9 @@ data class SubsCategoryConfig(
         @Query("SELECT * FROM subs_category_config")
         suspend fun queryAll(): List<SubsCategoryConfig>
 
+        @Query("SELECT enable, subs_id, category_key FROM subs_category_config ORDER BY subs_id, category_key LIMIT min(max(:limit, 0), 50)")
+        suspend fun queryForDiagnostics(limit: Int): List<SubsCategoryConfig>
+
         @Update
         suspend fun update(vararg objects: SubsCategoryConfig): Int
 

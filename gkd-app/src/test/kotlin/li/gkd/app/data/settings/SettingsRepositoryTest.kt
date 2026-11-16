@@ -221,6 +221,33 @@ class SettingsRepositoryTest {
         }
     }
 
+    @Test
+    fun invalidRestoreNeverArchivesOrReplacesHealthySettings() = runBlocking {
+        withRepository { repository, directory ->
+            repository.updateSettings { it.copy(httpServerPort = 8123) }
+            val healthy = json.encodeToString(repository.settings.value)
+            awaitFileText(directory.resolve("store.json"), healthy)
+            val initialEntries = repository.exportBackupEntries()
+            var databaseWorkStarted = false
+            val badInputs = listOf(
+                mapOf("store.json" to "{broken", "action_count.txt" to "100"),
+                mapOf("store.json" to json.encodeToString(testDefaults()), "action_count.txt" to "not-a-count"),
+                mapOf("action_count.txt" to "-1"),
+                mapOf("block_match_app_list.txt" to "valid.app\ninvalid app"),
+            )
+            badInputs.forEach { entries ->
+                val result = runCatching {
+                    repository.withBackupRestore(entries) { databaseWorkStarted = true }
+                }
+                assertTrue(result.isFailure)
+                assertFalse(databaseWorkStarted)
+                assertEquals(initialEntries, repository.exportBackupEntries())
+                assertEquals(healthy, directory.resolve("store.json").readText())
+                assertTrue(directory.listFiles().orEmpty().none { it.name.contains(".corrupt") })
+            }
+        }
+    }
+
     private suspend fun withRepository(block: suspend (SettingsRepository, java.io.File) -> Unit) {
         val directory = Files.createTempDirectory("gkd-settings-restore-test").toFile()
         val writer = SupervisorJob()
@@ -237,7 +264,12 @@ class SettingsRepositoryTest {
 
     private suspend fun awaitFileText(file: java.io.File, expected: String) {
         withTimeout(5_000) {
-            while (file.takeIf { it.isFile }?.readText() != expected) delay(10)
+            // Windows can deny opens briefly while the atomic replacement is in progress.
+            while (true) {
+                val actual = try { file.takeIf { it.isFile }?.readText() } catch (_: IOException) { null }
+                if (actual == expected) break
+                delay(10)
+            }
         }
     }
 

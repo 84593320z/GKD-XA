@@ -48,6 +48,9 @@ data class ActionLog(
         @Query("DELETE FROM action_log WHERE subs_id IN (:subsIds)")
         suspend fun deleteBySubsId(vararg subsIds: Long): Int
 
+        @Query("SELECT id, ctime, CASE WHEN length(app_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE app_id END AS app_id, CASE WHEN length(activity_id) > 1024 THEN '[\"[omitted: diagnostic text exceeds 1024 characters]\"]' ELSE activity_id END AS activity_id, subs_id, subs_version, group_key, group_type, rule_index, rule_key FROM action_log ORDER BY id DESC LIMIT min(max(:limit, 0), 50) OFFSET max(:offset, 0)")
+        suspend fun queryForDiagnostics(limit: Int, offset: Int = 0): List<ActionLog>
+
         @Query("SELECT * FROM action_log ORDER BY id DESC LIMIT 1000")
         fun query(): Flow<List<ActionLog>>
 

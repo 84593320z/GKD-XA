@@ -27,6 +27,8 @@ fun requestPrivilegeRecovery() {
 }
 
 suspend fun recoverPrivilege(ignoreCooldown: Boolean = false) = recoveryMutex.withLock {
+    li.gkd.app.appRuntimeReady.await()
+    if (CrashRecovery.isRecoveryBlocked) return@withLock
     Privilege.serverState.value?.let { return@withLock }
     val now = SystemClock.elapsedRealtime()
     if (!PrivilegeUi.desiredEnabled.value) return@withLock

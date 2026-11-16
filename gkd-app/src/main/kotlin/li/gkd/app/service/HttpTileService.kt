@@ -1,7 +1,7 @@
 package li.gkd.app.service
 
 class HttpTileService : BaseTileService() {
-    override val activeFlow = HttpService.isRunning
+    override val activeFlow get() = HttpService.isRunning
 
     override fun onTileClick() {
         if (HttpService.isRunning.value) {

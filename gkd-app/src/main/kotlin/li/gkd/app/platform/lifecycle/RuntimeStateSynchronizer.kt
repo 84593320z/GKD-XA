@@ -6,7 +6,12 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import li.gkd.app.a11y.updateSystemDefaultAppId
+import li.gkd.app.app
 import li.gkd.app.appScope
+import li.gkd.app.service.StatusService
+import li.gkd.app.service.scheduleStatusServiceBootWake
+import li.gkd.app.appRuntimeReady
+import li.gkd.app.priv.CrashRecovery
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.priv.privilegeContextFlow
 import li.gkd.app.service.armA11yService
@@ -20,6 +25,8 @@ object RuntimeStateSynchronizer {
     init {
         appScope.launch(Dispatchers.IO) {
             for (initialLoc in requests) {
+                appRuntimeReady.await()
+                if (CrashRecovery.isRecoveryBlocked) continue
                 delay(COALESCE_DELAY_MILLIS)
                 var loc = initialLoc
                 while (true) {
@@ -33,6 +40,8 @@ object RuntimeStateSynchronizer {
                 // 这里用特权服务补一次 pm grant；必须在 refreshAll 之前，权限状态才会立刻反映到 UI。
                 runStep(loc, "ensureWriteSecureSettings") { privilegeContextFlow.value?.ensureWriteSecureSettings() }
                 runStep(loc, "refreshAll") { PermissionStates.refreshAll() }
+                runStep(loc, "autoStartStatusService") { StatusService.autoStart() }
+                runStep(loc, "scheduleStatusServiceBootWake") { scheduleStatusServiceBootWake(app) }
                 runStep(loc, "fixRestartAutomatorService") { fixRestartAutomatorService() }
                 runStep(loc, "armA11yService") { armA11yService(loc = "sync($loc)") }
             }
@@ -48,6 +57,7 @@ object RuntimeStateSynchronizer {
         name: String,
         body: suspend () -> Unit,
     ) {
+        if (CrashRecovery.isRecoveryBlocked) return
         try {
             body()
         } catch (e: CancellationException) {

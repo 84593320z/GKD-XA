@@ -23,17 +23,20 @@ object PrivilegeOwnerLifecycle {
         applyConfiguration()
     }
 
+    @Synchronized
+    fun refreshCrashRecovery() { applyConfiguration() }
+
     private fun applyConfiguration() {
         PrivilegeConfig.configure(
             followDeathDelayMillis =
                 if (automatorEnabled || updateInstallationActive) FOLLOW_DEATH_DELAY_MILLIS else 0L,
-            activeReconnectOnOwnerDeath = automatorEnabled && !updateInstallationActive,
+            activeReconnectOnOwnerDeath = automatorEnabled && !updateInstallationActive && !CrashRecovery.isRecoveryBlocked,
         )
     }
 
-    fun prepareAppRestart() {
+    fun prepareAppRestart(passiveTimeoutMillis: Long = APP_RESTART_PASSIVE_TIMEOUT_MILLIS) {
         runCatching {
-            Privilege.prepareOwnerRestart(APP_RESTART_PASSIVE_TIMEOUT_MILLIS)
+            Privilege.prepareOwnerRestart(passiveTimeoutMillis)
         }.onFailure { error ->
             LogUtils.d("prepare owner restart failed", error)
         }

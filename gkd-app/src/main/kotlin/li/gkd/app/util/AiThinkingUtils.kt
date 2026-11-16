@@ -139,7 +139,7 @@ object AiThinkingUtils {
      * 模型名能识别出家族。Responses 端点只认 OpenAI 自家的 `reasoning.effort` 结构，
      * 非 OpenAI 家族在该模式下不发送，避免把 Chat 风格字段塞给 Responses 接口。
      */
-    fun buildParams(config: AiConfig): Map<String, JsonElement> {
+    fun buildParams(config: AiConfig, outputBudget: Int = config.maxTokens): Map<String, JsonElement> {
         if (config.thinkingRejected) return emptyMap()
         if (config.currentModel()?.reasoning != true) return emptyMap()
         val family = familyOf(config.model, config.protocol)
@@ -152,7 +152,7 @@ object AiThinkingUtils {
             }
         }
         return when (family) {
-            Family.Anthropic -> anthropicParams(LEVEL_ON)
+            Family.Anthropic -> anthropicParams(LEVEL_ON, outputBudget)
             Family.Gpt5 -> effortParams(LEVEL_ON, off = "minimal", supported = effortAll)
             Family.OpenAiReasoning -> effortParams(LEVEL_ON, off = "low", supported = effortWithoutMinimal)
             Family.Grok -> effortParams(LEVEL_ON, off = "low", supported = setOf("low", "high"))
@@ -253,8 +253,10 @@ object AiThinkingUtils {
         return mapOf("reasoning_effort" to JsonPrimitive(value))
     }
 
-    private fun anthropicParams(level: String): Map<String, JsonElement> {
-        val budget = anthropicBudgets[level] ?: return emptyMap()
+    private fun anthropicParams(level: String, outputBudget: Int): Map<String, JsonElement> {
+        // Anthropic requires at least 1024 thinking tokens and strictly more output tokens.
+        if (outputBudget <= 1024) return emptyMap()
+        val budget = (anthropicBudgets[level] ?: return emptyMap()).coerceAtMost(outputBudget - 1)
         return mapOf("thinking" to enabledThinking(budget))
     }
 

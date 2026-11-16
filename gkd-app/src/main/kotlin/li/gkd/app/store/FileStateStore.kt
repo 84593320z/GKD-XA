@@ -3,7 +3,7 @@ package li.gkd.app.store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,9 +42,19 @@ object FileStateStore {
         val filename = if (key.contains('.')) key else "$key.txt"
         val folder = if (private) FolderUtils.privateStoreFolder else FolderUtils.storeFolder
         val file = folder.resolve(filename)
+        return createTextFlow(file, decode, encode, scope)
+    }
+
+    internal fun <T> createTextFlow(
+        file: File,
+        decode: (String?) -> T,
+        encode: (T) -> String,
+        scope: CoroutineScope,
+    ): MutableStateFlow<T> {
         val stateFlow = MutableStateFlow(decode(readText(file)))
-        scope.launch {
-            stateFlow.drop(1).conflate().collect {
+        // Subscribe before returning the flow. StateFlow itself conflates later writes.
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            stateFlow.drop(1).collect {
                 withContext(Dispatchers.IO) {
                     writeText(file, encode(it))
                 }

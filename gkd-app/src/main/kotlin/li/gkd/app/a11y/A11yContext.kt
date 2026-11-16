@@ -7,6 +7,7 @@ import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CancellationException
 import li.gkd.app.META
 import li.gkd.app.data.ResolvedRule
+import li.gkd.app.domain.rule.queryRuleConditions
 import li.gkd.app.priv.toHidden
 import li.gkd.selector.FastQuery
 import li.gkd.selector.MatchOptions
@@ -518,45 +519,12 @@ class A11yContext(
             } else {
                 node
             } ?: return null
-            var resultNode: AccessibilityNodeInfo? = null
-            if (rule.anyMatches.isNotEmpty()) {
-                for (selector in rule.anyMatches) {
-                    resultNode = querySelfOrSelector(
-                        queryNode,
-                        selector,
-                        rule.matchOptions,
-                    )
-                    if (resultNode != null) break
-                }
-                if (resultNode == null) return null
-            }
-            for (selector in rule.matches) {
-                resultNode = querySelfOrSelector(
-                    queryNode,
-                    selector,
-                    rule.matchOptions,
-                ) ?: return null
-            }
-            for (selector in rule.excludeMatches) {
-                querySelfOrSelector(
-                    queryNode,
-                    selector,
-                    rule.matchOptions,
-                )?.let { return null }
-            }
-            if (rule.excludeAllMatches.isNotEmpty()) {
-                val allExclude = rule.excludeAllMatches.all {
-                    querySelfOrSelector(
-                        queryNode,
-                        it,
-                        rule.matchOptions,
-                    ) == null
-                }
-                if (!allExclude) {
-                    return null
-                }
-            }
-            return resultNode
+            return queryRuleConditions(
+                matches = rule.matches,
+                anyMatches = rule.anyMatches,
+                excludeMatches = rule.excludeMatches,
+                excludeAllMatches = rule.excludeAllMatches,
+            ) { selector -> querySelfOrSelector(queryNode, selector, rule.matchOptions) }
         } finally {
             currentRule = null
         }

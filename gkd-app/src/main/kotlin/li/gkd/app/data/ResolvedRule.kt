@@ -8,6 +8,7 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.a11y.appChangeTime
 import li.gkd.app.a11y.lastTriggerRule
 import li.gkd.app.a11y.lastTriggerTime
+import li.gkd.app.a11y.ruleNow
 import li.gkd.app.store.AppStore
 import li.gkd.selector.MatchOptions
 import li.gkd.selector.Selector
@@ -16,6 +17,30 @@ sealed class ResolvedRule(
     val rule: RawSubscription.RawRuleProps,
     val g: ResolvedGroup,
 ) {
+    companion object {
+        // Cooldown/count cells can be shared by different rules (including scopeKeys).
+        // One lock makes their resets and conditional commits a single transaction.
+        private val stateLock = Any()
+    }
+
+    private class ResettableValue<T>(var value: T) {
+        var epoch: Any = Any()
+        fun reset(value: T) {
+            this.value = value
+            epoch = Any()
+        }
+    }
+
+    internal class ActionAttempt internal constructor(
+        internal val rule: ResolvedRule,
+        internal val epoch: Any,
+        internal val cooldownEpoch: Any,
+        internal val countEpoch: Any,
+    ) {
+        internal var completed = false
+    }
+
+    private var resetEpoch: Any = Any()
     private val group = g.group
     val subsItem = g.subsItem
     val rawSubs = g.subscription
@@ -66,17 +91,17 @@ sealed class ResolvedRule(
     val priorityEnabled: Boolean
         get() = priorityTime > 0
 
-    fun isPriority(): Boolean {
+    fun isPriority(): Boolean = synchronized(stateLock) {
         if (!priorityEnabled) return false
         if (priorityActionMaximum <= actionCount.value) return false
         if (!status.ok) return false
-        val t = System.currentTimeMillis()
-        return t - matchChangedTime.value < priorityTime + matchDelay
+        val t = ruleNow()
+        t - matchChangedTime.value < priorityTime + matchDelay
     }
 
     fun bindGroupRules(
         groupToRules: Map<out RawSubscription.RawGroupProps, List<ResolvedRule>>,
-    ) {
+    ): Unit = synchronized(stateLock) {
         val selfGroupRules = groupToRules[group] ?: emptyList()
         val othersGroupRules =
             (group.scopeKeys ?: emptyList()).distinct().filter { k -> k != group.key }
@@ -108,33 +133,51 @@ sealed class ResolvedRule(
 
     private var preRules = emptySet<ResolvedRule>()
 
-    private var actionDelayTriggerTime = atomic(0L)
+    private val actionDelayTriggerTime = atomic(-1L)
     val actionDelayJob = atomic<Job?>(null)
-    fun checkDelay(): Boolean {
-        if (actionDelay > 0 && actionDelayTriggerTime.value == 0L) {
-            actionDelayTriggerTime.value = System.currentTimeMillis()
-            return true
+    fun checkDelay(): Boolean = checkDelayAt(ruleNow())
+
+    internal fun checkDelayAt(t: Long): Boolean = synchronized(stateLock) {
+        if (actionDelay > 0 && actionDelayTriggerTime.value < 0L) {
+            actionDelayTriggerTime.value = t
+            true
+        } else {
+            false
         }
-        return false
     }
 
     fun checkForced(): Boolean {
         if (forcedTime <= 0) return false
-        return System.currentTimeMillis() < matchChangedTime.value + matchDelay + forcedTime
+        return ruleNow() < matchChangedTime.value + matchDelay + forcedTime
     }
 
-    private var actionTriggerTime = atomic(0L)
-    fun trigger() {
-        val t = System.currentTimeMillis()
-        actionTriggerTime.value = t
-        actionDelayTriggerTime.value = 0L
-        actionCount.incrementAndGet()
-        lastTriggerTime = t
+    private var actionTriggerTime = ResettableValue<Long?>(null)
+    private var actionCount = ResettableValue(0)
+
+    internal fun beginAction(): ActionAttempt = synchronized(stateLock) {
+        ActionAttempt(this, resetEpoch, actionTriggerTime.epoch, actionCount.epoch)
+    }
+
+    /** Reset and every conditional write share one lock, including shared count/cooldown cells. */
+    internal fun commitAction(attempt: ActionAttempt, t: Long): Boolean = synchronized(stateLock) {
+        if (attempt.rule !== this || attempt.completed) return false
+        attempt.completed = true
+        if (attempt.epoch !== resetEpoch) return false
+        // A peer may reset a shared cell while this App/Match rule keeps its own cycle.
+        // Preserve the unaffected cells without writing the peer's newly reset state.
+        if (attempt.cooldownEpoch === actionTriggerTime.epoch) actionTriggerTime.value = t
+        if (attempt.countEpoch === actionCount.epoch) actionCount.value++
+        actionDelayTriggerTime.value = -1L
+        true
+    }
+
+    // A completed physical action still belongs in the original page's log/total,
+    // even when a reset prevented its result from consuming the new cycle's quota.
+    internal fun recordAction() {
+        lastTriggerTime = ruleNow()
         lastTriggerRule = this
         AppStore.incrementActionCount()
     }
-
-    private var actionCount = atomic(0)
 
     private val matchChangedTime = atomic(0L)
     val isFirstMatchApp: Boolean
@@ -146,14 +189,25 @@ sealed class ResolvedRule(
         it.value == resetMatch
     } ?: ResetMatchType.Activity
 
-    fun resetState(t: Long) {
-        actionCount.value = 0
-        actionDelayTriggerTime.value = 0L
-        actionTriggerTime.value = 0
+    fun resetState(t: Long): Unit = synchronized(stateLock) {
+        resetEpoch = Any()
+        actionCount.reset(0)
+        actionDelayTriggerTime.value = -1L
+        actionTriggerTime.reset(null)
         actionDelayJob.update { it?.cancel(); null }
         matchDelayJob.update { it?.cancel(); null }
         matchChangedTime.value = t
     }
+
+    internal fun resetOnActivityChange(t: Long, appChangedAt: Long, wasMatching: Boolean): Unit =
+        synchronized(stateLock) {
+            when (resetMatchType) {
+                ResetMatchType.App -> if (matchChangedTime.value < appChangedAt) resetState(t)
+                ResetMatchType.Activity -> resetState(t)
+                ResetMatchType.Match -> if (!wasMatching) resetState(t)
+            }
+            Unit
+        }
 
     private val performer = ActionPerformer.getAction(rule.action ?: rule.position?.let {
         ActionPerformer.ClickCenter.action
@@ -166,34 +220,32 @@ sealed class ResolvedRule(
     val matchDelayJob = atomic<Job?>(null)
 
     val status: RuleStatus
-        get() {
-            if (actionMaximum != null) {
-                if (actionCount.value >= actionMaximum) {
-                    return RuleStatus.Status1 // 达到最大执行次数
-                }
-            }
-            if (preRules.isNotEmpty() && !preRules.any { it === lastTriggerRule }) {
-                return RuleStatus.Status2 // 需要提前触发某个规则
-            }
-            val t = System.currentTimeMillis()
-            val c = matchChangedTime.value
-            if (matchDelay > 0 && t - c < matchDelay) {
-                return RuleStatus.Status3 // 处于匹配延迟中
-            }
-            if (matchTime != null && t - c > matchLimitTime) {
-                return RuleStatus.Status4 // 超出匹配时间
-            }
-            if (actionTriggerTime.value + actionCd > t) {
-                return RuleStatus.Status5 // 处于冷却时间
-            }
-            val d = actionDelayTriggerTime.value
-            if (d > 0) {
-                if (d + actionDelay > t) {
-                    return RuleStatus.Status6 // 处于触发延迟中
-                }
-            }
-            return RuleStatus.StatusOk
+        get() = statusAt(ruleNow())
+
+    internal fun statusAt(t: Long): RuleStatus = synchronized(stateLock) {
+        if (actionMaximum != null && actionCount.value >= actionMaximum) {
+            return RuleStatus.Status1 // 达到最大执行次数
         }
+        if (preRules.isNotEmpty() && !preRules.any { it === lastTriggerRule }) {
+            return RuleStatus.Status2 // 需要提前触发某个规则
+        }
+        val c = matchChangedTime.value
+        if (matchDelay > 0 && t - c < matchDelay) {
+            return RuleStatus.Status3 // 处于匹配延迟中
+        }
+        if (matchTime != null && t - c > matchLimitTime) {
+            return RuleStatus.Status4 // 超出匹配时间
+        }
+        val lastAction = actionTriggerTime.value
+        if (lastAction != null && t - lastAction < actionCd) {
+            return RuleStatus.Status5 // 处于冷却时间
+        }
+        val d = actionDelayTriggerTime.value
+        if (d >= 0 && t - d < actionDelay) {
+            return RuleStatus.Status6 // 处于触发延迟中
+        }
+        RuleStatus.StatusOk
+    }
 
     fun statusText(): String {
         return "id:${subsItem.id}, v:${rawSubs.version}, type:${type}, gKey=${group.key}, gName:${group.name}, index:${index}, key:${key}, status:${status.name}"

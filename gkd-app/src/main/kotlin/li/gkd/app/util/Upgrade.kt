@@ -20,13 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import io.ktor.client.call.body
-import io.ktor.client.plugins.onDownload
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.util.cio.writeChannel
-import io.ktor.utils.io.copyAndClose
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,6 +37,9 @@ import li.gkd.app.app
 import li.gkd.app.data.backup.BackupManager
 import li.gkd.app.platform.hasPrivilegedInstallCapability
 import li.gkd.app.platform.installPackagePrivileged
+import li.gkd.app.platform.updateInstallSessions
+import li.gkd.app.platform.verifyUpdatePackage
+import li.gkd.app.platform.PrivilegedInstallResult
 import li.gkd.app.store.FileStateStore
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.component.GkAlertDialog
@@ -62,6 +61,7 @@ data class GitHubReleaseAsset(
     val size: Long,
     @SerialName("browser_download_url")
     val browserDownloadUrl: String,
+    val digest: String? = null,
 )
 
 @Serializable
@@ -77,11 +77,13 @@ data class GitHubRelease(
 
 @Serializable
 data class NewVersion(
-    val versionCode: Int,
+    val versionCode: Int? = null,
     val versionName: String,
     val downloadUrl: String,
     val fileSize: Long,
     val versionLogs: List<VersionLog> = emptyList(),
+    val releaseNotes: String? = null,
+    val sha256: String? = null,
 ) {
     val absoluteDownloadUrl: String
         get() = downloadUrl.takeIf { it.startsWith("http://") || it.startsWith("https://") }
@@ -94,12 +96,6 @@ data class VersionLog(
     val code: Int,
     val desc: String,
 )
-
-private fun String.parseVersionCode(): Int {
-    val match = Regex("""v?(\d+)\.(\d+)\.(\d+)""").find(this) ?: return 0
-    val (major, minor, patch) = match.destructured
-    return major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt()
-}
 
 private fun String.parseGitHubTime(): Long? {
     return runCatching {
@@ -114,22 +110,18 @@ private fun GitHubRelease.isNewerThanCurrent(): Boolean {
     return (publishedAt?.parseGitHubTime() ?: 0L) > META.commitTime
 }
 
-private fun GitHubRelease.toNewVersion(): NewVersion {
+internal fun GitHubRelease.toNewVersion(): NewVersion {
     val apkAsset = assets.firstOrNull { asset ->
         asset.name.endsWith(".apk", ignoreCase = true)
     } ?: error("未找到 APK 下载文件")
     return NewVersion(
-        versionCode = tagName.parseVersionCode(),
+        // GitHub tags do not encode Android versionCode. Read that from the verified APK.
+        versionCode = null,
         versionName = tagName.removePrefix("v"),
         downloadUrl = apkAsset.browserDownloadUrl,
         fileSize = apkAsset.size,
-        versionLogs = listOf(
-            VersionLog(
-                name = tagName.removePrefix("v"),
-                code = tagName.parseVersionCode(),
-                desc = body.orEmpty(),
-            )
-        ),
+        releaseNotes = body,
+        sha256 = apkAsset.digest?.takeIf { it.startsWith("sha256:") }?.removePrefix("sha256:"),
     )
 }
 
@@ -142,6 +134,10 @@ class UpdateStatus(val scope: CoroutineScope) {
     private val newVersionFlow = MutableStateFlow<NewVersion?>(null)
     private val downloadStatusFlow = MutableStateFlow<LoadStatus<File>?>(null)
     private var downloadJob: Job? = null
+    private var installJob: Job? = null
+    private val ignoredReleaseNames by lazy {
+        FileStateStore.createJsonFlow("ignore_release_names", default = { emptySet<String>() }, scope = scope)
+    }
 
     private val ignoreVersionListFlow by lazy {
         FileStateStore.createJsonFlow(
@@ -169,16 +165,18 @@ class UpdateStatus(val scope: CoroutineScope) {
                     // 通道既可能是 GitHub Releases API（返回 release 对象），也可能是 version/*.json
                     // （直接就是 NewVersion）。按 URL 形态分流，而不是认某个具体仓库名 ——
                     // 之前这里写死了上游 fork 的仓库地址，换源后这条分支就永远进不去。
-                    val newVersion = if (UPDATE_URL.contains("api.github.com/repos/")) {
-                        val release = client.get(UPDATE_URL).body<GitHubRelease>()
+                    val updateUrl = UPDATE_URL
+                    val metadata = client.downloadTextBounded(updateUrl, maxBytes = 1024 * 1024, timeoutMillis = 30_000L)
+                    val newVersion = if (updateUrl.contains("api.github.com/repos/")) {
+                        val release = json.decodeFromString<GitHubRelease>(metadata)
                         if (!release.isNewerThanCurrent()) {
                             if (manual) toast(UiStrings.updates_none, loc = loc)
                             return@tryWithStateLock
                         }
                         release.toNewVersion()
                     } else {
-                        client.get(UPDATE_URL).body<NewVersion>().also { version ->
-                            if (version.versionCode <= META.versionCode) {
+                        json.decodeFromString<NewVersion>(metadata).also { version ->
+                            if (requireNotNull(version.versionCode) { "更新源缺少 versionCode" } <= META.versionCode) {
                                 if (manual) toast(UiStrings.updates_none, loc = loc)
                                 return@tryWithStateLock
                             }
@@ -186,7 +184,8 @@ class UpdateStatus(val scope: CoroutineScope) {
                     }
                     if (
                         !manual &&
-                        ignoreVersionListFlow.value.contains(newVersion.versionCode)
+                        (newVersion.versionCode?.let { it in ignoreVersionListFlow.value }
+                            ?: (newVersion.versionName in ignoredReleaseNames.value))
                     ) return@tryWithStateLock
                     newVersionFlow.value = newVersion
                 }
@@ -201,47 +200,33 @@ class UpdateStatus(val scope: CoroutineScope) {
         }
     }
 
-    private var downloadVersionCode: Int? = null
+    private var downloadedVersion: NewVersion? = null
 
     private fun startDownload(newVersion: NewVersion) {
-        if (downloadStatusFlow.value is LoadStatus.Loading) return
-        downloadVersionCode = newVersion.versionCode
-        downloadStatusFlow.value = LoadStatus.Loading(0f)
-        val apkFile = FolderUtils.sharedDir.resolve("gkd-v${newVersion.versionCode}.apk").apply {
-            if (exists()) {
-                delete()
-            }
+        if (downloadJob?.isActive == true || installJob?.isActive == true) return
+        if (updateInstallSessions.hasPendingInstallations) {
+            toast("上次安装结果尚未确认，请等待系统完成后检查应用版本")
+            return
         }
+        downloadedVersion = newVersion
+        downloadStatusFlow.value = LoadStatus.Loading(0f)
         downloadJob = scope.launch(Dispatchers.IO) {
+            var apkFile: File? = null
             try {
-                val channel =
-                    client.get(newVersion.absoluteDownloadUrl) {
-                        onDownload { bytesSentTotal, _ ->
-                            val downloadStatus = downloadStatusFlow.value
-                            if (downloadStatus is LoadStatus.Loading) {
-                                // fileSize 未回填（=0）时除法会产出 NaN/Infinity，进度条全程失效；
-                                // 退化为停在 0 的合法进度，等待 copyAndClose 完成回调
-                                val progress = if (newVersion.fileSize > 0) {
-                                    (bytesSentTotal.toFloat() / newVersion.fileSize).coerceIn(0f, 1f)
-                                } else {
-                                    0f
-                                }
-                                downloadStatusFlow.value = LoadStatus.Loading(progress)
-                            } else if (downloadStatus is LoadStatus.Failure) {
-                                // 提前终止下载
-                                downloadJob?.cancel()
-                            }
-                        }
-                    }.bodyAsChannel()
-                if (downloadStatusFlow.value is LoadStatus.Loading) {
-                    channel.copyAndClose(apkFile.writeChannel())
-                    downloadStatusFlow.value = LoadStatus.Success(apkFile)
+                apkFile = downloadUpdateApk(client, newVersion.absoluteDownloadUrl, FolderUtils.sharedDir, newVersion.fileSize, expectedSha256 = newVersion.sha256) {
+                    downloadStatusFlow.value = LoadStatus.Loading(it)
                 }
-            } catch (e: Exception) {
-                if (downloadStatusFlow.value is LoadStatus.Loading) {
-                    downloadStatusFlow.value = LoadStatus.Failure(e)
-                }
+                verifyUpdatePackage(apkFile, newVersion.versionCode, newVersion.versionName)
+                downloadStatusFlow.value = LoadStatus.Success(apkFile)
+                apkFile = null // The success dialog now owns this file.
+            } catch (error: TimeoutCancellationException) {
+                downloadStatusFlow.value = LoadStatus.Failure(java.io.IOException("更新包下载超时，请重试", error))
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                downloadStatusFlow.value = LoadStatus.Failure(error)
             } finally {
+                apkFile?.delete()
                 downloadJob = null
             }
         }
@@ -262,7 +247,7 @@ class UpdateStatus(val scope: CoroutineScope) {
                     } else if (logs.isNotEmpty()) {
                         logs.first().desc
                     } else {
-                        ""
+                        newVersionVal.releaseNotes.orEmpty()
                     }
                 }".trimEnd()
             }
@@ -312,9 +297,9 @@ class UpdateStatus(val scope: CoroutineScope) {
                     if (!lastManual) {
                         TextButton(onClick = {
                             newVersionFlow.value = null
-                            ignoreVersionListFlow.update {
-                                it + newVersionVal.versionCode
-                            }
+                            val code = newVersionVal.versionCode
+                            if (code != null) ignoreVersionListFlow.update { it + code }
+                            else ignoredReleaseNames.update { it + newVersionVal.versionName }
                             toast(UiStrings.update_version_ignored)
                         }) {
                             Text(text = UiStrings.action_ignore)
@@ -337,6 +322,7 @@ class UpdateStatus(val scope: CoroutineScope) {
                         onDismissRequest = {},
                         confirmButton = {
                             TextButton(onClick = {
+                                downloadJob?.cancel()
                                 downloadStatusFlow.value = LoadStatus.Failure(
                                     Exception(UiStrings.download_abort)
                                 )
@@ -391,34 +377,62 @@ class UpdateStatus(val scope: CoroutineScope) {
             }
         }
     }
-    /**
-     * 安装已下载的更新包：特权可用时先走静默安装（装完自动重启回应用），
-     * 失败则记日志并回退系统安装器（上游 8225f46a 的能力，XA 的兜底策略）。
-     */
+    /** Every route is validated and backed up before handing the APK to an installer. */
     private fun installDownloadedApk(file: File) {
-        val versionCode = downloadVersionCode
-        if (versionCode == null) {
-            installApk(file)
+        if (installJob?.isActive == true) return
+        if (updateInstallSessions.hasPendingInstallations) {
+            toast("上次安装结果尚未确认，请等待系统完成后检查应用版本")
             return
         }
-        // 能力检查要问特权服务（Binder IPC），别在点击所在的主线程同步做，挪进协程
-        scope.launch(Dispatchers.IO) {
-            if (!hasPrivilegedInstallCapability()) {
-                installApk(file)
-                return@launch
-            }
+        val version = downloadedVersion ?: return
+        installJob = scope.launch(Dispatchers.IO) {
             try {
-                installPackagePrivileged(file, versionCode)
-                downloadStatusFlow.value = null
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                LogUtils.d("privileged install failed, fallback to system installer", e)
-                toast("特权安装失败，已改用系统安装")
-                installApk(file)
+                val verified = verifyUpdatePackage(file, version.versionCode, version.versionName)
+                try {
+                    BackupManager.createPreUpgradeBackup()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    LogUtils.d("pre-upgrade backup failed", error)
+                    toast("自动备份失败，已停止安装：" + (error.message ?: "未知错误"))
+                    return@launch
+                }
+                // Backup may suspend while another UpdateStatus starts an installation.
+                if (updateInstallSessions.hasPendingInstallations) {
+                    toast("上次安装结果尚未确认，请等待系统完成后检查应用版本")
+                    return@launch
+                }
+                if (!hasPrivilegedInstallCapability()) {
+                    verifyUpdatePackage(file, version.versionCode, version.versionName)
+                    withContext(Dispatchers.Main) { installApk(file) }
+                    downloadStatusFlow.value = null
+                    return@launch
+                }
+                when (val result = installPackagePrivileged(file, verified)) {
+                    PrivilegedInstallResult.Installed -> downloadStatusFlow.value = null
+                    is PrivilegedInstallResult.Failed -> {
+                        if (result.canUseSystemInstaller && !updateInstallSessions.hasPendingInstallations) {
+                            verifyUpdatePackage(file, version.versionCode, version.versionName)
+                            toast("特权安装未完成，已改用系统安装")
+                            withContext(Dispatchers.Main) { installApk(file) }
+                            downloadStatusFlow.value = null
+                        } else {
+                            LogUtils.d("privileged install result unresolved", result.message)
+                            toast(result.message)
+                        }
+                    }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                LogUtils.d("update installation stopped", error)
+                toast("安装已停止：" + (error.message ?: "未知错误"))
+            } finally {
+                installJob = null
             }
         }
     }
+
 }
 
 

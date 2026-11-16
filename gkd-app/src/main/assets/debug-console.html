@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>GKD-XA 本地调试</title>
+<style>
+:root{color-scheme:light dark;font:15px/1.5 system-ui,sans-serif}body{max-width:1200px;margin:auto;padding:24px}h1{font-size:24px}h2{font-size:18px}section{margin:20px 0;padding:16px;border:1px solid #8886;border-radius:12px}button,select,input,textarea{font:inherit}button{cursor:pointer;padding:7px 12px;margin:3px}button:disabled{cursor:wait}textarea{box-sizing:border-box;width:100%;min-height:120px;padding:10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:480px;overflow:auto;padding:12px;background:#8881}table{border-collapse:collapse;width:100%}td,th{text-align:left;border-bottom:1px solid #8885;padding:6px;overflow-wrap:anywhere}.scroll{max-height:420px;overflow:auto}fieldset{border:0;margin:0;padding:0;min-width:0}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}#screenshot{max-width:100%;max-height:650px;object-fit:contain}#status{white-space:pre-wrap}input{max-width:100%;padding:6px}.muted{opacity:.75}details{margin-top:12px}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<h1>GKD-XA 本地调试</h1>
+<p class="muted">页面由设备提供。会话在服务停止或 30 分钟后失效；查看快照时请留意其中的个人信息。</p>
+<p id="status" role="status" aria-live="polite">正在连接设备…</p>
+<details><summary>设备信息</summary><pre id="server-info"></pre></details>
+<fieldset id="controls" disabled>
+<section>
+<h2>快照</h2>
+<div class="row"><button id="refresh">刷新列表</button><button id="capture">捕获当前页面</button><label>快照 <select id="snapshots" aria-label="选择快照"></select></label><button id="view">查看快照</button><button id="delete">删除所选快照</button></div>
+<p id="snapshot-info"></p>
+<img id="screenshot" alt="所选快照的屏幕截图" hidden>
+<p><label>筛选节点 <input id="filter" placeholder="文本、资源 ID 或类名"></label></p>
+<div class="scroll"><table><thead><tr><th>节点 / 父节点</th><th>文本 / 描述</th><th>资源 ID / 类名</th><th>详情</th></tr></thead><tbody id="nodes"></tbody></table></div>
+<pre id="node-detail" hidden></pre>
+<details><summary>完整快照 JSON</summary><pre id="snapshot-json"></pre></details>
+</section>
+<section><h2>调试规则</h2><p>提交标准 JSON 订阅，保存到临时 HTTP 订阅；根据规则内容可能立即触发操作。</p>
+<textarea id="subscription" aria-label="订阅 JSON" spellcheck="false" placeholder='{"id":-2,"name":"调试规则","version":0,"apps":[]}'></textarea>
+<button id="update-subscription">更新临时订阅</button></section>
+<section><h2>选择器与动作</h2><p>填写 GkdAction JSON。执行动作会作用于设备当前页面，请先核对目标应用。</p>
+<textarea id="action" aria-label="选择器动作 JSON" spellcheck="false" placeholder='{"selector":"[text=\"跳过\"]","action":"click"}'></textarea>
+<button id="execute">执行动作</button><pre id="result"></pre></section>
+</fieldset>
+<script>
+'use strict';
+(() => {
+  const byId = (id) => document.getElementById(id);
+  const status = byId('status');
+  const controls = byId('controls');
+  const maxRequestBytes = 4 * 1024 * 1024;
+  let nodes = [];
+  let imageUrl = null;
+  let connected = false;
+  const expired = () => { connected = false; controls.disabled = true; status.textContent = '会话已过期或凭据无效，请从应用高级设置重新打开本次调试链接。'; };
+  async function api(name, value = {}, binary = false) {
+    const body = JSON.stringify(value);
+    if (new TextEncoder().encode(body).length > maxRequestBytes) throw new Error('请求不能超过 4 MiB');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch('/api/' + name, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', cache:'no-store', signal:controller.signal, body});
+      if (response.status === 401 || response.status === 403) { expired(); throw new Error('会话不可用，请重新打开调试链接'); }
+      if (!response.ok) throw new Error('请求失败（HTTP ' + response.status + '）');
+      const contentType = (response.headers.get('Content-Type') || '').toLowerCase();
+      if (!binary || contentType.includes('json')) {
+        const data = await response.json();
+        if (data && data.__error === true) throw new Error(typeof data.message === 'string' ? data.message : '设备操作失败');
+        if (binary) throw new Error('截图响应格式不正确');
+        return data;
+      }
+      if (!contentType.startsWith('image/')) throw new Error('截图响应格式不正确');
+      return await response.blob();
+    } finally { clearTimeout(timer); }
+  }
+  function report(error) { status.textContent = error.name === 'AbortError' ? '请求超时，请检查设备后重试。' : error.message; }
+  function bind(id, handler) {
+    byId(id).addEventListener('click', async () => {
+      if (!connected) return;
+      controls.disabled = true;
+      try { await handler(); if (connected) status.textContent = '操作完成。'; }
+      catch (error) { report(error); }
+      finally { controls.disabled = !connected; }
+    });
+  }
+  function selectedId() {
+    const id = Number(byId('snapshots').value);
+    if (!Number.isSafeInteger(id) || id <= 0) throw new Error('请先选择一份快照');
+    return id;
+  }
+  async function refresh() {
+    const previous = byId('snapshots').value;
+    const snapshots = await api('getSnapshots');
+    if (!Array.isArray(snapshots)) throw new Error('快照列表格式不正确');
+    const options = snapshots.map((snapshot) => {
+      const option = document.createElement('option');
+      option.value = String(snapshot.id);
+      option.textContent = String(snapshot.appId) + ' · ' + new Date(Number(snapshot.id)).toLocaleString();
+      return option;
+    });
+    byId('snapshots').replaceChildren(...options);
+    if (options.some((option) => option.value === previous)) byId('snapshots').value = previous;
+    if (!options.length) status.textContent = '暂无快照，可捕获当前页面。';
+  }
+  function clearSnapshot() {
+    nodes = [];
+    byId('nodes').replaceChildren();
+    byId('snapshot-info').textContent = '';
+    byId('snapshot-json').textContent = '';
+    byId('node-detail').hidden = true;
+    byId('screenshot').hidden = true;
+    byId('screenshot').removeAttribute('src');
+    if (imageUrl) { URL.revokeObjectURL(imageUrl); imageUrl = null; }
+  }
+  function renderNodes() {
+    const query = byId('filter').value.toLocaleLowerCase();
+    const fragment = document.createDocumentFragment();
+    for (const node of nodes) {
+      const attr = node.attr || {};
+      const label = [attr.text, attr.desc, attr.id, attr.name].filter(Boolean).join(' ');
+      if (query && !label.toLocaleLowerCase().includes(query)) continue;
+      const row = document.createElement('tr');
+      for (const text of [String(node.id) + ' / ' + String(node.pid), [attr.text, attr.desc].filter(Boolean).join(' · '), [attr.id, attr.name].filter(Boolean).join(' · ')]) {
+        const cell = document.createElement('td'); cell.textContent = text; row.appendChild(cell);
+      }
+      const cell = document.createElement('td');
+      const button = document.createElement('button'); button.textContent = '属性';
+      button.addEventListener('click', () => { byId('node-detail').textContent = JSON.stringify(node, null, 2); byId('node-detail').hidden = false; });
+      cell.appendChild(button); row.appendChild(cell); fragment.appendChild(row);
+    }
+    byId('nodes').replaceChildren(fragment);
+  }
+  async function view() {
+    const id = selectedId();
+    clearSnapshot();
+    const snapshot = await api('getSnapshot', {id});
+    nodes = Array.isArray(snapshot.nodes) ? snapshot.nodes : [];
+    byId('snapshot-info').textContent = String(snapshot.appId) + ' / ' + String(snapshot.activityId || '') + ' · ' + nodes.length + ' 个节点';
+    byId('snapshot-json').textContent = JSON.stringify(snapshot, null, 2);
+    renderNodes();
+    try {
+      const blob = await api('getScreenshot', {id}, true);
+      imageUrl = URL.createObjectURL(blob);
+      byId('screenshot').src = imageUrl; byId('screenshot').hidden = false;
+    } catch (error) { if (!connected) throw error; byId('snapshot-info').textContent += '（截图不可用）'; }
+  }
+  bind('refresh', refresh);
+  bind('capture', async () => { const snapshot = await api('captureSnapshot'); await refresh(); byId('snapshots').value = String(snapshot.id); await view(); });
+  bind('view', view);
+  bind('delete', async () => { const id = selectedId(); if (!confirm('删除所选快照及其截图？')) return; await api('deleteSnapshot', {id}); clearSnapshot(); await refresh(); });
+  bind('update-subscription', async () => { const value = JSON.parse(byId('subscription').value); if (!confirm('更新临时订阅并允许其中规则运行？')) return; byId('result').textContent = JSON.stringify(await api('updateSubscription', value), null, 2); });
+  bind('execute', async () => { const value = JSON.parse(byId('action').value); if (!confirm('在当前设备页面执行该动作？')) return; byId('result').textContent = JSON.stringify(await api('execSelector', value), null, 2); });
+  byId('filter').addEventListener('input', renderNodes);
+  window.addEventListener('pagehide', () => { if (imageUrl) URL.revokeObjectURL(imageUrl); });
+  async function connect() {
+    let token = new URLSearchParams(location.hash.slice(1)).get('token');
+    history.replaceState(null, '', location.pathname);
+    try {
+      if (token) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15000);
+        try {
+          const response = await fetch('/session', {method:'POST', headers:{Authorization:'Bearer '+token}, credentials:'same-origin', cache:'no-store', signal:controller.signal});
+          if (!response.ok) { expired(); return; }
+        } finally { clearTimeout(timer); token = null; }
+      }
+      const info = await api('getServerInfo');
+      byId('server-info').textContent = JSON.stringify(info, null, 2);
+      connected = true;
+      await refresh();
+      controls.disabled = false;
+      status.textContent = '已连接。刷新页面可继续使用本次有效会话。';
+    } catch (error) { report(error); }
+    finally { token = null; }
+  }
+  connect();
+})();
+</script>
+</body></html>

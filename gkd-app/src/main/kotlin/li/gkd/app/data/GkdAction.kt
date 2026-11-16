@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 import li.gkd.app.a11y.A11yRuntime
 import li.gkd.app.priv.privilegeContextFlow
 import li.gkd.app.priv.toHidden
-import li.gkd.app.service.A11yService
+import li.gkd.app.a11y.dispatchGestureAndAwait
 import li.gkd.app.service.TrackService
 import li.gkd.app.util.ScreenUtils
 import kotlin.time.Duration.Companion.milliseconds
@@ -85,9 +85,7 @@ sealed class ActionPerformer(val action: String) {
                             path, 0, tapDurationMillis
                         )
                     )
-                    A11yService.instance?.dispatchGesture(
-                        gestureDescription.build(), null, null
-                    ) != null
+                    dispatchGestureAndAwait(gestureDescription.build())
                 },
                 position = x to y
             )
@@ -160,13 +158,7 @@ sealed class ActionPerformer(val action: String) {
                             path, 0, LONG_DURATION
                         )
                     )
-                    (A11yService.instance?.dispatchGesture(
-                        gestureDescription.build(), null, null
-                    ) != null).apply {
-                        if (this) {
-                            delay(LONG_DURATION.milliseconds)
-                        }
-                    }
+                    dispatchGestureAndAwait(gestureDescription.build())
                 },
                 position = x to y
             )
@@ -269,13 +261,7 @@ sealed class ActionPerformer(val action: String) {
                 )
                 ActionResult(
                     action = action,
-                    result = (A11yService.instance?.dispatchGesture(
-                        gestureDescription.build(), null, null
-                    ) != null).apply {
-                        if (this) {
-                            delay(swipeArg.duration.milliseconds)
-                        }
-                    },
+                    result = dispatchGestureAndAwait(gestureDescription.build()),
                     position = endX to endY,
                 )
             }

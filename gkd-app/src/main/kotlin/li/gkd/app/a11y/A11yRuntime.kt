@@ -41,7 +41,7 @@ object A11yRuntime {
     fun onA11yConnected(service: A11yCommonImpl) {
         // Preserve the engine's initial view of the other service before switching modes.
         val engine = service.ruleEngine
-        val serviceTime = System.currentTimeMillis()
+        val serviceTime = ruleNow()
         latestServiceMode.value = service.mode.value
         latestServiceTime.value = serviceTime
         engine.onA11yConnected()

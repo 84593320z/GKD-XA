@@ -76,14 +76,14 @@ class AiThinkingUtilsTest {
     @Test
     fun anthropicEnabledCarriesBudget() {
         assertEquals(
-            """{"type":"enabled","budget_tokens":4096}""",
+            """{"type":"enabled","budget_tokens":4095}""",
             AiThinkingUtils.buildParams(config("claude-sonnet-4", protocol = "anthropic"))["thinking"]
                 .toString(),
         )
         // 中转常把别的模型挂在 Anthropic 兼容端点上：XA 没有「关闭」档位，
         // 标志开启时同样发 enabled + 预算（plus 原版此处测的是关闭档发 disabled）
         assertEquals(
-            """{"type":"enabled","budget_tokens":4096}""",
+            """{"type":"enabled","budget_tokens":4095}""",
             AiThinkingUtils.buildParams(config("DeepSeek-V4.1-Flash", protocol = "anthropic"))["thinking"]
                 .toString(),
         )

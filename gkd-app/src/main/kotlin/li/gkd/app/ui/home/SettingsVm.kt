@@ -75,8 +75,12 @@ class SettingsVm : BaseViewModel() {
 
     suspend fun importBackup(uri: Uri) {
         toast(UiStrings.backup_import_progress)
-        val skipped = BackupManager.importData(uri)
-        toast(if (skipped > 0) UiStrings.backup_import_skipped_config_count(skipped) else UiStrings.import_success)
+        val result = BackupManager.importData(uri)
+        toast(when {
+            result.refreshError != null -> "备份已导入，但刷新失败，请重启应用"
+            result.skippedCount > 0 -> UiStrings.backup_import_skipped_config_count(result.skippedCount)
+            else -> UiStrings.import_success
+        })
     }
 
     suspend fun exportBackup(): File = BackupManager.exportData()

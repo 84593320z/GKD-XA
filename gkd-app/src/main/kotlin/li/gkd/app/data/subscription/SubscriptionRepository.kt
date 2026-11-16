@@ -1,7 +1,7 @@
 package li.gkd.app.data.subscription
 
 import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
+import li.gkd.app.util.downloadTextBounded
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -106,6 +106,17 @@ object SubscriptionRepository {
         }
     }
 
+    /** Capture subscriptions under the same lock used by writes and restores. */
+    suspend fun <T> withBackupSnapshot(block: suspend (SubscriptionSnapshot) -> T): T =
+        withContext(Dispatchers.IO) {
+            awaitSnapshot()
+            updateMutex.withStateLock {
+                val snapshot = snapshotFlow.value.value
+                    ?: refreshRawSubscriptions(Db.subsItemDao.queryAll())
+                block(snapshot)
+            }
+        }
+
     /**
      * Keeps backup file changes and compensation exclusive with subscription updates.
      * The block owns the database transaction and uses SubscriptionPersistence directly.
@@ -113,19 +124,14 @@ object SubscriptionRepository {
     suspend fun <T> withBackupTransaction(
         subscriptions: List<RawSubscription>,
         block: suspend (List<RawSubscription>) -> T,
-    ): T = withContext(Dispatchers.IO) {
+    ): li.gkd.app.data.backup.BackupCommitResult<T> = withContext(Dispatchers.IO) {
         updateMutex.withStateLock {
             val previous = snapshotFlow.value.value ?: refreshRawSubscriptions(Db.subsItemDao.queryAll())
             val prepared = subscriptions.map { prepareSubscription(it, previous) }
             // Waiting for an in-flight refresh remains cancellable; an accepted restore completes.
             withContext(NonCancellable) {
-                try {
-                    val result = block(prepared)
-                    refreshRawSubscriptions(
-                        items = Db.subsItemDao.queryAll(),
-                        previous = SubscriptionSnapshot(),
-                    )
-                    result
+                val result = try {
+                    block(prepared)
                 } catch (error: Throwable) {
                     // Compensation can itself fail: publish what is actually readable from disk.
                     runCatching {
@@ -136,6 +142,14 @@ object SubscriptionRepository {
                     }.exceptionOrNull()?.let(error::addSuppressed)
                     throw error
                 }
+                val refreshError = runCatching {
+                    refreshRawSubscriptions(
+                        items = Db.subsItemDao.queryAll(),
+                        previous = SubscriptionSnapshot(),
+                    )
+                }.exceptionOrNull()
+                if (refreshError != null) snapshotFlow.value = Loadable.Failure(refreshError)
+                li.gkd.app.data.backup.BackupCommitResult(result, refreshError)
             }
         }
     }
@@ -527,7 +541,7 @@ object SubscriptionRepository {
     /** 远程订阅的统一下载口径（对齐上游 70f89350）：失败先按传输失败归纳记一行，再原样抛出。 */
     private suspend fun fetchSubscriptionText(url: String, operation: String): String {
         try {
-            return client.get(url).bodyAsText()
+            return client.downloadTextBounded(url)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -545,7 +559,7 @@ object SubscriptionRepository {
         if (checkUrl != null && current != null) {
             try {
                 val version = json.decodeFromJson5String<SubsVersion>(
-                    client.get(checkUrl).bodyAsText(),
+                    client.downloadTextBounded(checkUrl, maxBytes = 64 * 1024, timeoutMillis = 15_000),
                 )
                 if (version.id == current.id && version.version <= current.version) return null
             } catch (e: CancellationException) {
