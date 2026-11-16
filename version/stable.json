@@ -3,7 +3,7 @@
   "versionName": "1.5.2",
   "changelog": "v1.5.2\n\n- 修复 AI 规则验证、协议响应、队列与预算\n- 修复匹配事件、动作结果和单调时钟\n- 严格备份导入、私有存储迁移、诊断脱敏与启动保护\n- 调试 HTTP 会话鉴权、更新包身份校验、崩溃熔断\n- 升级前请导出备份；旧版无法直接读取新的私有目录",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.2/GKD-XA-v1.5.2.apk",
-  "fileSize": 0,
+  "fileSize": 5942799,
   "versionLogs": [
     {
       "name": "1.5.2",
@@ -135,5 +135,6 @@
       "code": 92,
       "desc": "- 全量 MIUIX 界面（顶栏模糊、悬浮底栏、液态玻璃 FAB）\n- 预测式返回开关；动态取色默认关闭\n- 订阅添加/修改/刷新时显示加载进度\n- 触发提示支持流体云 / 灵动岛实时通知，并可自定义存在时间"
     }
-  ]
+  ],
+  "sha256": "89e08b73abeb3c5dabea0be91e45dafd912357e8bff0ca8798fc6882f62ee59f"
 }
