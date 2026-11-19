@@ -13,12 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -30,17 +27,21 @@ import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.RuleControlState
 import li.gkd.app.domain.rule.RuleGroupPolicy
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkFullscreenDialog
 import li.gkd.app.ui.component.GkGroupNameText
-import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkIcon
-import li.gkd.app.ui.icon.ToggleMid
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.icon.ToggleMid
 import li.gkd.app.ui.style.GkShapes
+import li.gkd.app.ui.style.GkUi
 import li.gkd.db.SubscriptionConfigSnapshot
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun GkRuleControlDialog(
@@ -123,26 +124,26 @@ fun GkRuleControlDialog(
                                 contentDescription = UiStrings.dialog_close)
                         },
                     )
-                    Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+                    Column(Modifier.padding(horizontal = GkUi.PageHorizontal, vertical = GkUi.SectionGap)) {
                         GkGroupNameText(text = group.name, isGlobal = false,
                             categoryName = category?.name, style = MiuixTheme.textStyles.title3,
-                            modifier = Modifier.padding(bottom = 20.dp))
+                            modifier = Modifier.padding(bottom = GkUi.SectionGap))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             GkIcon(if (ruleEnabled) GkIcons.ToggleOn else GkIcons.ToggleOff,
-                                modifier = Modifier.size(20.dp), contentDescription = null,
+                                modifier = Modifier.size(GkUi.IconSize), contentDescription = null,
                                 tint = if (ruleEnabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.error)
                             Text(result, modifier = Modifier.padding(start = 8.dp),
                                 style = MiuixTheme.textStyles.button,
                                 color = if (ruleEnabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.error)
                         }
-                        Text(reason, modifier = Modifier.padding(start = 28.dp, top = 4.dp),
+                        Text(reason, modifier = Modifier.padding(start = GkUi.IconSize + 8.dp, top = 4.dp),
                             style = MiuixTheme.textStyles.footnote1,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                     }
                 }
             },
         ) { padding ->
-            Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp)) {
+            Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(GkUi.PageHorizontal)) {
                 steps.forEachIndexed { index, step ->
                     ControlTimelineStep(
                         step = step,
@@ -214,16 +215,16 @@ private fun ControlTimelineStep(
                 else -> MiuixTheme.colorScheme.surface
             },
             shape = GkShapes.panel,
-            modifier = Modifier.weight(1f).padding(bottom = 4.dp).semantics(mergeDescendants = true) {
+            modifier = Modifier.weight(1f).padding(bottom = GkUi.SectionGap).semantics(mergeDescendants = true) {
                 stateDescription = listOfNotNull(step.value,
                     if (decisive) UiStrings.rule_control_deciding_step else if (!active) skippedReason else null).joinToString("，")
             },
         ) {
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Column(Modifier.padding(horizontal = GkUi.ContentPadding, vertical = 12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(step.title, Modifier.weight(1f), style = MiuixTheme.textStyles.subtitle,
+                    Text(step.title, Modifier.weight(1f), style = MiuixTheme.textStyles.body1,
                         color = if (active) MiuixTheme.colorScheme.onSurface else MiuixTheme.colorScheme.onSurfaceVariantSummary)
-                    GkIcon(step.icon, Modifier.padding(start = 12.dp).size(24.dp),
+                    GkIcon(step.icon, Modifier.padding(start = 12.dp).size(GkUi.IconSize),
                         tint = color, contentDescription = null)
                 }
                 if (step.appId != null) {

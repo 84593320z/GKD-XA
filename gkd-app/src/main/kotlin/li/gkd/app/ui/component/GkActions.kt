@@ -33,7 +33,7 @@ internal fun GkActionButton(
     enabled: Boolean = true,
     emphasized: Boolean = false,
     contentColor: Color = Color.Unspecified,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+    contentPadding: PaddingValues = ButtonDefaults.InsideMargin,
     content: @Composable RowScope.() -> Unit,
 ) {
     val scheme = MiuixTheme.colorScheme
@@ -48,7 +48,7 @@ internal fun GkActionButton(
             modifier = modifier,
             enabled = enabled,
             colors = colors,
-            minWidth = 0.dp,
+            minWidth = ButtonDefaults.MinWidth,
             minHeight = 48.dp,
             insideMargin = contentPadding,
             content = content,

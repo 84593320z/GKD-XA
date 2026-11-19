@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.style.GkUi
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextFieldColors
@@ -97,7 +99,11 @@ internal fun GkFormTextField(
                         color = if (enabled) colors.onSurface else colors.disabledOnSurface,
                     ),
                     colors = TextFieldDefaults.textFieldColors(
-                        labelColor = if (enabled) colors.onSurfaceVariantSummary else colors.disabledOnSurface,
+                        labelColor = when {
+                            !enabled -> colors.disabledOnSurface
+                            isError -> colors.error
+                            else -> colors.onSurfaceVariantSummary
+                        },
                         borderColor = if (isError) colors.error else colors.primary,
                     ),
                     keyboardOptions = keyboardOptions,
@@ -120,7 +126,11 @@ internal fun GkFormTextField(
             }
             if (supportingText != null) {
                 CompositionLocalProvider(
-                    LocalContentColor provides if (isError) colors.error else colors.onSurfaceVariantSummary,
+                    LocalContentColor provides when {
+                        !enabled -> colors.disabledOnSurface
+                        isError -> colors.error
+                        else -> colors.onSurfaceVariantSummary
+                    },
                 ) {
                     supportingText()
                 }
@@ -159,13 +169,19 @@ fun GkOutlinedTextField(
     interactionSource: MutableInteractionSource? = null,
     cornerRadius: Dp = TextFieldDefaults.CornerRadius,
     colors: TextFieldColors = TextFieldDefaults.textFieldColors(),
-    contentPadding: PaddingValues = PaddingValues(16.dp),
+    contentPadding: PaddingValues = PaddingValues(GkUi.ContentPadding),
 ) {
     val interactions = interactionSource ?: remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val scheme = MiuixTheme.colorScheme
     val contentColor = if (enabled) scheme.onSurface else scheme.disabledOnSurface
+    val hasFocus = enabled && focused
     val accentColor = if (isError) scheme.error else colors.borderColor
+    val secondaryContentColor = when {
+        !enabled -> scheme.disabledOnSurface
+        isError -> scheme.error
+        else -> colors.labelColor
+    }
     val transformedText = remember(value, visualTransformation) {
         visualTransformation.filter(AnnotatedString(value)).text
     }
@@ -176,7 +192,9 @@ fun GkOutlinedTextField(
             modifier = modifier.semantics { if (isError) error(UiStrings.error_label) },
             enabled = enabled,
             readOnly = readOnly,
-            textStyle = textStyle.copy(color = textStyle.color.takeOrElse { contentColor }),
+            textStyle = textStyle.copy(
+                color = if (enabled) textStyle.color.takeOrElse { contentColor } else contentColor,
+            ),
             cursorBrush = SolidColor(accentColor),
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
@@ -188,15 +206,19 @@ fun GkOutlinedTextField(
             decorationBox = { innerTextField ->
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (label != null) {
-                        CompositionLocalProvider(LocalContentColor provides if (isError) scheme.error else colors.labelColor) {
+                        CompositionLocalProvider(LocalContentColor provides secondaryContentColor) {
                             label()
                         }
                     }
                     Row(
                         modifier = Modifier
-                            .squircleBackground(colors.backgroundColor, cornerRadius)
+                            .heightIn(min = GkUi.MinTouchTarget)
+                            .squircleBackground(
+                                if (enabled) colors.backgroundColor else colors.backgroundColor.copy(alpha = 0.55f),
+                                cornerRadius,
+                            )
                             .squircleBorder(
-                                width = if (focused) 2.dp else if (isError) 1.dp else 0.dp,
+                                width = if (hasFocus) 2.dp else if (isError) 1.dp else 0.dp,
                                 color = accentColor,
                                 cornerRadius = cornerRadius,
                             )
@@ -204,20 +226,26 @@ fun GkOutlinedTextField(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        leadingIcon?.invoke()
-                        prefix?.invoke()
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopStart) {
-                            if (transformedText.isEmpty() && placeholder != null) {
-                                CompositionLocalProvider(LocalContentColor provides colors.labelColor) {
+                        CompositionLocalProvider(LocalContentColor provides secondaryContentColor) {
+                            leadingIcon?.invoke()
+                            prefix?.invoke()
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopStart) {
+                                if (transformedText.isEmpty() && placeholder != null) {
                                     placeholder()
                                 }
+                                innerTextField()
                             }
-                            innerTextField()
+                            suffix?.invoke()
+                            trailingIcon?.invoke()
                         }
-                        suffix?.invoke()
-                        trailingIcon?.invoke()
                     }
-                    supportingText?.invoke()
+                    if (supportingText != null) {
+                        CompositionLocalProvider(
+                            LocalContentColor provides if (isError) scheme.error else secondaryContentColor,
+                        ) {
+                            supportingText()
+                        }
+                    }
                 }
             },
         )

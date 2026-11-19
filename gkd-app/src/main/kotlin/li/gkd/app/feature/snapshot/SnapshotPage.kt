@@ -2,8 +2,8 @@ package li.gkd.app.feature.snapshot
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.border
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,16 +23,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.CheckboxDefaults
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -53,16 +43,17 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import coil3.compose.AsyncImage
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
@@ -77,8 +68,8 @@ import li.gkd.app.data.screenshotFile
 import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.store.AppStore
 import li.gkd.app.text.UiStrings
-import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkAppNameText
+import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkFixedTimeText
 import li.gkd.app.ui.component.GkIconButton
@@ -86,23 +77,34 @@ import li.gkd.app.ui.component.GkIconButtonDefaults
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
-import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkPageBottomSpace
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRetainedSheet
 import li.gkd.app.ui.component.GkTooltipBox
 import li.gkd.app.ui.component.SheetRequest
 import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.share.ListPlaceholder
 import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.lineHeightDp
-import li.gkd.app.ui.style.scaffoldPadding
-import li.gkd.app.util.SnapshotDisplayModeOption
 import li.gkd.app.util.IMPORT_SHORT_URL
+import li.gkd.app.util.SnapshotDisplayModeOption
+import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.findOption
 import li.gkd.app.util.format
 import li.gkd.app.util.getShowActivityId
-import li.gkd.app.util.ToastUtils.toast
 import li.gkd.db.Snapshot
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.CheckboxDefaults
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
+import top.yukonga.miuix.kmp.basic.rememberTooltipState
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data object SnapshotPageRoute : NavKey
@@ -301,6 +303,7 @@ fun SnapshotPage() {
                             )
                             GkBatchActionMenuItem(
                                 text = UiStrings.action_delete,
+                                destructive = true,
                                 enabled = selectedSnapshots.isNotEmpty(),
                                 onDismiss = dismiss,
                                 onClick = {
@@ -350,12 +353,23 @@ fun SnapshotPage() {
     ) { contentPadding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 160.dp),
-            modifier = Modifier.fillMaxSize().scaffoldPadding(contentPadding),
+            modifier = Modifier.fillMaxSize().padding(contentPadding),
             state = gridState,
-            contentPadding = PaddingValues(start = 12.dp, top = 0.dp, end = 12.dp, bottom = 8.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 12.dp),
+            // Two 160dp thumbnails still fit at 360dp with the shared 16dp page gutters.
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (firstLoading && groups.isEmpty()) {
+                item(key = "loading", span = { GridItemSpan(maxLineSpan) }) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
             groups.forEach { group ->
                 stickyHeader(key = group.key) {
                     val groupIds = remember(group) {
@@ -469,7 +483,7 @@ private fun SnapshotGroupHeader(
     onToggleSelection: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().background(MiuixTheme.colorScheme.background),
+        modifier = Modifier.fillMaxWidth().background(MiuixTheme.colorScheme.surface).semantics { heading() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (appId != null) {
@@ -477,13 +491,15 @@ private fun SnapshotGroupHeader(
                 appId = appId,
                 fallbackName = title,
                 modifier = Modifier.weight(1f),
-                style = MiuixTheme.textStyles.subtitle,
+                style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
         } else {
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),
-                style = MiuixTheme.textStyles.subtitle,
+                style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -516,7 +532,7 @@ private fun SnapshotCard(
 ) {
     val context = LocalContext.current
     val colorScheme = MiuixTheme.colorScheme
-    val cardShape = RoundedCornerShape(12.dp)
+    val cardShape = GkShapes.card
     val screenshotFile = snapshot.screenshotFile
     val modifiedAt = screenshotFile.lastModified()
     val cacheKey = remember(snapshot.id, modifiedAt, thumbnailVersion) {
@@ -545,15 +561,16 @@ private fun SnapshotCard(
                 if (selectedMode) {
                     role = Role.Checkbox
                     this.selected = selected
+                    toggleableState = if (selected) ToggleableState.On else ToggleableState.Off
                 }
             },
-        colors = CardDefaults.defaultColors(color = if (selected) colorScheme.primaryContainer
-                else colorScheme.surfaceContainer,
+        colors = CardDefaults.defaultColors(
+            color = if (selected) colorScheme.primaryContainer else colorScheme.surfaceContainer,
+            contentColor = if (selected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceContainer,
         ),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth().aspectRatio(4f / 3f)
-                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
                 .background(colorScheme.surfaceVariant),
         ) {
             AsyncImage(
@@ -573,7 +590,7 @@ private fun SnapshotCard(
             if (imageFailed) {
                 Text(
                     text = UiStrings.snapshot_screenshot_unavailable,
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.Center).padding(12.dp),
                     style = MiuixTheme.textStyles.footnote1,
                 )
             }
@@ -610,7 +627,7 @@ private fun SnapshotCard(
         // IllegalStateException: Only Sp can convert to Px
         val firstLineHeight = MiuixTheme.textStyles.body2.lineHeightDp(LocalDensity.current)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp)
                 .heightIn(min = firstLineHeight),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -650,7 +667,7 @@ private fun SnapshotCard(
             ?.takeIf(String::isNotBlank)
         Row(
             modifier = Modifier.fillMaxWidth().heightIn(min = 28.dp)
-                .padding(start = 10.dp, end = 10.dp, bottom = 8.dp),
+                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(

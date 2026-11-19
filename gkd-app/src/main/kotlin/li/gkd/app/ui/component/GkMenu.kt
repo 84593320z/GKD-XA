@@ -1,6 +1,7 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -15,21 +16,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import li.gkd.app.util.TimeUtils.throttle
 import top.yukonga.miuix.kmp.basic.RadioButton
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.SmallTitle
 
 @Composable
 inline fun GkMenuGroupCard(inTop: Boolean = false, title: String, content: @Composable () -> Unit) {
-    Text(
+    SmallTitle(
         text = title,
-        modifier = Modifier.padding(
-            start = 16.dp,
-            end = 16.dp,
-            top = if (inTop) 8.dp else 16.dp,
-            bottom = 12.dp,
-        ),
-        style = MiuixTheme.textStyles.footnote2,
-        color = MiuixTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = if (inTop) 4.dp else 8.dp),
+        insideMargin = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
     )
     content()
 }

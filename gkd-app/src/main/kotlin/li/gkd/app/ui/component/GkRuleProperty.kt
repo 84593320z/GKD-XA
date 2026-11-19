@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FilterAltOff
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
@@ -35,7 +33,7 @@ enum class RuleProperty {
 
     val icon: ImageVector get() = when (this) {
         CustomSetting -> ResetSettings
-        Personal -> Icons.Outlined.FilterAltOff
+        Personal -> GkIcons.Filter
         Restricted -> GkIcons.WarningAmber
     }
 

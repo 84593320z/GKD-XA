@@ -7,41 +7,43 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.MainViewModel
 import li.gkd.app.data.RawSubscription
-import li.gkd.db.SubsItem
-import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.style.GkUi
 import li.gkd.app.util.TimeUtils.formatTimeAgo
+import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.db.SubsItem
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
@@ -88,7 +90,8 @@ fun SubsItemCard(
     // 只在四个圆角外溢出，表现为「按压后颜色加深区域露出四个尖角」。
     Card(
         modifier = modifier
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = GkUi.PageHorizontal, vertical = GkUi.SectionGap / 2)
+            .fillMaxWidth(),
         colors = CardDefaults.defaultColors(
             color = containerColor.value
         ),
@@ -116,6 +119,7 @@ fun SubsItemCard(
                     }
                     if (isSelectedMode) {
                         selected = isSelected
+                        toggleableState = ToggleableState(isSelected)
                         role = Role.Checkbox
                     }
                     this.onClick(
@@ -139,7 +143,7 @@ fun SubsItemCard(
                         }
                     }
                 }
-                .padding(8.dp),
+                .padding(start = GkUi.ContentPadding, top = 12.dp, bottom = 12.dp),
         ) {
             Column(
                 modifier = Modifier.weight(1f),
@@ -151,22 +155,18 @@ fun SubsItemCard(
                             contentDescription = "订阅顺序：$index, 订阅名称 ${subscription.name}"
                         },
                         text = "$index. ${subscription.name}",
-                        maxLines = 1,
-                        softWrap = false,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         style = MiuixTheme.textStyles.body1,
                     )
                     Text(
                         text = subscription.numText,
                         style = MiuixTheme.textStyles.body2,
-                        color = if (subscription.groupsSize == 0) {
-                            LocalContentColor.current.copy(alpha = 0.5f)
-                        } else {
-                            LocalContentColor.current
-                        }
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         if (subsItem.id >= 0) {
                             if (subscription.author != null) {
@@ -175,7 +175,10 @@ fun SubsItemCard(
                                         contentDescription = "作者 ${subscription.author}"
                                     },
                                     text = subscription.author,
-                                    style = MiuixTheme.textStyles.footnote2,
+                                    style = MiuixTheme.textStyles.footnote1,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 )
                             }
                             Text(
@@ -183,13 +186,14 @@ fun SubsItemCard(
                                     contentDescription = "订阅版本号 ${subscription.version}"
                                 },
                                 text = "v" + (subscription.version.toString()),
-                                style = MiuixTheme.textStyles.footnote2,
+                                style = MiuixTheme.textStyles.footnote1,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         } else {
                             Text(
                                 modifier = Modifier.clearAndSetSemantics {},
                                 text = META.appName,
-                                style = MiuixTheme.textStyles.footnote2,
+                                style = MiuixTheme.textStyles.footnote1,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         }
@@ -199,7 +203,8 @@ fun SubsItemCard(
                                 contentDescription = "更新时间 $timeStr"
                             },
                             text = timeStr,
-                            style = MiuixTheme.textStyles.footnote2,
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     }
                 } else {
@@ -213,41 +218,45 @@ fun SubsItemCard(
                     val color = if (loadError != null) {
                         MiuixTheme.colorScheme.error
                     } else {
-                        Color.Unspecified
+                        MiuixTheme.colorScheme.onSurfaceVariantSummary
                     }
                     Text(
                         text = loadError?.message
-                            ?: if (refreshing) "加载中..." else "文件不存在",
+                            ?: if (refreshing) "加载中…" else "文件不存在",
                         style = MiuixTheme.textStyles.body2,
                         color = color
                     )
                 }
                 if (refreshError != null) {
                     Text(
-                        text = "更新错误: ${refreshError.message}",
+                        text = "更新错误：${refreshError.message ?: UiStrings.data_load_failed}",
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.error
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(4.dp))
-            val percent = usePercentAnimatable(!isSelectedMode)
-            val switchModifier = Modifier.graphicsLayer(
-                alpha = 0.5f + (1 - 0.5f) * percent.value,
-            ).run {
+            Box(
+                Modifier.width(68.dp).heightIn(min = GkUi.MinTouchTarget)
+                    .semantics { contentDescription = subscription?.name ?: subsItem.id.toString() }
+                    .then(if (isSelectedMode) Modifier else Modifier.toggleable(
+                        value = subsItem.enable,
+                        role = Role.Switch,
+                        onValueChange = throttle(fn = onCheckedChange),
+                    )),
+                contentAlignment = Alignment.Center,
+            ) {
                 if (isSelectedMode) {
-                    sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    GkCheckbox(checked = isSelected, enabled = selectionEnabled,
+                        modifier = Modifier.clearAndSetSemantics {})
                 } else {
-                    this
+                    PerfSwitch(
+                        modifier = Modifier.clearAndSetSemantics {},
+                        key = subsItem.id,
+                        checked = subsItem.enable,
+                        onCheckedChange = throttle(fn = onCheckedChange),
+                    )
                 }
             }
-            PerfSwitch(
-                key = subsItem.id,
-                modifier = switchModifier,
-                checked = subsItem.enable,
-                enabled = !isSelectedMode || selectionEnabled,
-                onCheckedChange = if (isSelectedMode) null else throttle(fn = onCheckedChange),
-            )
         }
     }
 }

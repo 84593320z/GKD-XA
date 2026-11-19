@@ -31,8 +31,10 @@ jobs:
       - name: Run all regression gates before loading signing secrets
         run: |
           python3 -B -m unittest discover -s scripts -p "test_*.py"
+          python3 scripts/check_miuix_ui.py
+          python3 gkd-priv-ui/tools/verify_fork.py
           chmod +x ./gradlew
-          ./gradlew gkd-app:testGkdDebugUnitTest gkd-selector:jvmTest gkd-db:jvmTest --stacktrace
+          ./gradlew gkd-priv-ui:testDebugUnitTest gkd-app:testGkdDebugUnitTest gkd-selector:jvmTest gkd-db:jvmTest --stacktrace
       - name: Build with the repository release key
         env:
           GKD_STORE_FILE_BASE64: ${{ secrets.GKD_STORE_FILE_BASE64 }}
@@ -66,6 +68,7 @@ jobs:
           path: |
             **/build/test-results/**
             **/build/reports/tests/**
+            **/build/reports/miuix-ui/**
             gkd-app/build/outputs/mapping/gkdRelease/**
           if-no-files-found: warn
 

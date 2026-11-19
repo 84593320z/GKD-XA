@@ -159,6 +159,8 @@ fun GkMultiSelectionTopAppBar(
             color = barColor ?: MiuixTheme.colorScheme.surface,
             navigationIcon = {
                 MiuixIconButton(
+                    minWidth = GkIconButtonDefaults.MinTouchTargetSize,
+                    minHeight = GkIconButtonDefaults.MinTouchTargetSize,
                     onClick = {
                         if (selectedMode) onExitSelection() else onNavigateBack()
                     },

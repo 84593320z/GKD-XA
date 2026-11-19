@@ -3,9 +3,6 @@ package li.gkd.app.ui.component
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FlipToBack
-import androidx.compose.material.icons.outlined.SelectAll
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.setValue
@@ -30,13 +27,13 @@ fun <K> RowScope.GkMultiSelectionActions(
         if (!enabled || selectedKeys.isEmpty()) expanded = false
     }
     GkIconButton(
-        imageVector = Icons.Outlined.SelectAll,
+        imageVector = GkIcons.SelectAll,
         contentDescription = UiStrings.selection_all,
         enabled = enabled && keys.isNotEmpty() && selectedKeys != keys,
         onClick = { selectionState.selectAll(keys) },
     )
     GkIconButton(
-        imageVector = Icons.Outlined.FlipToBack,
+        imageVector = GkIcons.InvertSelection,
         contentDescription = UiStrings.selection_invert,
         enabled = enabled && keys.isNotEmpty(),
         onClick = { selectionState.invert(keys) },

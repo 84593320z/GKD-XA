@@ -15,10 +15,10 @@ import androidx.compose.ui.unit.isUnspecified
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-val itemHorizontalPadding = 16.dp
-val itemVerticalPadding = 12.dp
+val itemHorizontalPadding = GkUi.ContentPadding
+val itemVerticalPadding = GkUi.RowVertical
 val EmptyHeight = 80.dp
-val cardHorizontalPadding = 12.dp
+val cardHorizontalPadding = GkUi.PageHorizontal
 
 /** MIUIX 部分 TextStyle 的 lineHeight/fontSize 不是 Sp，直接 toDp() 会崩溃 */
 fun TextUnit.toSpDpOr(density: Density, fallback: Dp): Dp = with(density) {

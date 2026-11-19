@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
-import li.gkd.app.ui.icon.Rocket
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.theme.LocalContentColor
@@ -41,26 +40,15 @@ fun PerfIconButton(
     tint: Color = perfDefaultIconTint(),
     contentDescription: String? = getIconDefaultDesc(imageVector),
     onClickLabel: String? = null,
-) = GkTooltipIconButtonBox(
+) = GkIconButton(
+    imageVector = imageVector,
+    onClick = onClick,
+    modifier = modifier,
+    enabled = enabled,
+    colors = GkIconButtonDefaults.iconButtonColors(contentColor = tint),
     contentDescription = contentDescription,
-) {
-    val buttonModifier = modifier.semantics {
-        if (onClickLabel != null) {
-            this.onClick(label = onClickLabel, action = null)
-        }
-    }
-    MiuixIconButton(
-        modifier = buttonModifier,
-        enabled = enabled,
-        onClick = onClick,
-    ) {
-        PerfIcon(
-            imageVector = imageVector,
-            contentDescription = contentDescription,
-            tint = if (enabled) tint else tint.copy(alpha = 0.38f),
-        )
-    }
-}
+    onClickLabel = onClickLabel,
+)
 
 @Composable
 fun PerfIcon(
@@ -94,6 +82,8 @@ fun PerfIconButton(
             }
         },
         enabled = enabled,
+        minWidth = GkIconButtonDefaults.MinTouchTargetSize,
+        minHeight = GkIconButtonDefaults.MinTouchTargetSize,
         onClick = onClick,
     ) {
         PerfIcon(
@@ -133,7 +123,7 @@ object PerfIcon {
     val ArrowForward get() = GkIcons.ArrowForward
     val Image get() = GkIcons.Image
     val WarningAmber get() = GkIcons.WarningAmber
-    val RocketLaunch get() = Rocket
+    val RocketLaunch get() = GkIcons.RocketLaunch
     val WhiteList get() = GkIcons.Lock
     val CenterFocusWeak get() = GkIcons.CenterFocusWeak
     val AutoMode get() = GkIcons.AutoMode

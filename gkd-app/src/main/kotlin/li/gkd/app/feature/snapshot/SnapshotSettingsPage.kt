@@ -1,8 +1,5 @@
 package li.gkd.app.feature.snapshot
 
-import li.gkd.app.ui.component.GkActionButton
-import li.gkd.app.ui.component.GkPageBottomSpace
-import li.gkd.app.MainViewModel
 import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,43 +11,45 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
-import li.gkd.app.text.UiStrings
+import li.gkd.app.MainViewModel
 import li.gkd.app.app
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.service.ScreenshotService
 import li.gkd.app.store.AppStore.storeFlow
-import li.gkd.app.ui.style.titleItemPadding
-import li.gkd.app.util.AndroidTarget
-import li.gkd.app.util.ShortUrlSet
-import li.gkd.app.ui.share.launchUiAction
-import li.gkd.app.ui.share.launchUi
-import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkOutlinedTextField
+import li.gkd.app.ui.component.GkPageBottomSpace
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
-import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.ui.component.autoFocus
+import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.share.launchUiAction
+import li.gkd.app.util.AndroidTarget
+import li.gkd.app.util.ShortUrlSet
+import li.gkd.app.util.TimeUtils.throttle
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
 
 @Serializable
 data object SnapshotSettingsRoute : NavKey
@@ -123,77 +122,66 @@ fun SnapshotSettingsPage() {
                 .verticalScroll(rememberScrollState())
                 .padding(contentPadding),
         ) {
-            Text(
-                text = UiStrings.snapshot_capture_methods,
-                modifier = Modifier.titleItemPadding(showTop = false),
-                style = MiuixTheme.textStyles.subtitle,
-                color = MiuixTheme.colorScheme.primary,
-            )
-            if (!AndroidTarget.R) {
+            PreferenceGroup(title = UiStrings.snapshot_capture_methods, showTop = false) {
+                if (!AndroidTarget.R) {
+                    GkTextSwitch(
+                        title = UiStrings.screenshot_service,
+                        subtitle = UiStrings.screenshot_service_description,
+                        checked = screenshotServiceRunning,
+                        onCheckedChange = ::setScreenshotServiceEnabled,
+                    )
+                }
                 GkTextSwitch(
-                    title = UiStrings.screenshot_service,
-                    subtitle = UiStrings.screenshot_service_description,
-                    checked = screenshotServiceRunning,
-                    onCheckedChange = ::setScreenshotServiceEnabled,
+                    title = UiStrings.snapshot_volume_trigger,
+                    subtitle = UiStrings.snapshot_volume_trigger_description,
+                    checked = store.captureVolumeChange,
+                    onCheckedChange = vm::setCaptureVolumeChange,
+                )
+                GkTextSwitch(
+                    title = UiStrings.snapshot_screenshot_trigger,
+                    subtitle = UiStrings.snapshot_screenshot_trigger_description,
+                    checked = store.captureScreenshot,
+                    suffixIcon = {
+                        GkSizedIconButton(
+                            size = 48.dp,
+                            iconSize = 24.dp,
+                            onClickLabel = UiStrings.snapshot_screenshot_settings_open,
+                            onClick = throttle { showCaptureScreenshotDialog = true },
+                            imageVector = GkIcons.PageInfo,
+                            contentDescription = UiStrings.snapshot_screenshot_settings,
+                        )
+                    },
+                    onCheckedChange = vm::setCaptureScreenshot,
                 )
             }
-            GkTextSwitch(
-                title = UiStrings.snapshot_volume_trigger,
-                subtitle = UiStrings.snapshot_volume_trigger_description,
-                checked = store.captureVolumeChange,
-                onCheckedChange = vm::setCaptureVolumeChange,
-            )
-            GkTextSwitch(
-                title = UiStrings.snapshot_screenshot_trigger,
-                subtitle = UiStrings.snapshot_screenshot_trigger_description,
-                checked = store.captureScreenshot,
-                suffixIcon = {
-                    GkSizedIconButton(
-                        size = 32.dp,
-                        iconSize = 20.dp,
-                        onClickLabel = UiStrings.snapshot_screenshot_settings_open,
-                        onClick = throttle { showCaptureScreenshotDialog = true },
-                        imageVector = GkIcons.PageInfo,
-                        contentDescription = UiStrings.snapshot_screenshot_settings,
-                    )
-                },
-                onCheckedChange = vm::setCaptureScreenshot,
-            )
 
-            Text(
-                text = UiStrings.screenshot_processing,
-                modifier = Modifier.titleItemPadding(),
-                style = MiuixTheme.textStyles.subtitle,
-                color = MiuixTheme.colorScheme.primary,
-            )
-            GkTextSwitch(
-                title = UiStrings.snapshot_hide_status_bar,
-                subtitle = UiStrings.snapshot_hide_status_bar_description,
-                checked = store.hideSnapshotStatusBar,
-                onCheckedChange = vm::setHideSnapshotStatusBar,
-            )
+            PreferenceGroup(title = UiStrings.screenshot_processing) {
+                GkTextSwitch(
+                    title = UiStrings.snapshot_hide_status_bar,
+                    subtitle = UiStrings.snapshot_hide_status_bar_description,
+                    checked = store.hideSnapshotStatusBar,
+                    onCheckedChange = vm::setHideSnapshotStatusBar,
+                )
+            }
 
-            Text(
-                text = UiStrings.action_export,
-                modifier = Modifier.titleItemPadding(),
-                style = MiuixTheme.textStyles.subtitle,
-                color = MiuixTheme.colorScheme.primary,
-            )
-            GkTextSwitch(
-                title = UiStrings.snapshot_auto_export,
-                subtitle = UiStrings.snapshot_auto_export_description,
-                checked = store.autoSaveSnapshotToDownloads,
-                onCheckedChange = scope.launchUiAction { enabled ->
-                    if (
-                        !enabled || mainVm.permissionRequests.ensurePermissions(
-                            PermissionStates.writeExternalStorage,
-                        )
-                    ) {
-                        vm.setAutoSaveSnapshotToDownloads(enabled)
-                    }
-                },
-            )
-            GkPageBottomSpace()
+            PreferenceGroup(title = UiStrings.action_export) {
+                GkTextSwitch(
+                    title = UiStrings.snapshot_auto_export,
+                    subtitle = UiStrings.snapshot_auto_export_description,
+                    checked = store.autoSaveSnapshotToDownloads,
+                    onCheckedChange = scope.launchUiAction { enabled ->
+                        if (
+                            !enabled || mainVm.permissionRequests.ensurePermissions(
+                                PermissionStates.writeExternalStorage,
+                            )
+                        ) {
+                            vm.setAutoSaveSnapshotToDownloads(enabled)
+                        }
+                    },
+                )
+            }
+
+            GkPageBottomSpace(height = 40.dp)
         }
     }
 }
@@ -216,7 +204,7 @@ private fun CaptureScreenshotConfigDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = UiStrings.snapshot_screenshot_trigger)
+                Text(text = UiStrings.snapshot_screenshot_trigger, modifier = Modifier.weight(1f))
                 GkIconButton(
                     imageVector = GkIcons.HelpOutline,
                     onClick = throttle(onOpenHelp),

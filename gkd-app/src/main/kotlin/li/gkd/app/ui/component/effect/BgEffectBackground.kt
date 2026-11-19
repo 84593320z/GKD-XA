@@ -3,6 +3,7 @@
 
 package li.gkd.app.ui.component.effect
 
+import android.os.Build
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
@@ -34,7 +35,7 @@ fun BgEffectBackground(
     alpha: () -> Float = { 1f },
     content: @Composable BoxScope.() -> Unit,
 ) {
-    if (!isRuntimeShaderSupported()) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || !isRuntimeShaderSupported()) {
         Box(modifier = modifier, content = content)
         return
     }

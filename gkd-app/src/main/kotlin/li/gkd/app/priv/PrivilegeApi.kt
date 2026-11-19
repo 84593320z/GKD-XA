@@ -69,50 +69,50 @@ private suspend fun applyPrivilegeContext(serverInfo: PrivilegeServerInfo?) {
     val oldContext = privilegeContextFlow.value
     if (oldContext?.serverInfo == serverInfo) return
 
-        if (serverInfo != null) {
-            if (oldContext != null) {
-                clearPrivilegeContext(oldContext)
-            }
-
-            if (!app.justStarted) {
-                toast(UiStrings.privilege_service_connecting)
-            }
-            val userServiceConnection = Privilege.bindUserService(userServiceSpec)
-            val privilegeContext = PrivilegeContext.create(serverInfo, userServiceConnection)
-            privilegeContextFlow.value = privilegeContext
-            privilegeContext.topCpn()?.let { cpn ->
-                updateTopTaskAppId(cpn.packageName)
-            }
-            if (
-                storeFlow.value.useAutomation &&
-                !currentAppBlocked &&
-                !currentAppUseA11y
-            ) {
-                AutomationService.tryConnect(true)
-            }
-            PermissionStates.refreshAll()
-            // 特权通道就绪 == 「拿到 root」的时刻，这里补一次全局同步：RuntimeStateSynchronizer 先
-            // grantSelf()（用特权进程给自己 pm grant WRITE_SECURE_SETTINGS）、再 refreshAll()，
-            // 然后 armA11yService() 按工作模式把无障碍写进 secure settings 并校验重试
-            // （fixRestartAutomatorService 那道门看的是 enableAutomator，它只有在无障碍已经跑起来之后
-            // 才为 true，冷启动必然是 false，所以必须由不看那个标志位的 arm 分支来开）。
-            // 缺这根线时，开机只有 App.onCreate 那一次同步，而它早于 root 就绪；之后就要等用户
-            // 打开界面才补开无障碍 —— ColorOS 开机会关掉无障碍、临时 root 与 LSPosed 又普遍要
-            // 软重启后才可用，正是这个时序。用事件驱动而不是轮询：Privilege.serverState 是
-            // StateFlow，进程晚起或 root 先到都能立刻拿到当前状态。
-            RuntimeStateSynchronizer.requestSync(loc = "privilege connected")
-            if (StatusService.needRestart) {
-                privilegeContext.startForegroundService(
-                    ExposeService.exposeIntent(expose = -1),
-                )
-            }
-            val delayMillis = if (app.justStarted) 1200L else 0L
-            toast(UiStrings.privilege_service_connect_success, delayMillis = delayMillis)
-        } else if (oldContext != null) {
+    if (serverInfo != null) {
+        if (oldContext != null) {
             clearPrivilegeContext(oldContext)
-            PermissionStates.refreshAll()
-            toast(UiStrings.privilege_service_disconnected)
         }
+
+        if (!app.justStarted) {
+            toast(UiStrings.privilege_service_connecting)
+        }
+        val userServiceConnection = Privilege.bindUserService(userServiceSpec)
+        val privilegeContext = PrivilegeContext.create(serverInfo, userServiceConnection)
+        privilegeContextFlow.value = privilegeContext
+        privilegeContext.topCpn()?.let { cpn ->
+            updateTopTaskAppId(cpn.packageName)
+        }
+        if (
+            storeFlow.value.useAutomation &&
+            !currentAppBlocked &&
+            !currentAppUseA11y
+        ) {
+            AutomationService.tryConnect(true)
+        }
+        PermissionStates.refreshAll()
+        // 特权通道就绪 == 「拿到 root」的时刻，这里补一次全局同步：RuntimeStateSynchronizer 先
+        // grantSelf()（用特权进程给自己 pm grant WRITE_SECURE_SETTINGS）、再 refreshAll()，
+        // 然后 armA11yService() 按工作模式把无障碍写进 secure settings 并校验重试
+        // （fixRestartAutomatorService 那道门看的是 enableAutomator，它只有在无障碍已经跑起来之后
+        // 才为 true，冷启动必然是 false，所以必须由不看那个标志位的 arm 分支来开）。
+        // 缺这根线时，开机只有 App.onCreate 那一次同步，而它早于 root 就绪；之后就要等用户
+        // 打开界面才补开无障碍 —— ColorOS 开机会关掉无障碍、临时 root 与 LSPosed 又普遍要
+        // 软重启后才可用，正是这个时序。用事件驱动而不是轮询：Privilege.serverState 是
+        // StateFlow，进程晚起或 root 先到都能立刻拿到当前状态。
+        RuntimeStateSynchronizer.requestSync(loc = "privilege connected")
+        if (StatusService.needRestart) {
+            privilegeContext.startForegroundService(
+                ExposeService.exposeIntent(expose = -1),
+            )
+        }
+        val delayMillis = if (app.justStarted) 1200L else 0L
+        toast(UiStrings.privilege_service_connect_success, delayMillis = delayMillis)
+    } else if (oldContext != null) {
+        clearPrivilegeContext(oldContext)
+        PermissionStates.refreshAll()
+        toast(UiStrings.privilege_service_disconnected)
+    }
 }
 
 fun initPrivilege() {

@@ -1,12 +1,8 @@
 package li.gkd.app.ui
 
-import li.gkd.app.ui.component.GkActionButton
-import li.gkd.app.ui.component.GkBottomActionBar
-import li.gkd.app.ui.component.GkPageBottomSpace
-import li.gkd.app.ui.share.launchUi
-import li.gkd.app.MainViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,12 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -29,28 +21,36 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
-import li.gkd.app.text.UiStrings
-import li.gkd.app.data.CrashData
+import li.gkd.app.MainViewModel
 import li.gkd.app.core.state.Loadable
-import li.gkd.app.ui.style.itemHorizontalPadding
-import li.gkd.app.ui.style.itemVerticalPadding
-import li.gkd.app.ui.style.scaffoldPadding
-import li.gkd.app.ui.style.surfaceCardColors
-import li.gkd.app.util.ISSUES_URL
-import li.gkd.app.util.format
-import li.gkd.app.util.TimeUtils.throttle
-import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.data.CrashData
+import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAlertDialog
+import li.gkd.app.ui.component.GkBottomActionBar
 import li.gkd.app.ui.component.GkCopyTextCard
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkFixedTimeText
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.rememberListScrollState
+import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.GkUi
+import li.gkd.app.ui.style.scaffoldPadding
+import li.gkd.app.ui.style.surfaceCardColors
+import li.gkd.app.util.ISSUES_URL
+import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.util.format
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @Serializable
@@ -104,19 +104,23 @@ fun CrashReportPage() {
         bottomBar = {
             if (crashDataList.isNotEmpty()) {
                 GkBottomActionBar {
-                    Spacer(modifier = Modifier.weight(1f))
-                    GkActionButton(
-                        onClick = throttle { mainVm.openUrl(ISSUES_URL) },
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = GkUi.PageHorizontal),
+                        horizontalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
                     ) {
-                        Text(text = UiStrings.feedback_report)
+                        GkActionButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = throttle { mainVm.openUrl(ISSUES_URL) },
+                        ) {
+                            Text(text = UiStrings.feedback_report)
+                        }
+                        GkActionButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { mainVm.shareLog.show() },
+                        ) {
+                            Text(text = UiStrings.logs_export)
+                        }
                     }
-                    Spacer(modifier = Modifier.width(itemHorizontalPadding))
-                    GkActionButton(
-                        onClick = { mainVm.shareLog.show() },
-                    ) {
-                        Text(text = UiStrings.logs_export)
-                    }
-                    Spacer(modifier = Modifier.width(itemHorizontalPadding))
                 }
             }
         },
@@ -126,7 +130,8 @@ fun CrashReportPage() {
                 .scaffoldPadding(contentPadding)
                 .fillMaxSize(),
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(itemVerticalPadding),
+            contentPadding = PaddingValues(top = GkUi.SectionGap / 2),
+            verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
         ) {
             items(
                 items = crashDataList,
@@ -138,7 +143,17 @@ fun CrashReportPage() {
                 )
             }
             item(key = "crash-report-footer") {
-                if (crashDataList.isEmpty() && crashDataState !is Loadable.Loading) {
+                if (crashDataList.isEmpty() && crashDataState is Loadable.Loading) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
+                    ) {
+                        CircularProgressIndicator()
+                        Text(UiStrings.loading_progress, style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                    }
+                } else if (crashDataList.isEmpty()) {
                     GkEmptyState(
                         text = (crashDataState as? Loadable.Failure)?.cause?.message
                             ?: UiStrings.crash_reports_empty,
@@ -227,7 +242,7 @@ private fun CrashReportDialog(
             }
         },
         dismissButton = {
-            GkActionButton(onClick = onDelete) {
+            GkActionButton(onClick = onDelete, contentColor = MiuixTheme.colorScheme.error) {
                 Text(text = UiStrings.crash_report_delete)
             }
         },
@@ -247,21 +262,22 @@ private fun CrashReportCard(
     val supportingColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
     Card(
         modifier = Modifier
-            .padding(horizontal = itemHorizontalPadding / 2)
+            .padding(horizontal = GkUi.PageHorizontal)
             .fillMaxWidth(),
         colors = surfaceCardColors,
+        showIndication = true,
         onClick = onClick,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(GkUi.ContentPadding),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = exceptionName,
-                style = MiuixTheme.textStyles.title3,
-                maxLines = 1,
+                style = MiuixTheme.textStyles.body1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
@@ -275,19 +291,17 @@ private fun CrashReportCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = UiStrings.crash_version_thread(crashData.versionName, crashData.versionCode, crashData.thread),
-                    modifier = Modifier.weight(1f),
                     style = MiuixTheme.textStyles.footnote1,
                     color = supportingColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 GkFixedTimeText(
                     text = timeText,
                     style = MiuixTheme.textStyles.footnote1,

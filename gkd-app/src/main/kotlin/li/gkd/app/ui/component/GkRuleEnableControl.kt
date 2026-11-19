@@ -2,7 +2,6 @@ package li.gkd.app.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
-import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.ui.semantics.Role
@@ -86,7 +85,7 @@ fun GkRuleEnableControl(
     }
     // The MIUIX switch keeps its track at its native size inside the expanded touch target.
     // Its own interaction source draws press feedback on the thumb, not the whole target.
-    Switch(
+    GkSwitch(
         modifier = modifier.then(reasonAction).semantics {
             contentDescription = UiStrings.rule_switch
             stateDescription = buildString {

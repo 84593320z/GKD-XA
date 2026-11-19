@@ -1,11 +1,10 @@
 package li.gkd.app.feature.settings
 
-import li.gkd.app.MainViewModel
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,11 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
-import li.gkd.app.text.UiStrings
+import li.gkd.app.MainViewModel
 import li.gkd.app.feature.log.A11yEventLogRoute
 import li.gkd.app.feature.log.ActivityLogRoute
+import li.gkd.app.feature.settings.ai.AiProvidersPageRoute
 import li.gkd.app.feature.snapshot.SnapshotPageRoute
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.platform.service.ServiceController
@@ -39,21 +38,11 @@ import li.gkd.app.service.ExternalCallTokens
 import li.gkd.app.service.HttpService
 import li.gkd.app.service.TrackService
 import li.gkd.app.store.AppStore.storeFlow
-import li.gkd.app.feature.settings.ai.AiProvidersPageRoute
-import li.gkd.app.ui.style.GkProvideTextStyle
-import li.gkd.app.util.ToastUtils.copyText
-import li.gkd.app.util.ToastUtils.toast
-import li.gkd.app.ui.style.EmptyHeight
-import li.gkd.app.ui.style.itemHorizontalPadding
-import li.gkd.app.ui.style.itemVerticalPadding
-import li.gkd.app.ui.style.TABULAR_NUMBERS_FONT_FEATURE
-import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.share.launchUiAction
-import li.gkd.app.util.TimeUtils.throttle
-import li.gkd.app.util.componentName
+import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkSizedIconButton
+import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkPageScaffold
+import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.PerfAlertDialog
 import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfIconButton
@@ -61,10 +50,21 @@ import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.ui.component.SettingItem
 import li.gkd.app.ui.component.TextSwitch
 import li.gkd.app.ui.component.autoFocus
+import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.share.launchUiAction
+import li.gkd.app.ui.style.GkProvideTextStyle
+import li.gkd.app.ui.style.TABULAR_NUMBERS_FONT_FEATURE
+import li.gkd.app.ui.style.itemHorizontalPadding
+import li.gkd.app.ui.style.itemVerticalPadding
+import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.util.ToastUtils.copyText
+import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.util.componentName
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -124,7 +124,7 @@ private fun AdvancedContent() {
                 .verticalScroll(rememberScrollState())
                 .padding(contentPadding),
         ) {
-            PreferenceGroup(showTop = false) {
+            PreferenceGroup(title = "快照与 AI", showTop = false) {
                 SettingItem(
                     title = UiStrings.snapshot_records,
                     subtitle = UiStrings.snapshot_records_description,
@@ -166,7 +166,7 @@ private fun AdvancedContent() {
                 )
             }
 
-            PreferenceGroup {
+            PreferenceGroup(title = "HTTP 调试") {
                 HttpServiceItem(
                     running = httpServer != null,
                     settingsSelected = showHttpSettingsDialog,
@@ -228,7 +228,7 @@ private fun AdvancedContent() {
                 }
             }
 
-            PreferenceGroup {
+            PreferenceGroup(title = "界面监视") {
                 TextSwitch(
                     title = UiStrings.activity_service_label,
                     subtitle = UiStrings.activity_service_description,
@@ -288,7 +288,7 @@ private fun AdvancedContent() {
                 )
             }
 
-            PreferenceGroup {
+            PreferenceGroup(title = "日志与工具") {
                 SettingItem(
                     title = UiStrings.activity_log_title,
                     subtitle = UiStrings.activity_switch_logs,
@@ -316,7 +316,7 @@ private fun AdvancedContent() {
                 )
             }
 
-            Spacer(modifier = Modifier.height(EmptyHeight))
+            GkPageBottomSpace(height = 40.dp)
         }
     }
 }
@@ -345,7 +345,8 @@ private fun HttpServiceItem(
                     onClickLabel = UiStrings.http_view_addresses(type),
                     onClick = throttle { HttpService.sessionUrl(host, port)?.let(onAddressClick) },
                 )
-                .padding(vertical = 2.dp),
+                .heightIn(min = 48.dp)
+                .padding(vertical = 12.dp),
         )
     }
 
@@ -355,8 +356,8 @@ private fun HttpServiceItem(
         subtitle = UiStrings.http_service_description,
         suffixIcon = {
             GkSizedIconButton(
-                size = 32.dp,
-                iconSize = 20.dp,
+                size = 48.dp,
+                iconSize = 24.dp,
                 onClickLabel = UiStrings.http_settings_open,
                 onClick = onSettingsClick,
                 imageVector = GkIcons.PageInfo,
@@ -382,7 +383,11 @@ private fun HttpServiceItem(
                     bottom = itemVerticalPadding,
                 ),
             ) {
-                Text(text = "点击链接连接本次调试会话（30 分钟有效，关闭后失效）")
+                Text(
+                    text = "点击链接连接本次调试会话（30 分钟有效，关闭后失效）",
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
                 addressItem("127.0.0.1", UiStrings.network_local_device)
                 localNetworkIps.forEach { host ->
                     addressItem(host, UiStrings.network_lan)
@@ -417,7 +422,9 @@ private fun EditHttpPortDialog(
                 )
                 Text(
                     text = UiStrings.port_input_length(value.length),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     textAlign = TextAlign.End,
                 )
             }

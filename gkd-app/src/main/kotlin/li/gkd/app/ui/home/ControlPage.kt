@@ -8,15 +8,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircleOutline
-import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -115,6 +111,8 @@ fun useControlPage(): ScaffoldExt {
                         }
                     GkTooltipIconButtonBox(contentDescription = "工作模式") {
                         MiuixIconButton(
+                            minWidth = 48.dp,
+                            minHeight = 48.dp,
                             modifier = Modifier.semantics {
                                 onClick(label = "前往工作模式页面", action = null)
                             },
@@ -345,7 +343,7 @@ private fun StatusOverviewSection() {
             ) {
                 Icon(
                     modifier = Modifier.size(32.dp),
-                    imageVector = if (serviceRunning) Icons.Rounded.CheckCircleOutline else Icons.Rounded.ErrorOutline,
+                    imageVector = if (serviceRunning) PerfIcon.Check else PerfIcon.WarningAmber,
                     tint = statusColors.icon,
                     contentDescription = null,
                 )
@@ -430,7 +428,7 @@ private fun ServerStatusSection() {
                 ) {
                     GroupNameText(
                         modifier = Modifier.weight(1f),
-                        preText = "最近触发: ",
+                        preText = "最近触发：",
                         isGlobal = latestRecord?.groupType == RuleGroupType.Global,
                         text = latestRecordDesc ?: "",
                         style = MiuixTheme.textStyles.body2,

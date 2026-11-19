@@ -3,26 +3,25 @@ package li.gkd.app.feature.snapshot
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.draw.clipToBounds
-import kotlinx.coroutines.CancellationException
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,15 +31,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,16 +57,17 @@ import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkCheckbox
-import li.gkd.app.ui.component.GkIcon
-import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkIconButton
+import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkPageScaffold
-import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.style.itemHorizontalPadding
-import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.util.json
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class SnapshotNodesRoute(
@@ -142,18 +147,20 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
         }
     }
     val highlightColor = MiuixTheme.colorScheme.primary
+    var imageReady by remember(route.snapshotId, state.imageWidth, state.imageHeight) { mutableStateOf(false) }
+    var imageFailed by remember(route.snapshotId, state.imageWidth, state.imageHeight) { mutableStateOf(false) }
+    val validImageBounds = state.imageWidth > 0 && state.imageHeight > 0 &&
+        route.screenWidth > 0 && route.screenHeight > 0
 
-    GkPageScaffold(topBar = {
-        GkTopAppBar(
-            navigationIcon = {
-                GkIconButton(imageVector = GkIcons.ArrowBack, onClick = { mainVm.popPage() })
-            },
-            titleText = UiStrings.snapshot_nodes_title,
-        )
-    }) { contentPadding ->
+    GkPageScaffold(
+        title = UiStrings.snapshot_nodes_title,
+        navigationIcon = {
+            GkIconButton(imageVector = GkIcons.ArrowBack, onClick = mainVm::popPage)
+        },
+    ) { contentPadding ->
         Column(
             modifier = Modifier
-                .scaffoldPadding(contentPadding)
+                .padding(contentPadding)
                 .fillMaxSize(),
         ) {
             if (!state.loaded) {
@@ -167,116 +174,162 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Text(
                         text = error ?: UiStrings.snapshot_nodes_empty,
-                        modifier = Modifier.align(Alignment.Center),
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                        style = MiuixTheme.textStyles.body2,
+                        textAlign = TextAlign.Center,
+                        color = if (error != null) MiuixTheme.colorScheme.error
+                            else MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 }
                 return@Column
             }
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxWidth().weight(1.2f).background(Color.Black),
-                contentAlignment = Alignment.Center,
-            ) {
-                val ratio = state.imageWidth.coerceAtLeast(1).toFloat() / state.imageHeight.coerceAtLeast(1)
-                val imageWidth = minOf(maxWidth, maxHeight * ratio)
-                Box(Modifier.size(imageWidth, imageWidth / ratio).clipToBounds()) {
-                AsyncImage(
-                    model = SnapshotRepository.screenshotFile(route.snapshotId),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillBounds,
-                )
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(state.nodes, topCrop) {
-                            detectTapGestures { offset ->
-                                val screenX = offset.x / size.width * route.screenWidth
-                                val screenY = offset.y / size.height * state.imageHeight + topCrop
-                                val hit = state.nodes
-                                    .filter {
-                                        screenX >= it.attr.left && screenX < it.attr.right &&
-                                            screenY >= it.attr.top && screenY < it.attr.bottom
-                                    }
-                                    .minByOrNull {
-                                        (it.attr.right - it.attr.left).toLong() *
-                                            (it.attr.bottom - it.attr.top)
-                                    }
-                                if (hit != null) {
-                                    selectedIds = if (hit.id in selectedIds) {
-                                        selectedIds - hit.id
-                                    } else {
-                                        selectedIds + hit.id
+            val preview: @Composable (Modifier) -> Unit = { previewModifier ->
+                if (!validImageBounds || imageFailed) {
+                    Card(modifier = previewModifier.padding(horizontal = itemHorizontalPadding, vertical = 8.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = UiStrings.snapshot_screenshot_unavailable,
+                                style = MiuixTheme.textStyles.headline1,
+                                color = MiuixTheme.colorScheme.error,
+                            )
+                            Text(
+                                text = "仍可在列表中选择组件，或保留完整节点树生成规则。",
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                    }
+                } else {
+                    BoxWithConstraints(
+                        modifier = previewModifier.background(Color.Black),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val ratio = state.imageWidth.coerceAtLeast(1).toFloat() / state.imageHeight.coerceAtLeast(1)
+                        val imageWidth = minOf(maxWidth, maxHeight * ratio)
+                        Box(Modifier.size(imageWidth, imageWidth / ratio).clipToBounds()) {
+                            AsyncImage(
+                                model = SnapshotRepository.screenshotFile(route.snapshotId),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.FillBounds,
+                                onLoading = { imageReady = false },
+                                onSuccess = { imageReady = true },
+                                onError = {
+                                    imageReady = false
+                                    imageFailed = true
+                                },
+                            )
+                            // Bounds decoding alone cannot prove the actual screenshot is readable.
+                            // Never install coordinate hit testing until Coil has decoded the image.
+                            if (imageReady) {
+                                Canvas(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .pointerInput(state.nodes, topCrop) {
+                                            detectTapGestures { offset ->
+                                                val screenX = offset.x / size.width * route.screenWidth
+                                                val screenY = offset.y / size.height * state.imageHeight + topCrop
+                                                val hit = state.nodes
+                                                    .filter {
+                                                        screenX >= it.attr.left && screenX < it.attr.right &&
+                                                            screenY >= it.attr.top && screenY < it.attr.bottom
+                                                    }
+                                                    .minByOrNull {
+                                                        (it.attr.right - it.attr.left).toLong() *
+                                                            (it.attr.bottom - it.attr.top)
+                                                    }
+                                                if (hit != null) {
+                                                    selectedIds = if (hit.id in selectedIds) {
+                                                        selectedIds - hit.id
+                                                    } else {
+                                                        selectedIds + hit.id
+                                                    }
+                                                }
+                                            }
+                                        },
+                                ) {
+                                    val scaleX = size.width / route.screenWidth
+                                    val scaleY = size.height / state.imageHeight.coerceAtLeast(1)
+                                    selectedNodes.forEach { node ->
+                                        drawRect(
+                                            color = highlightColor,
+                                            topLeft = Offset(
+                                                node.attr.left * scaleX,
+                                                (node.attr.top - topCrop) * scaleY,
+                                            ),
+                                            size = Size(
+                                                (node.attr.right - node.attr.left) * scaleX,
+                                                (node.attr.bottom - node.attr.top) * scaleY,
+                                            ),
+                                            style = Stroke(width = 3f),
+                                        )
                                     }
                                 }
+                            } else {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                             }
-                        },
-                ) {
-                    val scaleX = size.width / route.screenWidth
-                    val scaleY = size.height / state.imageHeight.coerceAtLeast(1)
-                    selectedNodes.forEach { node ->
-                        drawRect(
-                            color = highlightColor,
-                            topLeft = Offset(
-                                node.attr.left * scaleX,
-                                (node.attr.top - topCrop) * scaleY,
-                            ),
-                            size = Size(
-                                (node.attr.right - node.attr.left) * scaleX,
-                                (node.attr.bottom - node.attr.top) * scaleY,
-                            ),
-                            style = Stroke(width = 3f),
-                        )
+                        }
                     }
                 }
             }
-            }
-            Text(
-                text = UiStrings.snapshot_nodes_hint,
-                modifier = Modifier.padding(horizontal = itemHorizontalPadding, vertical = 8.dp),
-                style = MiuixTheme.textStyles.footnote1,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = itemHorizontalPadding),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "已选 ${selectedIds.size} 个组件",
-                    style = MiuixTheme.textStyles.body2,
-                    modifier = Modifier.weight(1f),
-                )
-                GkActionButton(
-                    onClick = { selectedIds = emptySet() },
-                    enabled = selectedIds.isNotEmpty(),
-                ) {
-                    Text(text = UiStrings.snapshot_nodes_clear)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                GkActionButton(
-                    emphasized = true,
-                    onClick = {
-                        val ids = selectedIds
-                        scope.launch {
-                            if (AiRuleGenerator.generateRule(route.snapshotId, ids, includeAllNodes)) {
-                                mainVm.popPage()
+            val panel: LazyListScope.() -> Unit = {
+                item(key = "controls") {
+                    Column {
+                        Text(
+                            text = UiStrings.snapshot_nodes_hint,
+                            modifier = Modifier.padding(horizontal = itemHorizontalPadding, vertical = 8.dp),
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                        Text(
+                            text = "已选 ${selectedIds.size} 个组件",
+                            style = MiuixTheme.textStyles.body2,
+                            modifier = Modifier.padding(horizontal = itemHorizontalPadding, vertical = 4.dp),
+                        )
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = itemHorizontalPadding),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            GkActionButton(
+                                onClick = { selectedIds = emptySet() },
+                                enabled = selectedIds.isNotEmpty(),
+                            ) {
+                                Text(text = UiStrings.snapshot_nodes_clear)
+                            }
+                            GkActionButton(
+                                emphasized = true,
+                                onClick = {
+                                    val ids = selectedIds
+                                    scope.launch {
+                                        if (AiRuleGenerator.generateRule(route.snapshotId, ids, includeAllNodes)) {
+                                            mainVm.popPage()
+                                        }
+                                    }
+                                },
+                                enabled = selectedIds.isNotEmpty() || includeAllNodes,
+                            ) {
+                                Text(
+                                    text = if (includeAllNodes && selectedIds.isEmpty()) "用完整节点树生成规则"
+                                        else UiStrings.snapshot_nodes_generate,
+                                )
                             }
                         }
-                    },
-                    enabled = selectedIds.isNotEmpty(),
-                ) {
-                    Text(text = UiStrings.snapshot_nodes_generate)
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .toggleable(value = includeAllNodes, role = Role.Checkbox, onValueChange = { includeAllNodes = it })
+                                .heightIn(min = 48.dp)
+                                .padding(horizontal = itemHorizontalPadding),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            GkCheckbox(checked = includeAllNodes)
+                            Text("保留完整节点树", style = MiuixTheme.textStyles.footnote1)
+                        }
+                    }
                 }
-            }
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = itemHorizontalPadding),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                GkCheckbox(checked = includeAllNodes, onCheckedChange = { includeAllNodes = it })
-                Text("保留完整节点树", style = MiuixTheme.textStyles.footnote1)
-            }
-            LazyColumn(modifier = Modifier.weight(1f)) {
                 items(
                     items = visibleNodes,
                     key = { it.id },
@@ -285,13 +338,14 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                selectedIds = if (selected) {
-                                    selectedIds - node.id
-                                } else {
-                                    selectedIds + node.id
-                                }
-                            }
+                            .background(
+                                if (selected) MiuixTheme.colorScheme.primaryContainer
+                                else MiuixTheme.colorScheme.surface,
+                            )
+                            .toggleable(value = selected, role = Role.Checkbox, onValueChange = {
+                                selectedIds = if (selected) selectedIds - node.id else selectedIds + node.id
+                            })
+                            .heightIn(min = 48.dp)
                             .padding(
                                 // 层级缩进封顶，深树节点别把文字挤没
                                 start = itemHorizontalPadding + (node.attr.depth * 10).coerceAtMost(60).dp,
@@ -302,13 +356,7 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        if (selected) {
-                            GkIcon(
-                                imageVector = GkIcons.CheckCircle,
-                                tint = MiuixTheme.colorScheme.primary,
-                                contentDescription = null,
-                            )
-                        }
+                        GkCheckbox(checked = selected)
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = node.displayLabel(),
@@ -322,8 +370,27 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                                 style = MiuixTheme.textStyles.footnote1,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
+                    }
+                }
+            }
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                // Available height is after the scaffold insets. At large font scales, prefer
+                // one scroll surface instead of dividing an already short window into slivers.
+                val compact = maxHeight < 480.dp * LocalDensity.current.fontScale
+                if (compact) {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        item(key = "preview") {
+                            preview(Modifier.fillMaxWidth().height((maxHeight * 0.6f).coerceIn(120.dp, 280.dp)))
+                        }
+                        panel()
+                    }
+                } else {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        preview(Modifier.fillMaxWidth().weight(1.2f))
+                        LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f), content = panel)
                     }
                 }
             }

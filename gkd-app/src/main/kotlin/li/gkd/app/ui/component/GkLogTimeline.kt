@@ -4,16 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -26,6 +26,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -36,9 +37,12 @@ import androidx.paging.compose.itemKey
 import li.gkd.app.data.appinfo.AppInfoRepository
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.share.ListPlaceholder
+import li.gkd.app.ui.style.GkUi
 import li.gkd.app.ui.style.TABULAR_NUMBERS_FONT_FEATURE
-import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.util.format
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun <T : Any> GkLogTimeline(
@@ -102,11 +106,56 @@ fun <T : Any> GkLogTimeline(
             }
         }
         item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
-            if (items.itemCount == 0 && items.loadState.refresh !is LoadState.Loading) {
-                GkEmptyState(text = UiStrings.data_empty)
-            } else {
-                GkPageBottomSpace()
+            val refresh = items.loadState.refresh
+            val append = items.loadState.append
+            // One load-state branch owns the footer; retries happen only on a user tap.
+            when {
+                refresh is LoadState.Error -> GkLogLoadError(refresh.error, onRetry = items::retry)
+                items.itemCount == 0 && refresh is LoadState.Loading -> {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
+                    ) {
+                        CircularProgressIndicator()
+                        Text(UiStrings.loading_progress, style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                    }
+                }
+                append is LoadState.Error -> GkLogLoadError(append.error, onRetry = items::retry)
+                items.itemCount == 0 -> GkEmptyState(text = UiStrings.data_empty)
+                append is LoadState.Loading -> {
+                    Box(Modifier.fillMaxWidth().padding(GkUi.ContentPadding), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(modifier = Modifier.size(GkUi.IconSize))
+                    }
+                }
             }
+            GkPageBottomSpace()
+        }
+    }
+}
+
+@Composable
+private fun GkLogLoadError(cause: Throwable, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(GkUi.ContentPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
+    ) {
+        GkIcon(
+            imageVector = GkIcons.WarningAmber,
+            modifier = Modifier.size(GkUi.IconSize),
+            tint = MiuixTheme.colorScheme.error,
+            contentDescription = null,
+        )
+        Text(
+            text = cause.message?.takeIf { it.isNotBlank() } ?: UiStrings.data_load_failed,
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.error,
+            textAlign = TextAlign.Center,
+        )
+        GkActionButton(onClick = onRetry) {
+            Text(UiStrings.action_reload)
         }
     }
 }
@@ -122,7 +171,7 @@ fun GkLogTimeText(time: Long) {
                 append(formatted.takeLast(4))
             }
         },
-        style = MiuixTheme.textStyles.footnote2.copy(
+        style = MiuixTheme.textStyles.footnote1.copy(
             fontFeatureSettings = TABULAR_NUMBERS_FONT_FEATURE,
         ),
         color = color,
@@ -184,7 +233,8 @@ private fun GkLogDateHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(MiuixTheme.colorScheme.surface)
-            .padding(start = 24.dp, end = itemHorizontalPadding, top = 8.dp, bottom = 8.dp),
+            .heightIn(min = GkUi.MinTouchTarget)
+            .padding(start = 24.dp, end = GkUi.PageHorizontal, top = 8.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -204,7 +254,7 @@ private fun GkLogDateHeader(
                 val apps by AppInfoRepository.appInfoMapFlow.collectAsStateWithLifecycle()
                 Text(
                     text = apps[id]?.name ?: id,
-                    style = MiuixTheme.textStyles.footnote2,
+                    style = MiuixTheme.textStyles.footnote1,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     maxLines = 1,
                     softWrap = false,
@@ -225,12 +275,14 @@ private fun GkLogAppHeader(
         modifier = Modifier
             .fillMaxWidth()
             .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
+            .padding(top = if (firstInDate) 0.dp else GkUi.SectionGap)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .heightIn(min = GkUi.MinTouchTarget)
             .padding(
-                start = 16.dp,
-                end = itemHorizontalPadding,
-                top = if (firstInDate) 0.dp else 12.dp,
-                bottom = 0.dp,
+                start = GkUi.PageHorizontal,
+                end = GkUi.PageHorizontal,
+                top = 8.dp,
+                bottom = 8.dp,
             ),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -242,7 +294,7 @@ private fun GkLogAppHeader(
                 .background(MiuixTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
-            GkAppIcon(appId = appId, size = 24.dp)
+            GkAppIcon(appId = appId, size = GkUi.IconSize)
         }
         GkAppNameText(
             appId = appId,

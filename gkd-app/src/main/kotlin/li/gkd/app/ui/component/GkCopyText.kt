@@ -99,7 +99,7 @@ fun GkCopyIconOverlay(
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(modifier = modifier) {
-        content()
+        Box(modifier = Modifier.padding(end = GkIconButtonDefaults.MinTouchTargetSize), content = content)
         AnimatedVisibility(
             visible = copyIconVisible,
             modifier = Modifier.align(Alignment.TopEnd),

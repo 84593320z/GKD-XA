@@ -23,6 +23,7 @@ include(
     ":gkd-app",
     ":gkd-db",
     ":gkd-hidden-api",
+    ":gkd-priv-ui",
     ":gkd-selector",
 )
 

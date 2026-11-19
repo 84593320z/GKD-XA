@@ -24,9 +24,9 @@ fun GkTwoLineText(
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.MiddleEllipsis,
-            style = MiuixTheme.textStyles.title3,
+            style = MiuixTheme.textStyles.headline1,
         )
-        GkProvideTextStyle(MiuixTheme.textStyles.subtitle) {
+        GkProvideTextStyle(MiuixTheme.textStyles.body2) {
             if (showApp) {
                 GkAppNameText(appId = subtitle, fallbackName = appFallbackName)
             } else {

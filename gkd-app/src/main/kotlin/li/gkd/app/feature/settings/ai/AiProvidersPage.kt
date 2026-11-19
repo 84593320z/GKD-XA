@@ -3,8 +3,12 @@ package li.gkd.app.feature.settings.ai
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,11 +20,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import li.gkd.app.MainViewModel
@@ -30,15 +36,16 @@ import li.gkd.app.ui.component.GkCheckbox
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkSizedIconButton
+import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkPageScaffold
-import li.gkd.app.ui.style.scaffoldPadding
+import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.util.AiProtocolOption
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
@@ -94,7 +101,9 @@ fun AiProvidersPage() {
             )
         },
     ) { contentPadding ->
-        LazyColumn(modifier = Modifier.scaffoldPadding(contentPadding)) {
+        LazyColumn(
+            modifier = Modifier.padding(contentPadding).consumeWindowInsets(contentPadding).imePadding(),
+        ) {
             item(key = "add") {
                 AiSection(title = "添加服务商") {
                     AiProtocolOption.objects.forEachIndexed { index, option ->
@@ -155,6 +164,8 @@ fun AiProvidersPage() {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                                    .semantics { stateDescription = if (isActive) "当前服务商" else "未选用" }
                                     .clickable(
                                         onClick = throttle {
                                             mainVm.navigatePage(AiProviderDetailRoute(id = provider.id))
@@ -166,9 +177,9 @@ fun AiProvidersPage() {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = provider.name.ifBlank { "未命名" },
-                                            style = MiuixTheme.textStyles.headline2,
+                                            style = MiuixTheme.textStyles.headline1,
                                             color = MiuixTheme.colorScheme.onSurface,
-                                            maxLines = 1,
+                                            maxLines = 2,
                                             overflow = TextOverflow.Ellipsis,
                                         )
                                         Text(
@@ -183,11 +194,12 @@ fun AiProvidersPage() {
                                     GkCheckbox(
                                         checked = isActive,
                                         key = provider.id,
+                                        modifier = Modifier.semantics { contentDescription = "设为当前服务商" },
                                         onCheckedChange = { activate() },
                                     )
                                     GkSizedIconButton(
-                                        size = 36.dp,
-                                        iconSize = 19.dp,
+                                        size = 48.dp,
+                                        iconSize = 24.dp,
                                         onClickLabel = "移除服务商",
                                         onClick = throttle(fn = { confirmDelete(provider) }),
                                         imageVector = GkIcons.Delete,
@@ -195,8 +207,9 @@ fun AiProvidersPage() {
                                         tint = MiuixTheme.colorScheme.error,
                                     )
                                 }
-                                Row(
+                                FlowRow(
                                     horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp),
                                     modifier = Modifier.padding(top = 8.dp),
                                 ) {
                                     AiTagChip(text = provider.protocolLabel)
@@ -216,6 +229,7 @@ fun AiProvidersPage() {
                     }
                 }
             }
+            item(key = "bottom") { GkPageBottomSpace(height = 40.dp) }
         }
     }
 }

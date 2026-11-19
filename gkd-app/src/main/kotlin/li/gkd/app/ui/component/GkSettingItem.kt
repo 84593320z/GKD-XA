@@ -1,24 +1,22 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import li.gkd.app.text.UiStrings
-import li.gkd.app.ui.style.itemPadding
 import li.gkd.app.util.TimeUtils.throttle
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.ui.graphics.vector.ImageVector
 
+/** One native row implementation for both historical setting-item entry points. */
 @Composable
 fun GkSettingItem(
     title: String,
@@ -32,69 +30,42 @@ fun GkSettingItem(
     subtitleMaxLines: Int = Int.MAX_VALUE,
     subtitleOverflow: TextOverflow = TextOverflow.Clip,
 ) {
-    Row(
-        modifier = Modifier
-            .let {
-                if (onClick != null) {
-                    it.clickable(
-                        onClick = throttle(fn = onClick),
-                        onClickLabel = onClickLabel ?: UiStrings.page_enter_description(title)
-                    )
-                } else {
-                    it
-                }
-            }
-            .fillMaxWidth()
-            .itemPadding(),
-        verticalAlignment = Alignment.CenterVertically,
+    val trailing = imageVector.takeUnless { it == GkIcons.KeyboardArrowRight && onClick == null }
+    BasicComponent(
+        onClick = onClick?.let { throttle(fn = it) },
+        onClickLabel = onClickLabel ?: UiStrings.page_enter_description(title),
+        endActions = trailing?.let { { GkIcon(it, contentDescription = null) } },
     ) {
-        Column(modifier = if (imageVector != null) Modifier.weight(1f) else Modifier.fillMaxWidth()) {
-            Text(
-                text = title,
-                style = MiuixTheme.textStyles.body1,
-            )
-            if (subtitle != null) {
-                if (suffix != null) {
-                    Row {
-                        Text(
-                            text = subtitle,
-                            maxLines = subtitleMaxLines,
-                            overflow = subtitleOverflow,
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = suffix,
-                            style = MiuixTheme.textStyles.body2.run {
-                                if (suffixUnderline) {
-                                    copy(textDecoration = TextDecoration.Underline)
-                                } else {
-                                    this
-                                }
-                            },
-                            color = MiuixTheme.colorScheme.primary,
-                            modifier = if (onSuffixClick != null) Modifier.clickable(
-                                onClick = throttle(fn = onSuffixClick),
-                            ) else Modifier
-                        )
-                    }
-                } else {
-                    Text(
-                        text = subtitle,
-                        maxLines = subtitleMaxLines,
-                        overflow = subtitleOverflow,
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                }
-            }
+        Text(title, style = MiuixTheme.textStyles.headline1.copy(fontWeight = FontWeight.Medium))
+        GkPreferenceSummary(subtitle, suffix, suffixUnderline, onSuffixClick,
+            maxLines = subtitleMaxLines, overflow = subtitleOverflow)
+    }
+}
+
+@Composable
+internal fun GkPreferenceSummary(
+    subtitle: String?,
+    suffix: String?,
+    underline: Boolean,
+    onSuffixClick: (() -> Unit)?,
+    enabled: Boolean = true,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
+) {
+    if (subtitle == null && suffix == null) return
+    val scheme = MiuixTheme.colorScheme
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        subtitle?.let {
+            Text(it, style = MiuixTheme.textStyles.body2, maxLines = maxLines, overflow = overflow,
+                color = if (enabled) scheme.onSurfaceVariantSummary else scheme.disabledOnSurface)
         }
-        if (imageVector != null) {
-            GkIcon(
-                imageVector = imageVector,
-                contentDescription = null,
-            )
+        suffix?.let {
+            Text(it, style = MiuixTheme.textStyles.body2,
+                textDecoration = if (underline) TextDecoration.Underline else null,
+                color = if (!enabled) scheme.disabledOnSurface else if (onSuffixClick != null) scheme.primary
+                    else scheme.onSurfaceVariantSummary,
+                modifier = if (onSuffixClick != null) Modifier.clickable(enabled = enabled,
+                    onClick = throttle(fn = onSuffixClick)) else Modifier)
         }
     }
 }

@@ -9,12 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.RadioButton
@@ -27,6 +28,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import li.gkd.app.ui.style.GkShapes
+import li.gkd.app.ui.style.GkUi
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -79,23 +87,29 @@ fun WorkModePage() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
                 .padding(contentPadding)
+                .consumeWindowInsets(contentPadding)
+                .verticalScroll(rememberScrollState())
         ) {
             Card(
                 modifier = Modifier
                     .padding(horizontal = cardHorizontalPadding)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .semantics {
+                        role = Role.RadioButton
+                        selected = automatorMode == AutomatorModeOption.A11yMode
+                    },
                 onClick = throttle { mainVm.updateAutomatorMode(AutomatorModeOption.A11yMode) },
                 colors = surfaceCardColors,
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(GkUi.ContentPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
                         selected = automatorMode == AutomatorModeOption.A11yMode,
                         onClick = null,
+                        modifier = Modifier.clearAndSetSemantics {},
                     )
                     Text(
                         modifier = Modifier.padding(start = 12.dp),
@@ -148,11 +162,12 @@ fun WorkModePage() {
                             Text(
                                 modifier = Modifier
                                     .align(Alignment.End)
-                                    .clip(RoundedCornerShape(4.dp))
+                                    .clip(GkShapes.control)
                                     .clickable(onClick = throttle {
                                         mainVm.navigateWebPage(ShortUrlSet.URL2)
                                     })
-                                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                                    .heightIn(min = GkUi.MinTouchTarget)
+                                    .padding(horizontal = 12.dp, vertical = 12.dp),
                                 text = UiStrings.help_view,
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.primary,
@@ -233,7 +248,11 @@ fun WorkModePage() {
             Card(
                 modifier = Modifier
                     .padding(horizontal = cardHorizontalPadding)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .semantics {
+                        role = Role.RadioButton
+                        selected = automatorMode == AutomatorModeOption.AutomationMode
+                    },
                 onClick = vm.scope.launchUiAction {
                     if (privilegeContext == null) {
                         if (mainVm.dialogRequests.confirm(
@@ -252,12 +271,13 @@ fun WorkModePage() {
                 colors = surfaceCardColors,
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(GkUi.ContentPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
                         selected = automatorMode == AutomatorModeOption.AutomationMode,
                         onClick = null,
+                        modifier = Modifier.clearAndSetSemantics {},
                     )
                     Text(
                         modifier = Modifier.padding(start = 12.dp),

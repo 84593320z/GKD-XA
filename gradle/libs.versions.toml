@@ -65,7 +65,6 @@ remap-processor = { module = "li.songe.remap:remap-processor", version.ref = "re
 remap-annotation = { module = "li.songe.remap:remap-annotation", version.ref = "remap" }
 rikka-shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 rikka-shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
-priv-kit-ui = { module = "io.github.priv-kit:priv-ui", version.ref = "priv-kit" }
 lsposed-hiddenapibypass = "org.lsposed.hiddenapibypass:hiddenapibypass:6.1"
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }

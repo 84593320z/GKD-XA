@@ -1,18 +1,17 @@
 package li.gkd.app.ui
 
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkEditorScaffold
 import li.gkd.app.ui.component.GkMultiTextField
 import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.ToastUtils.toast
+import top.yukonga.miuix.kmp.nav.core.NavKey
 
 @Serializable
 data object EditBlockAppListRoute : NavKey
@@ -33,6 +32,7 @@ fun EditBlockAppListPage() {
             text = text,
             onTextChange = vm::setText,
             immediateFocus = true,
+            placeholderText = UiStrings.app_ids_input_hint,
             indicatorSize = vm.indicatorSizeFlow.collectAsStateWithLifecycle().value,
         )
     }

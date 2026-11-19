@@ -55,6 +55,8 @@ fun PrivilegeServicePage() {
         )
     }
     PrivilegeKitTheme {
+        // Supplied by :gkd-priv-ui (pinned 0.20.0 source fork). The actual permission
+        // host and service flows are retained; the entire visible layer is native Miuix.
         PrivilegeScaffold(
             modifier = Modifier.fillMaxSize(),
             viewModel = privilegeVm,
@@ -63,6 +65,7 @@ fun PrivilegeServicePage() {
                     navigationIcon = {
                         GkIconButton(
                             imageVector = GkIcons.ArrowBack,
+                            contentDescription = UiStrings.action_back,
                             onClick = mainVm::popPage,
                         )
                     },

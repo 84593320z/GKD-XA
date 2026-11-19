@@ -1,12 +1,12 @@
 package li.gkd.app.feature.settings
 
-import li.gkd.app.MainViewModel
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
@@ -18,18 +18,21 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
-import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.MainActivity
+import li.gkd.app.MainViewModel
+import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkTextListDialog
+import li.gkd.app.ui.share.launchUiAction
+import li.gkd.app.util.IntentUtils
 import li.gkd.app.util.PLAY_STORE_URL
 import li.gkd.app.util.ShortUrlSet
 import li.gkd.app.util.format
 import li.gkd.app.util.getShareApkFile
-import li.gkd.app.ui.share.launchUiAction
-import li.gkd.app.util.IntentUtils
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun AboutDialogs(
@@ -55,31 +58,25 @@ private fun VersionInfoDialog(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    VersionInfoItem(label = UiStrings.build_channel, value = META.channel)
+                    VersionInfoItem(label = UiStrings.version_code, value = META.versionCode.toString())
+                    VersionInfoItem(label = UiStrings.version_name, value = META.versionName)
                     Column {
-                        Text(text = UiStrings.build_channel)
-                        Text(text = META.channel)
-                    }
-                    Column {
-                        Text(text = UiStrings.version_code)
-                        Text(text = META.versionCode.toString())
-                    }
-                    Column {
-                        Text(text = UiStrings.version_name)
-                        Text(text = META.versionName)
-                    }
-                    Column {
-                        Text(text = UiStrings.code_history)
                         Text(
-                            modifier = Modifier.clickable { IntentUtils.openUri(META.commitUrl) },
+                            text = UiStrings.code_history,
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                        Text(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                .clickable { IntentUtils.openUri(META.commitUrl) }
+                                .padding(vertical = 8.dp),
                             text = META.tagName ?: META.commitId.substring(0, 16),
                             color = MiuixTheme.colorScheme.primary,
-                            style = MiuixTheme.textStyles.main.copy(textDecoration = TextDecoration.Underline),
+                            style = MiuixTheme.textStyles.body1.copy(textDecoration = TextDecoration.Underline),
                         )
                     }
-                    Column {
-                        Text(text = UiStrings.commit_time)
-                        Text(text = META.commitTime.format("yyyy-MM-dd HH:mm:ss ZZ"))
-                    }
+                    VersionInfoItem(label = UiStrings.commit_time, value = META.commitTime.format("yyyy-MM-dd HH:mm:ss ZZ"))
                 }
             },
             confirmButton = {
@@ -88,6 +85,18 @@ private fun VersionInfoDialog(
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun VersionInfoItem(label: String, value: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = label,
+            style = MiuixTheme.textStyles.footnote1,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+        Text(text = value, style = MiuixTheme.textStyles.body1)
     }
 }
 

@@ -11,12 +11,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,11 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.serialization.Serializable
 import li.gkd.app.MainViewModel
@@ -42,9 +39,6 @@ import li.gkd.app.feature.subscription.SubsGlobalGroupListRoute
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.AppConfigRoute
 import li.gkd.app.ui.component.GkActionButton
-import li.gkd.app.ui.component.GkLogTimeline
-import li.gkd.app.ui.component.GkLogTimeText
-import li.gkd.app.ui.component.gkLogTimelineRail
 import li.gkd.app.ui.component.GkAppIcon
 import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkCheckbox
@@ -54,22 +48,29 @@ import li.gkd.app.ui.component.GkGroupNameText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkLogTimeText
+import li.gkd.app.ui.component.GkLogTimeline
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleSettingsContent
 import li.gkd.app.ui.component.GkRuleSettingsSheet
-import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.animateListItem
+import li.gkd.app.ui.component.gkLogTimelineRail
 import li.gkd.app.ui.component.rememberListScrollState
 import li.gkd.app.ui.component.rememberRuleControlEnvironment
 import li.gkd.app.ui.component.useSubs
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.style.appItemPadding
 import li.gkd.app.ui.style.itemHorizontalPadding
-import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.db.ActionLog
 import li.gkd.db.RuleGroupType
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class ActionLogRoute(
@@ -135,7 +136,7 @@ fun ActionLogPage(route: ActionLogRoute) {
             key = { it.actionLog.id },
             appId = { it.actionLog.appId },
             time = { it.actionLog.ctime },
-            modifier = Modifier.scaffoldPadding(contentPadding),
+            modifier = Modifier.padding(contentPadding),
             showAppHeaders = !appScoped,
             contextChanged = { previous, current ->
                 !sameActionLogContext(previous.actionLog, current.actionLog)
@@ -229,30 +230,31 @@ private fun ActionLogAppFilterDialog(
                     style = MiuixTheme.textStyles.subtitle,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 )
-                if (appIds.isEmpty()) {
-                    Text(
-                        text = UiStrings.action_log_app_filter_empty,
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    )
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        GkActionButton(onClick = throttle { selected = appIds.toSet() }) {
-                            Text(text = UiStrings.selection_all)
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(max = 360.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    if (appIds.isEmpty()) {
+                        Text(
+                            text = UiStrings.action_log_app_filter_empty,
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            GkActionButton(onClick = throttle { selected = appIds.toSet() }) {
+                                Text(text = UiStrings.selection_all)
+                            }
+                            GkActionButton(onClick = throttle { selected = emptySet() }) {
+                                Text(text = UiStrings.reset_filter)
+                            }
                         }
-                        GkActionButton(onClick = throttle { selected = emptySet() }) {
-                            Text(text = UiStrings.reset_filter)
-                        }
-                    }
-                    Column(
-                        modifier = Modifier
-                            .heightIn(max = 360.dp)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
                         appIds.forEach { appId ->
                             ActionLogAppFilterItem(
                                 appId = appId,
@@ -274,7 +276,7 @@ private fun ActionLogAppFilterDialog(
                     GkActionButton(onClick = throttle(onDismiss)) {
                         Text(text = UiStrings.action_cancel)
                     }
-                    GkActionButton(onClick = throttle { onConfirm(appIds.filter { it in selected }) }) {
+                    GkActionButton(emphasized = true, onClick = throttle { onConfirm(appIds.filter { it in selected }) }) {
                         Text(text = UiStrings.action_confirm)
                     }
                 }
@@ -289,10 +291,12 @@ private fun ActionLogAppFilterItem(
     checked: Boolean,
     onClick: () -> Unit,
 ) {
+    val toggle = throttle(fn = onClick)
     Row(
         modifier = Modifier
-            .clickable(onClick = throttle(onClick))
             .fillMaxWidth()
+            .toggleable(value = checked, role = Role.Checkbox, onValueChange = { toggle() })
+            .heightIn(min = 48.dp)
             .appItemPadding(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -434,6 +438,7 @@ private fun ActionLogEntry(
             .fillMaxWidth()
             .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .clickable(onClick = onClick)
+            .heightIn(min = 48.dp)
             .padding(start = 56.dp, end = itemHorizontalPadding, top = 6.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top,
@@ -514,10 +519,12 @@ private fun ItemText(
     val modifier = Modifier
         .clickable(onClick = throttle(onClick))
         .fillMaxWidth()
+        .heightIn(min = 48.dp)
         .padding(16.dp)
     Text(
         modifier = modifier,
         text = text,
+        style = MiuixTheme.textStyles.headline1,
         color = color,
     )
 }

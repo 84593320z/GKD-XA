@@ -1,5 +1,12 @@
 package li.gkd.app.ui.component
 
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -30,7 +38,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Dialog as PlatformDialog
 import li.gkd.app.ui.style.GkProvideTextStyle
 import li.gkd.app.ui.style.GkShapes
+import li.gkd.app.ui.style.GkUi
 import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
@@ -87,16 +97,39 @@ private fun DialogLayer(content: @Composable () -> Unit) {
 fun GkDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(),
+    nativePlacement: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val dismiss by rememberUpdatedState(onDismissRequest)
     DialogLayer {
         // Keep the platform Dialog here intentionally: callers rely on the exact
         // DialogProperties contract (including outside/back dismissal and fullscreen windows).
         PlatformDialog(
             onDismissRequest = onDismissRequest,
-            properties = properties,
-            content = content,
-        )
+            properties = if (nativePlacement) DialogProperties(
+                dismissOnBackPress = properties.dismissOnBackPress,
+                dismissOnClickOutside = properties.dismissOnClickOutside,
+                securePolicy = properties.securePolicy,
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
+            ) else properties,
+        ) {
+            if (nativePlacement) {
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize().imePadding().safeDrawingPadding()
+                        .pointerInput(properties.dismissOnClickOutside) {
+                            detectTapGestures { if (properties.dismissOnClickOutside) dismiss() }
+                        },
+                ) {
+                    val large = maxWidth >= 840.dp && maxHeight >= 480.dp
+                    Box(
+                        modifier = Modifier.align(if (large) Alignment.Center else Alignment.BottomCenter)
+                            .padding(vertical = DialogDefaults.outsideMargin.height)
+                            .pointerInput(Unit) { detectTapGestures { } },
+                    ) { content() }
+                }
+            } else content()
+        }
     }
 }
 
@@ -133,6 +166,7 @@ internal fun GkProvideDialogTextStyle(
     }
 }
 
+/** Shared Miuix dialog frame; a bounded inner height leaves scrolling to each content slot. */
 @Composable
 internal fun GkDialogSurface(
     modifier: Modifier = Modifier,
@@ -142,28 +176,38 @@ internal fun GkDialogSurface(
     shadowElevation: Dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val maxHeight = (LocalWindowInfo.current.containerDpSize.height * 0.9f)
-        .coerceAtLeast(240.dp)
-    Surface(
+    val windowSize = LocalWindowInfo.current.containerDpSize
+    val isLargeScreen = windowSize.height >= 480.dp && windowSize.width >= 840.dp
+    val maxHeight = (
+        if (isLargeScreen) windowSize.height * (2f / 3f)
+        else windowSize.height - DialogDefaults.outsideMargin.height * 2f
+    ).coerceAtLeast(1.dp)
+
+    Box(
         modifier = Modifier
-            .widthIn(max = 420.dp)
             .fillMaxWidth()
-            .heightIn(max = maxHeight)
-            .imePadding()
-            .then(modifier),
-        shape = shape,
-        color = containerColor,
-        contentColor = contentColor,
-        shadowElevation = shadowElevation,
+            .padding(horizontal = DialogDefaults.outsideMargin.width),
+        contentAlignment = Alignment.Center,
     ) {
-        Column(
+        Surface(
             modifier = Modifier
+                .widthIn(max = DialogDefaults.MaxWidth)
                 .fillMaxWidth()
                 .heightIn(max = maxHeight)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            content = content,
-        )
+                .then(modifier),
+            shape = shape,
+            color = containerColor,
+            contentColor = contentColor,
+            shadowElevation = shadowElevation,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(DialogDefaults.insideMargin.width, DialogDefaults.insideMargin.height),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                content = content,
+            )
+        }
     }
 }
 
@@ -185,19 +229,19 @@ fun GkAlertDialog(
     properties: DialogProperties = DialogProperties(),
 ) {
     val resolvedContainerColor = if (containerColor == Color.Unspecified) {
-        MiuixTheme.colorScheme.background
+        DialogDefaults.backgroundColor()
     } else containerColor
     val resolvedIconContentColor = if (iconContentColor == Color.Unspecified) {
         MiuixTheme.colorScheme.onSurface
     } else iconContentColor
     val resolvedTitleContentColor = if (titleContentColor == Color.Unspecified) {
-        MiuixTheme.colorScheme.onSurface
+        DialogDefaults.titleColor()
     } else titleContentColor
     val resolvedTextContentColor = if (textContentColor == Color.Unspecified) {
-        MiuixTheme.colorScheme.onSurfaceSecondary
+        DialogDefaults.summaryColor()
     } else textContentColor
 
-    GkDialog(onDismissRequest = onDismissRequest, properties = properties) {
+    GkDialog(onDismissRequest = onDismissRequest, properties = properties, nativePlacement = true) {
         GkDialogSurface(
             modifier = modifier,
             shape = shape,
@@ -217,27 +261,36 @@ fun GkAlertDialog(
                 }
             }
             title?.let {
-                GkProvideDialogTextStyle(
-                    style = MiuixTheme.textStyles.title3,
-                    contentColor = resolvedTitleContentColor,
-                    content = it,
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    GkProvideDialogTextStyle(
+                        style = MiuixTheme.textStyles.title4.copy(textAlign = TextAlign.Center),
+                        contentColor = resolvedTitleContentColor,
+                        content = it,
+                    )
+                }
             }
             text?.let {
                 Box(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
+                    contentAlignment = Alignment.Center,
                 ) {
                     GkProvideDialogTextStyle(
-                        style = MiuixTheme.textStyles.body1,
+                        style = MiuixTheme.textStyles.body1.copy(textAlign = TextAlign.Center),
                         contentColor = resolvedTextContentColor,
                         content = it,
                     )
                 }
             }
             FlowRow(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = GkUi.MinTouchTarget),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {

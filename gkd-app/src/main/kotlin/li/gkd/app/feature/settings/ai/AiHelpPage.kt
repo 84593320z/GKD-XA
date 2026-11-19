@@ -1,26 +1,23 @@
 package li.gkd.app.feature.settings.ai
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
 import li.gkd.app.MainViewModel
 import li.gkd.app.ui.component.GkIconButton
-import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.PreferenceGroup
-import li.gkd.app.util.TimeUtils.throttle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
@@ -82,18 +79,12 @@ fun AiHelpPage() {
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                     ) {
-                        Text(
-                            text = section,
-                            style = MiuixTheme.textStyles.main,
-                            color = MiuixTheme.colorScheme.onSurface,
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
                         lines.forEach { line ->
                             Text(
                                 text = line,
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                modifier = Modifier.padding(bottom = 6.dp),
+                                modifier = Modifier.padding(bottom = 8.dp),
                             )
                         }
                     }

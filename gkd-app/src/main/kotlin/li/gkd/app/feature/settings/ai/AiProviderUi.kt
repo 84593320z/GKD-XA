@@ -2,21 +2,24 @@ package li.gkd.app.feature.settings.ai
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.PreferenceGroup
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.TimeUtils.throttle
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
@@ -29,15 +32,7 @@ fun AiSection(
     title: String,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column {
-        Text(
-            text = title,
-            style = MiuixTheme.textStyles.footnote1,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            modifier = Modifier.padding(start = 28.dp, top = 12.dp, bottom = 2.dp),
-        )
-        PreferenceGroup(content = content)
-    }
+    PreferenceGroup(title = title, content = content)
 }
 
 @Composable
@@ -57,17 +52,16 @@ fun AiRowIcon(
 ) {
     Box(
         modifier = Modifier
-            .padding(end = 14.dp)
-            .size(34.dp)
+            .size(40.dp)
             .background(
                 MiuixTheme.colorScheme.surfaceContainerHigh,
-                RoundedCornerShape(10.dp),
+                GkShapes.control,
             ),
         contentAlignment = Alignment.Center,
     ) {
         GkIcon(
             imageVector = imageVector,
-            modifier = Modifier.size(19.dp),
+            modifier = Modifier.size(24.dp),
             tint = if (enabled) tint else MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
     }
@@ -96,7 +90,7 @@ fun AiTagChip(
                 } else {
                     MiuixTheme.colorScheme.secondaryContainer
                 },
-                RoundedCornerShape(6.dp),
+                GkShapes.compact,
             )
             .padding(horizontal = 6.dp, vertical = 2.dp),
     )
@@ -107,18 +101,20 @@ fun AiHint(
     text: String,
     modifier: Modifier = Modifier,
     error: Boolean = false,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
 ) {
     Text(
         text = text,
-        style = MiuixTheme.textStyles.footnote2,
+        style = MiuixTheme.textStyles.footnote1,
         color = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onSurfaceVariantSummary,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .semantics { liveRegion = LiveRegionMode.Polite }
+            .padding(contentPadding),
     )
 }
 
-/** 右侧显示当前值的单选行，点击后由调用方弹出选择框。 */
+/** 当前值单独换行，窄屏与大字体下仍能读全；点击后由调用方弹出选择框。 */
 @Composable
 fun AiPickerRow(
     title: String,
@@ -130,13 +126,12 @@ fun AiPickerRow(
         title = title,
         summary = summary,
         onClick = throttle(fn = onClick),
-        endActions = {
+        bottomAction = {
             Text(
                 text = value,
                 style = MiuixTheme.textStyles.body2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth(),
             )
         },
     )

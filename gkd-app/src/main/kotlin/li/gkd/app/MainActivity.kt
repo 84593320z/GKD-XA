@@ -127,8 +127,8 @@ class MainActivity : ComponentActivity() {
             val failure by appStartupFailure.collectAsState()
             val startupTheme = remember { ThemeController() }
             MiuixTheme(controller = startupTheme) {
-                Surface(modifier = Modifier.fillMaxSize(), color = MiuixTheme.colorScheme.background,
-                    contentColor = MiuixTheme.colorScheme.onBackground) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MiuixTheme.colorScheme.surface,
+                    contentColor = MiuixTheme.colorScheme.onSurface) {
                     Column(
                         modifier = Modifier.padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),

@@ -5,11 +5,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,9 +28,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
@@ -39,9 +47,9 @@ import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkPageBottomSpace
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
-import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.LabeledField
 import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.ui.component.TextSearchListDialog
@@ -55,8 +63,8 @@ import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TabRow
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -93,7 +101,9 @@ fun AiProviderDetailPage(route: AiProviderDetailRoute) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = contentPadding.calculateTopPadding()),
+                .padding(contentPadding)
+                .consumeWindowInsets(contentPadding)
+                .imePadding(),
         ) {
             if (!isNew) {
                 TabRow(
@@ -102,7 +112,7 @@ fun AiProviderDetailPage(route: AiProviderDetailRoute) {
                     onTabSelected = { tab = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
             Box(modifier = Modifier.weight(1f)) {
@@ -143,6 +153,8 @@ private fun MissingProviderPage(onBack: () -> Unit) {
                 text = "该服务商已被移除",
                 style = MiuixTheme.textStyles.body2,
                 color = colorScheme.onSurfaceVariantSummary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
             Spacer(modifier = Modifier.height(12.dp))
             TextButton(text = "返回", onClick = throttle(fn = onBack))
@@ -239,8 +251,8 @@ private fun AiProviderConfigTab(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         GkSizedIconButton(
-                            size = 36.dp,
-                            iconSize = 19.dp,
+                            size = 48.dp,
+                            iconSize = 24.dp,
                             onClickLabel = if (apiKeyVisible) "隐藏 API Key" else "显示 API Key",
                             onClick = { apiKeyVisible = !apiKeyVisible },
                             imageVector = if (apiKeyVisible) GkIcons.ToggleOff else GkIcons.ToggleOn,
@@ -276,7 +288,7 @@ private fun AiProviderConfigTab(
                 AiRowDivider(hasLeading = false)
                 BasicComponent(
                     title = if (testing) "测试连接中…" else "测试连接",
-                    summary = testResult ?: "读取 $modelsEndpoint，并把返回的模型合并进模型列表",
+                    summary = "读取 $modelsEndpoint，并把返回的模型合并进模型列表",
                     enabled = !testing,
                     onClick = throttle {
                         val error = draft.validationError()
@@ -306,6 +318,12 @@ private fun AiProviderConfigTab(
                         }
                     },
                 )
+                testResult?.let { message ->
+                    AiHint(
+                        text = message,
+                        error = message.startsWith("校验未通过") || message.startsWith("连接失败"),
+                    )
+                }
             }
         }
 
@@ -377,15 +395,15 @@ private fun AiProviderConfigTab(
                     TextField(
                         value = draft.systemPrompt,
                         onValueChange = { v -> update { it.copy(systemPrompt = v) } },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                        minLines = 3,
+                        maxLines = 6,
                         label = "追加在内置提示词之前",
                         useLabelAsPlaceholder = true,
                     )
                     AiHint(
                         text = "留空则只使用内置的 gkd-rule-generator-prompt.md。",
-                        modifier = Modifier.padding(top = 4.dp),
+                        contentPadding = PaddingValues(top = 8.dp),
                     )
                 }
             }
@@ -417,7 +435,7 @@ private fun AiProviderConfigTab(
                     )
                     AiHint(
                         text = "快照规则输出是结构化 JSON，Temperature 建议保持 0，可减少选择器漂移。",
-                        modifier = Modifier.padding(vertical = 4.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp),
                     )
                 }
             }
@@ -427,7 +445,7 @@ private fun AiProviderConfigTab(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(top = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -471,7 +489,8 @@ private fun AiProviderConfigTab(
                         } else {
                             colorScheme.primary
                         },
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.padding(top = 8.dp)
+                            .semantics { liveRegion = LiveRegionMode.Polite },
                     )
                 }
             }
@@ -497,7 +516,8 @@ private fun AiProviderConfigTab(
                                     onRemoved()
                                 }
                             }
-                            .padding(vertical = 14.dp),
+                            .heightIn(min = 48.dp)
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -511,7 +531,7 @@ private fun AiProviderConfigTab(
         }
 
         item(key = "bottom") {
-            GkPageBottomSpace()
+            GkPageBottomSpace(height = 40.dp)
         }
     }
 }
@@ -524,14 +544,12 @@ private fun HeaderRow(
     onRemove: () -> Unit,
 ) {
     var visible by remember(header.key) { mutableStateOf(false) }
-    Row(
-        modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            FieldLabel("请求头名称")
             TextField(
                 value = header.name,
                 onValueChange = onNameChange,
@@ -540,6 +558,7 @@ private fun HeaderRow(
                 useLabelAsPlaceholder = true,
                 singleLine = true,
             )
+            FieldLabel("请求头取值")
             TextField(
                 value = header.value,
                 onValueChange = onValueChange,
@@ -555,23 +574,28 @@ private fun HeaderRow(
                 },
             )
         }
-        GkSizedIconButton(
-            size = 36.dp,
-            iconSize = 19.dp,
-            onClickLabel = "显示或隐藏取值",
-            onClick = { visible = !visible },
-            imageVector = if (visible) GkIcons.ToggleOff else GkIcons.ToggleOn,
-            contentDescription = "显示/隐藏取值",
-        )
-        GkSizedIconButton(
-            size = 36.dp,
-            iconSize = 19.dp,
-            onClickLabel = "删除该请求头",
-            onClick = throttle(fn = onRemove),
-            imageVector = GkIcons.Delete,
-            contentDescription = "删除",
-            tint = colorScheme.error,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            GkSizedIconButton(
+                size = 48.dp,
+                iconSize = 24.dp,
+                onClickLabel = "显示或隐藏取值",
+                onClick = { visible = !visible },
+                imageVector = if (visible) GkIcons.ToggleOff else GkIcons.ToggleOn,
+                contentDescription = "显示/隐藏取值",
+            )
+            GkSizedIconButton(
+                size = 48.dp,
+                iconSize = 24.dp,
+                onClickLabel = "删除该请求头",
+                onClick = throttle(fn = onRemove),
+                imageVector = GkIcons.Delete,
+                contentDescription = "删除",
+                tint = colorScheme.error,
+            )
+        }
     }
 }
 

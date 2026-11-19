@@ -1,8 +1,9 @@
 package li.gkd.app.feature.settings.ai
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,8 +36,8 @@ import li.gkd.app.data.settings.AiConfig
 import li.gkd.app.data.settings.AiModel
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkCheckbox
-import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
 import li.gkd.app.ui.component.PreferenceGroup
@@ -41,9 +48,10 @@ import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.launchLogged
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -155,7 +163,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
                     onValueChange = { query = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     label = "搜索模型",
                     useLabelAsPlaceholder = true,
                     singleLine = true,
@@ -185,101 +193,103 @@ fun AiProviderModelsTab(provider: AiConfig) {
             } else {
                 val visible = if (selectionMode) provider.models else filtered
                 item(key = "models_title") {
-                    Text(
+                    SmallTitle(
                         text = listTitle,
-                        style = MiuixTheme.textStyles.footnote1,
-                        modifier = Modifier.padding(start = 28.dp, top = 12.dp, bottom = 2.dp),
+                        modifier = Modifier.semantics { heading() },
+                        insideMargin = PaddingValues(start = 32.dp, end = 32.dp, top = 12.dp, bottom = 8.dp),
                     )
                 }
                 items(visible, key = { "model:${it.modelId}" }) { model ->
                     PreferenceGroup {
-                            ModelRow(
-                                provider = provider,
-                                model = model,
-                                selectionMode = selectionMode,
-                                checked = model.modelId in selected,
-                                onToggleChecked = {
-                                    selected = if (model.modelId in selected) {
-                                        selected - model.modelId
-                                    } else {
-                                        selected + model.modelId
-                                    }
-                                },
-                                onEdit = {
-                                    creating = false
-                                    editing = model
-                                },
-                                onSetCurrent = { setModelId(model.modelId) },
-                            )
+                        ModelRow(
+                            provider = provider,
+                            model = model,
+                            selectionMode = selectionMode,
+                            checked = model.modelId in selected,
+                            onToggleChecked = {
+                                selected = if (model.modelId in selected) {
+                                    selected - model.modelId
+                                } else {
+                                    selected + model.modelId
+                                }
+                            },
+                            onEdit = {
+                                creating = false
+                                editing = model
+                            },
+                            onSetCurrent = { setModelId(model.modelId) },
+                        )
                     }
                 }
             }
 
             item(key = "bottom") {
-                Spacer(modifier = Modifier.height(if (selectionMode) 88.dp else 24.dp))
+                GkPageBottomSpace(height = 40.dp)
             }
         }
 
         if (selectionMode) {
             PreferenceGroup {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 4.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    GkSizedIconButton(
-                        size = 36.dp,
-                        iconSize = 19.dp,
-                        onClickLabel = "退出多选",
-                        onClick = throttle {
-                            selectionMode = false
-                            selected = emptySet()
-                        },
-                        imageVector = GkIcons.Close,
-                        contentDescription = "退出多选",
-                    )
+                Column {
                     Text(
                         text = "已选 ${selected.size} 个",
                         style = MiuixTheme.textStyles.body2,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
                     )
-                    TextButton(
-                        text = if (selected.size == provider.models.size) "取消全选" else "全选",
-                        enabled = !fetching,
-                        minWidth = 40.dp,
-                        onClick = throttle {
-                            selected = if (selected.size == provider.models.size) {
-                                emptySet()
-                            } else {
-                                provider.models.mapTo(mutableSetOf()) { it.modelId }
-                            }
-                        },
-                    )
-                    TextButton(
-                        text = "删除",
-                        enabled = selected.isNotEmpty() && !fetching,
-                        minWidth = 40.dp,
-                        colors = ButtonDefaults.textButtonColorsPrimary(
-                            color = colorScheme.error,
-                            textColor = colorScheme.onError,
-                        ),
-                        onClick = throttle {
-                            scope.launch {
-                                if (!mainVm.dialogRequests.confirm(
-                                        title = "删除模型",
-                                        text = "确定删除选中的 ${selected.size} 个模型？",
-                                        confirmText = "删除",
-                                        error = true,
-                                    )
-                                ) return@launch
-                                saveModels(provider.models.filterNot { it.modelId in selected })
-                                toast("已删除 ${selected.size} 个模型")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        GkSizedIconButton(
+                            size = 48.dp,
+                            iconSize = 24.dp,
+                            onClickLabel = "退出多选",
+                            onClick = throttle {
+                                selectionMode = false
                                 selected = emptySet()
-                            }
-                        },
-                    )
+                            },
+                            imageVector = GkIcons.Close,
+                            contentDescription = "退出多选",
+                        )
+                        TextButton(
+                            text = if (selected.size == provider.models.size) "取消全选" else "全选",
+                            enabled = !fetching,
+                            modifier = Modifier.weight(1f),
+                            onClick = throttle {
+                                selected = if (selected.size == provider.models.size) {
+                                    emptySet()
+                                } else {
+                                    provider.models.mapTo(mutableSetOf()) { it.modelId }
+                                }
+                            },
+                        )
+                        TextButton(
+                            text = "删除",
+                            enabled = selected.isNotEmpty() && !fetching,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.textButtonColorsPrimary(
+                                color = colorScheme.error,
+                                textColor = colorScheme.onError,
+                            ),
+                            onClick = throttle {
+                                scope.launch {
+                                    if (!mainVm.dialogRequests.confirm(
+                                            title = "删除模型",
+                                            text = "确定删除选中的 ${selected.size} 个模型？",
+                                            confirmText = "删除",
+                                            error = true,
+                                        )
+                                    ) return@launch
+                                    saveModels(provider.models.filterNot { it.modelId in selected })
+                                    toast("已删除 ${selected.size} 个模型")
+                                    selected = emptySet()
+                                }
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -324,70 +334,65 @@ private fun ModelRow(
     onSetCurrent: () -> Unit,
 ) {
     val isCurrent = provider.model == model.modelId
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                onClick = if (selectionMode) onToggleChecked else onSetCurrent,
-            )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = model.displayName.ifBlank { model.modelId },
-                style = MiuixTheme.textStyles.headline2,
-                color = colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = model.modelId,
-                style = MiuixTheme.textStyles.body2,
-                color = colorScheme.onSurfaceVariantSummary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
-            )
-            Row(
+    BasicComponent(
+        modifier = Modifier.semantics {
+            if (selectionMode) {
+                toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
+            } else {
+                selected = isCurrent
+            }
+        },
+        role = if (selectionMode) Role.Checkbox else Role.RadioButton,
+        onClick = if (selectionMode) onToggleChecked else onSetCurrent,
+        endActions = {
+            if (selectionMode) {
+                GkCheckbox(checked = checked, key = model.modelId)
+            } else {
+                GkSizedIconButton(
+                    size = 48.dp,
+                    iconSize = 24.dp,
+                    onClickLabel = "编辑模型参数",
+                    onClick = throttle(fn = onEdit),
+                    imageVector = GkIcons.Edit,
+                    contentDescription = "编辑",
+                )
+                GkSizedIconButton(
+                    size = 48.dp,
+                    iconSize = 24.dp,
+                    onClickLabel = if (isCurrent) "当前模型" else "设为当前模型",
+                    onClick = throttle(fn = onSetCurrent),
+                    imageVector = GkIcons.Check,
+                    contentDescription = "设为当前",
+                    tint = if (isCurrent) colorScheme.primary else defaultIconTint(),
+                )
+            }
+        },
+        bottomAction = {
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.padding(top = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 AiTagChip(text = "上下文 ${formatTokens(model.contextWindow)}")
-                if (model.reasoning == true) {
-                    AiTagChip(text = "支持思考")
-                }
-                if (isCurrent) {
-                    AiTagChip(text = "当前", emphasized = true)
-                }
+                if (model.reasoning == true) AiTagChip(text = "支持思考")
+                if (isCurrent) AiTagChip(text = "当前", emphasized = true)
             }
-        }
-        if (selectionMode) {
-            val toggle = throttle(fn = onToggleChecked)
-            GkCheckbox(
-                checked = checked,
-                key = model.modelId,
-                onCheckedChange = { toggle() },
-            )
-        } else {
-            GkSizedIconButton(
-                size = 36.dp,
-                iconSize = 19.dp,
-                onClickLabel = "编辑模型参数",
-                onClick = throttle(fn = onEdit),
-                imageVector = GkIcons.Edit,
-                contentDescription = "编辑",
-            )
-            GkSizedIconButton(
-                size = 36.dp,
-                iconSize = 19.dp,
-                onClickLabel = if (isCurrent) "当前模型" else "设为当前模型",
-                onClick = throttle(fn = onSetCurrent),
-                imageVector = GkIcons.Check,
-                contentDescription = "设为当前",
-                tint = if (isCurrent) colorScheme.primary else defaultIconTint(),
-            )
-        }
+        },
+    ) {
+        Text(
+            text = model.displayName.ifBlank { model.modelId },
+            style = MiuixTheme.textStyles.headline1,
+            color = colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = model.modelId,
+            style = MiuixTheme.textStyles.body2,
+            color = colorScheme.onSurfaceVariantSummary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 2.dp),
+        )
     }
 }
 
@@ -413,6 +418,7 @@ private fun ModelEditDialog(
         title = { Text(text = if (isNew) "添加模型" else "编辑模型") },
         text = {
             Column {
+                FieldLabel("显示名称")
                 TextField(
                     value = displayName,
                     onValueChange = { displayName = it },
@@ -422,6 +428,7 @@ private fun ModelEditDialog(
                     singleLine = true,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                FieldLabel("Model ID")
                 TextField(
                     value = modelId,
                     onValueChange = { modelId = it },
@@ -432,6 +439,7 @@ private fun ModelEditDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                FieldLabel("上下文长度（tokens，可留空）")
                 TextField(
                     value = contextWindow,
                     onValueChange = { contextWindow = it },
@@ -442,7 +450,7 @@ private fun ModelEditDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
                 contextError?.let {
-                    AiHint(text = "上下文长度需为正整数", error = true)
+                    AiHint(text = "上下文长度需为正整数", error = true, contentPadding = PaddingValues(top = 8.dp))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 GkTextSwitch(
@@ -452,13 +460,13 @@ private fun ModelEditDialog(
                     onCheckedChange = { reasoning = it },
                 )
                 onDelete?.let { delete ->
-                    Text(
+                    TextButton(
                         text = "删除该模型",
-                        style = MiuixTheme.textStyles.body2,
-                        color = colorScheme.error,
-                        modifier = Modifier
-                            .clickable(onClick = throttle(fn = delete))
-                            .padding(vertical = 8.dp),
+                        onClick = throttle(fn = delete),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.textButtonColors(
+                            textColor = colorScheme.error,
+                        ),
                     )
                 }
             }

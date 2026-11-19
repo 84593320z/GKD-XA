@@ -60,6 +60,8 @@ import li.gkd.app.feature.settings.AdvancedPageRoute
 import li.gkd.app.ui.BlockA11yAppListRoute
 import li.gkd.app.ui.PrivilegeServiceRoute
 import li.gkd.app.ui.component.GkFullscreenDialog
+import li.gkd.app.ui.component.GkFormTextField
+import li.gkd.app.ui.component.GkBottomActionBar
 import li.gkd.app.ui.component.PerfAlertDialog
 import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfIconButton
@@ -131,13 +133,11 @@ fun useSettingsPage(): ScaffoldExt {
                         contentDescription = "文案规则",
                         onClickLabel = "打开文案规则弹窗",
                         onClick = throttle {
-                            showToastInputDlg = false
                             scope.launchUi {
                                 mainVm.dialogRequests.showMessage(
                                     title = "文案规则",
                                     text = $$"触发文案支持变量替换，规则如下\n${1} 子规则名称\n${2} 规则名称\n${3} 触发次数\n\n示例模板\n${1}/${2}/${3}\n\n替换结果\n子规则a/规则A/3",
                                 )
-                                showToastInputDlg = true
                             }
                         },
                     )
@@ -145,13 +145,13 @@ fun useSettingsPage(): ScaffoldExt {
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    TextField(
+                    GkFormTextField(
                         value = value,
                         onValueChange = {
                             value = it.take(maxCharLen)
                         },
-                        label = "请输入提示内容",
-                        useLabelAsPlaceholder = true,
+                        label = "提示内容",
+                        placeholder = "请输入提示内容",
                         modifier = Modifier
                             .fillMaxWidth()
                             .autoFocus(),
@@ -208,13 +208,11 @@ fun useSettingsPage(): ScaffoldExt {
                         contentDescription = "文案规则",
                         onClickLabel = "打开文案规则弹窗",
                         onClick = throttle {
-                            showNotifTextInputDlg = false
                             scope.launchUi {
                                 mainVm.dialogRequests.showMessage(
                                     title = "文案规则",
                                     text = $$"通知文案支持变量替换，规则如下\n${i} 全局规则数\n${k} 应用数\n${u} 应用规则数\n${n} 触发次数\n\n示例模板\n${i}全局/${k}应用/${u}规则/${n}触发\n\n替换结果\n0全局/1应用/2规则/3触发",
                                 )
-                                showNotifTextInputDlg = true
                             }
                         },
                     )
@@ -227,14 +225,13 @@ fun useSettingsPage(): ScaffoldExt {
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    TextField(
+                    GkFormTextField(
                         value = titleValue,
                         onValueChange = {
                             titleValue = (if (it.length > titleMaxLen) it.take(titleMaxLen) else it)
                                 .filter { c -> c !in "\n\r" }
                         },
                         label = "主标题",
-                        useLabelAsPlaceholder = true,
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -243,13 +240,12 @@ fun useSettingsPage(): ScaffoldExt {
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.End,
                     )
-                    TextField(
+                    GkFormTextField(
                         value = textValue,
                         onValueChange = {
                             textValue = if (it.length > textMaxLen) it.take(textMaxLen) else it
                         },
                         label = "副标题",
-                        useLabelAsPlaceholder = true,
                         maxLines = 4,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -432,6 +428,7 @@ fun useSettingsPage(): ScaffoldExt {
                     suffixIcon = {
                         PerfIconButton(
                             imageVector = PerfIcon.PageInfo,
+                            contentDescription = "提示设置",
                             onClickLabel = "打开提示设置弹窗",
                             onClick = { showToastSettingsDlg = !showToastSettingsDlg },
                             tint = if (showToastSettingsDlg) MiuixTheme.colorScheme.primary else LocalContentColor.current,
@@ -536,7 +533,7 @@ fun useSettingsPage(): ScaffoldExt {
                                 if (enabled) {
                                     if (!mainVm.dialogRequests.confirm(
                                             title = "使用须知",
-                                            text = "开启「轨迹提示」后点击或滑动后会在屏幕上使用悬浮窗绘制轨迹(一段时间后消失)，如果新触摸事件恰好在悬浮窗区域内，可能会被目标应用拒绝，从而导致点击或滑动无响应",
+                                            text = "开启「轨迹提示」后点击或滑动后会在屏幕上使用悬浮窗绘制轨迹（一段时间后消失），如果新触摸事件恰好在悬浮窗区域内，可能会被目标应用拒绝，从而导致点击或滑动无响应",
                                             confirmText = "继续",
                                         )
                                     ) return@launchUiAction
@@ -573,11 +570,11 @@ fun useSettingsPage(): ScaffoldExt {
                     checked = store.excludeFromRecents,
                     onCheckedChange = vm.scope.launchUiAction<Boolean> { enabled ->
                         if (enabled) {
-                            mainVm.dialogRequests.confirm(
+                            if (!mainVm.dialogRequests.confirm(
                                 title = "后台隐藏",
                                 text = "隐藏卡片后可能导致部分设备无法给任务卡片加锁后台，建议先加锁后再隐藏，若已加锁或没有锁后台机制请继续",
                                 confirmText = "继续",
-                            )
+                            )) return@launchUiAction
                         }
                         AppStore.updateSettings { s -> s.copy(excludeFromRecents = enabled) }
                     })
@@ -725,12 +722,7 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
             )
         },
         bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = itemHorizontalPadding, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            GkBottomActionBar {
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(
                     text = "继续",
@@ -803,7 +795,7 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
                         },
                     )
                     RequiredTextItem(
-                        text = "(可选) 允许自启动",
+                        text = "（可选）允许自启动",
                         enabled = true,
                         imageVector = PerfIcon.OpenInNew,
                         onClickLabel = "打开应用详情页面",
@@ -812,7 +804,7 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
                         },
                     )
                     RequiredTextItem(
-                        text = "(可选) 在「最近任务」锁定",
+                        text = "（可选）在「最近任务」锁定",
                         enabled = true,
                         imageVector = PerfIcon.OpenInNew,
                         onClickLabel = "打开应用详情页面",

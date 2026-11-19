@@ -1,37 +1,30 @@
 package li.gkd.app.ui
 
-import li.gkd.app.ui.component.GkPageBottomSpace
-import li.gkd.app.MainViewModel
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
-import li.gkd.app.ui.component.GkAppRuleRestrictionCard
-import li.gkd.app.store.AppStore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
-import li.gkd.app.text.UiStrings
+import li.gkd.app.MainViewModel
 import li.gkd.app.core.state.Loadable
 import li.gkd.app.domain.rule.RuleConfigIndex
 import li.gkd.app.domain.rule.RuleGroupTarget
@@ -39,43 +32,50 @@ import li.gkd.app.domain.rule.RuleSetting
 import li.gkd.app.domain.rule.toRuleGroupTarget
 import li.gkd.app.feature.log.ActionLogRoute
 import li.gkd.app.feature.subscription.UpsertRuleGroupRoute
+import li.gkd.app.store.AppStore
 import li.gkd.app.store.AppStore.storeFlow
-import li.gkd.app.ui.share.ListPlaceholder
-import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.component.GkPageScaffold
-import li.gkd.app.util.RuleSortOption
-import li.gkd.app.util.ToastUtils.copyText
-import li.gkd.app.util.ToastUtils.toast
-import li.gkd.app.util.collator
-import li.gkd.app.util.findOption
-import li.gkd.app.util.TimeUtils.throttle
-import li.gkd.db.ActionLog
-import li.gkd.db.LOCAL_SUBS_ID
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.TextButton
+import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
 import li.gkd.app.ui.component.GkAppNameText
+import li.gkd.app.ui.component.GkAppRuleRestrictionCard
 import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkEmptyState
+import li.gkd.app.ui.component.GkFilterIconButton
+import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.MenuGroupCard
-import li.gkd.app.ui.component.MenuItemCheckbox
-import li.gkd.app.ui.component.MenuItemRadioButton
-import li.gkd.app.ui.component.PerfDropdownMenu
-import li.gkd.app.ui.component.PerfIcon
-import li.gkd.app.ui.component.PerfIconButton
-import li.gkd.app.ui.component.perfDefaultIconTint
+import li.gkd.app.ui.component.GkMenuGroupCard
+import li.gkd.app.ui.component.GkMenuItemCheckbox
+import li.gkd.app.ui.component.GkMenuItemRadioButton
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleBatchMenuItems
 import li.gkd.app.ui.component.GkRuleFocusNotice
 import li.gkd.app.ui.component.GkRuleGroupCard
+import li.gkd.app.ui.component.GkSubscriptionLoadingState
+import li.gkd.app.ui.component.PerfDropdownMenu
 import li.gkd.app.ui.component.animateListItem
 import li.gkd.app.ui.component.rememberListScrollState
 import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.component.rememberRuleControlEnvironment
 import li.gkd.app.ui.component.rememberRuleListFocus
+import li.gkd.app.ui.share.ListPlaceholder
+import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.GkUi
+import li.gkd.app.util.RuleSortOption
+import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.util.ToastUtils.copyText
+import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.util.collator
+import li.gkd.app.util.findOption
+import li.gkd.db.ActionLog
+import li.gkd.db.LOCAL_SUBS_ID
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class AppConfigRoute(
@@ -258,21 +258,16 @@ fun AppConfigPage(route: AppConfigRoute) {
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
                             anchor = {
-                                PerfIconButton(
-                                    imageVector = PerfIcon.Sort,
+                                GkFilterIconButton(
+                                    filtered = state != null && groupSize < state.subsPairs.sumOf { it.second.size },
                                     contentDescription = UiStrings.sort_filter,
-                                    tint = if (state != null && groupSize < state.subsPairs.sumOf { it.second.size }) {
-                                        MiuixTheme.colorScheme.primary
-                                    } else {
-                                        perfDefaultIconTint()
-                                    },
                                     onClick = { expanded = true },
                                 )
                             },
                         ) {
-                            MenuGroupCard(inTop = true, title = UiStrings.sort_title) {
+                            GkMenuGroupCard(inTop = true, title = UiStrings.sort_title) {
                                 RuleSortOption.objects.forEach { option ->
-                                    MenuItemRadioButton(
+                                    GkMenuItemRadioButton(
                                         text = option.label,
                                         selected = RuleSortOption.objects.findOption(store.appRuleSort) == option,
                                         onClick = {
@@ -282,8 +277,8 @@ fun AppConfigPage(route: AppConfigRoute) {
                                     )
                                 }
                             }
-                            MenuGroupCard(title = UiStrings.filter_title) {
-                                MenuItemCheckbox(
+                            GkMenuGroupCard(title = UiStrings.filter_title) {
+                                GkMenuItemCheckbox(
                                     text = UiStrings.not_enabled,
                                     checked = showDisabledRules,
                                     onClick = {
@@ -294,8 +289,9 @@ fun AppConfigPage(route: AppConfigRoute) {
                                 )
                             }
                         }
-                        PerfIconButton(
-                            imageVector = PerfIcon.History,
+                        GkIconButton(
+                            imageVector = GkIcons.History,
+                            contentDescription = UiStrings.history_title,
                             onClick = throttle {
                                 mainVm.navigatePage(ActionLogRoute(appId = appId))
                             },
@@ -305,15 +301,14 @@ fun AppConfigPage(route: AppConfigRoute) {
             )
         },
     ) { contentPadding ->
-        // 列表铺满全屏，用 contentPadding 让出顶栏与底部系统栏；
-        // 内容延伸到屏幕底部，避免底部死白，且 backdrop 采样完整
+        // Sticky headers pin to the list viewport, not its scrollable content padding.
+        // Keep that viewport below the overlay top bar and inside every safe inset.
+        // Bottom content padding clears the 56dp FAB + 12dp offset plus a section gap,
+        // and stays stable while selection animates the button out.
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.padding(contentPadding).consumeWindowInsets(contentPadding).fillMaxSize(),
             state = listState,
-            contentPadding = PaddingValues(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
+            contentPadding = PaddingValues(bottom = 56.dp + GkUi.SectionGap * 2),
         ) {
                 if (focus.missing) {
                     item("focus-notice") {
@@ -358,8 +353,9 @@ fun AppConfigPage(route: AppConfigRoute) {
                         stickyHeader(subsId) {
                             Text(
                                 modifier = Modifier
+                                    .fillMaxWidth()
                                     .background(MiuixTheme.colorScheme.surface)
-                                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    .padding(horizontal = GkUi.PageHorizontal + GkUi.ContentPadding, vertical = 12.dp),
                                 text = entry.subscription.name,
                                 style = MiuixTheme.textStyles.subtitle,
                                 color = MiuixTheme.colorScheme.primary,
@@ -414,12 +410,13 @@ fun AppConfigPage(route: AppConfigRoute) {
                             isSelected = isSelected,
                             onSelectedChange = onSelectedChange,
                             highlighted = !isSelectedMode && focus.highlightedKey == Triple(subsId, group.groupType, group.key),
-                            legacyStyle = true,
                         )
                     }
                 }
                 item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
-                    if (groupSize == 0 && !firstLoading) {
+                    if (groupSize == 0 && firstLoading) {
+                        GkSubscriptionLoadingState()
+                    } else if (groupSize == 0) {
                         GkEmptyState(
                             text = if (loadError != null) {
                                 loadError.message ?: UiStrings.data_load_failed
@@ -429,8 +426,6 @@ fun AppConfigPage(route: AppConfigRoute) {
                                 UiStrings.data_empty_filter_hint
                             }
                         )
-                    } else {
-                        GkPageBottomSpace()
                     }
                 }
         }
@@ -468,10 +463,9 @@ fun AppConfigPage(route: AppConfigRoute) {
                 }
             },
             confirmButton = {
-                TextButton(
-                    text = UiStrings.simple_rule_cancel,
-                    onClick = { showAddChooser = false },
-                )
+                GkActionButton(onClick = { showAddChooser = false }) {
+                    Text(UiStrings.simple_rule_cancel)
+                }
             },
         )
     }

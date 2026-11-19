@@ -16,9 +16,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import li.gkd.app.ui.style.GkUi
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -39,7 +42,16 @@ fun GkAppBarTextField(
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(value, TextRange(value.length)))
     }
-    textFieldValue = textFieldValue.copy(text = value)
+    if (textFieldValue.text != value) {
+        textFieldValue = textFieldValue.copy(
+            text = value,
+            selection = TextRange(
+                textFieldValue.selection.start.coerceIn(0, value.length),
+                textFieldValue.selection.end.coerceIn(0, value.length),
+            ),
+            composition = null,
+        )
+    }
 
     GkTextFieldSelection {
         BasicTextField(
@@ -51,7 +63,8 @@ fun GkAppBarTextField(
             },
             modifier = modifier
                 .fillMaxWidth()
-                .heightIn(min = 32.dp),
+                .heightIn(min = GkUi.MinTouchTarget)
+                .semantics { contentDescription = hint },
             textStyle = textStyle,
             cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
             keyboardOptions = keyboardOptions,

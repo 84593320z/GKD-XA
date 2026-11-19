@@ -1,0 +1,14 @@
+GKD-XA native Miuix privilege UI
+
+This module contains a source-level Android UI fork of Priv Kit v0.20.0
+(original author: lisonge; https://github.com/priv-kit/priv-kit).
+The official Maven release metadata declares the Apache License, Version 2.0.
+See LICENSE and the original publication metadata in UPSTREAM.pom.
+
+GKD-XA local changes replace the presentation layer with native Miuix components
+and Android resource adapters. The authorization backend is not replaced.
+Modified upstream files are identified in MODIFIED_FILES.txt and carry a
+modification notice; original source hashes are retained in UPSTREAM.sha256.
+Full provenance, integration instructions and verification limits: README.md.
+
+Miuix 0.9.4 is an external dependency under its own Apache-2.0 notices.

@@ -6,17 +6,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.serialization.Serializable
 import li.gkd.app.MainViewModel
@@ -27,16 +25,18 @@ import li.gkd.app.ui.AppConfigRoute
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.GkLogTimeline
 import li.gkd.app.ui.component.GkLogTimeText
+import li.gkd.app.ui.component.GkLogTimeline
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.component.gkLogTimelineRail
 import li.gkd.app.ui.component.rememberListScrollState
 import li.gkd.app.ui.style.itemHorizontalPadding
-import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.format
 import li.gkd.db.ActivityLog
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data object ActivityLogRoute : NavKey
@@ -69,7 +69,7 @@ fun ActivityLogPage() {
             appId = { it.appId },
             time = { it.ctime },
             onOpenApp = { mainVm.navigatePage(AppConfigRoute(it)) },
-            modifier = Modifier.scaffoldPadding(contentPadding),
+            modifier = Modifier.padding(contentPadding),
         ) { log ->
             ActivityLogEntry(log) {
                 mainVm.textDialog.showText(
@@ -92,6 +92,7 @@ private fun ActivityLogEntry(log: ActivityLog, onClick: () -> Unit) {
             .fillMaxWidth()
             .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .clickable(onClick = onClick)
+            .heightIn(min = 48.dp)
             .padding(start = 20.dp, end = itemHorizontalPadding, top = 6.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,

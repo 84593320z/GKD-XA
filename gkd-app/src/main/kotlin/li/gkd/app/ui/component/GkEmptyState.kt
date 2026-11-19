@@ -42,7 +42,7 @@ fun GkEmptyState(
             modifier = Modifier.fillMaxWidth(),
             style = MiuixTheme.textStyles.body2,
             textAlign = TextAlign.Center,
-            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
         if (action != null) {
             Spacer(Modifier.height(GkEmptyStateDefaults.ActionSpacing))

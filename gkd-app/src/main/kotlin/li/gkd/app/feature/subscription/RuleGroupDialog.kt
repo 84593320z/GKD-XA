@@ -1,13 +1,10 @@
 package li.gkd.app.feature.subscription
 
-import li.gkd.app.MainViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,35 +14,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import li.gkd.app.text.UiStrings
-import li.gkd.app.data.RawSubscription
+import li.gkd.app.MainViewModel
 import li.gkd.app.data.ExcludeData
+import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.RuleControlState
 import li.gkd.app.domain.rule.RuleSetting
+import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.ImagePreviewItem
 import li.gkd.app.ui.ImagePreviewRoute
 import li.gkd.app.ui.component.GkActionButton
-import li.gkd.app.ui.component.PerfDropdownMenu
-import li.gkd.app.ui.component.PerfDropdownMenuItem
-import li.gkd.app.ui.icon.RuleList
-import li.gkd.app.ui.share.LocalDarkTheme
-import li.gkd.app.ui.style.GkShapes
-import li.gkd.app.ui.style.JSON5_LARGE_TEXT_THRESHOLD
-import li.gkd.app.ui.style.getJson5AnnotatedString
-import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.ui.component.GkCopyableText
 import li.gkd.app.ui.component.GkFullscreenDialog
+import li.gkd.app.ui.component.GkGroupNameText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkLazyCopyableText
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleExclusionsCard
 import li.gkd.app.ui.component.GkRuleSettingsContent
 import li.gkd.app.ui.component.GkRuleSettingsSheet
-import li.gkd.app.ui.component.GkGroupNameText
-import li.gkd.app.ui.component.GkPageScaffold
+import li.gkd.app.ui.component.GkSubscriptionLoadingState
 import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.PerfDropdownMenu
+import li.gkd.app.ui.component.PerfDropdownMenuItem
 import li.gkd.app.ui.component.removeRuleCategoryPrefix
+import li.gkd.app.ui.icon.RuleList
+import li.gkd.app.ui.share.LocalDarkTheme
+import li.gkd.app.ui.style.GkShapes
+import li.gkd.app.ui.style.GkUi
+import li.gkd.app.ui.style.JSON5_LARGE_TEXT_THRESHOLD
+import li.gkd.app.ui.style.getJson5AnnotatedString
+import li.gkd.app.ui.style.scaffoldPadding
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun RuleGroupDialog(
@@ -127,7 +129,7 @@ fun RuleGroupDialog(
                 GkIconButton(
                     imageVector = RuleList,
                     contentDescription = UiStrings.rule_view_parent_list,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(GkUi.MinTouchTarget),
                     onClick = {
                         onDismissRequest()
                         mainVm.navigatePage(targetRoute)
@@ -138,7 +140,7 @@ fun RuleGroupDialog(
                 GkIconButton(
                     imageVector = GkIcons.Edit,
                     contentDescription = UiStrings.rule_edit,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(GkUi.MinTouchTarget),
                     onClick = onClickEdit,
                 )
             }
@@ -181,7 +183,7 @@ fun RuleGroupDialog(
         },
     ) {
         if (control == null) {
-            Text(UiStrings.config_loading)
+            GkSubscriptionLoadingState()
         } else {
             GkRuleSettingsContent(control, onSettingChange,
                 title = if (group is RawSubscription.RawGlobalGroup && appId != null) UiStrings.rule_enable_in_app else UiStrings.rule_enable,
@@ -215,16 +217,16 @@ private fun RuleSourceDialog(group: RawSubscription.RawGroupProps, onDismissRequ
                 },
             )
         }) { contentPadding ->
-            val textModifier = Modifier.scaffoldPadding(contentPadding).padding(16.dp)
+            val textModifier = Modifier.scaffoldPadding(contentPadding).padding(GkUi.PageHorizontal)
                 .fillMaxSize().clip(GkShapes.card)
                 .background(MiuixTheme.colorScheme.surfaceContainerHigh)
             if (source.length > JSON5_LARGE_TEXT_THRESHOLD) {
                 GkLazyCopyableText(text = annotatedText, modifier = textModifier,
-                    contentPadding = PaddingValues(16.dp), textStyle = MiuixTheme.textStyles.footnote1,
+                    contentPadding = PaddingValues(GkUi.ContentPadding), textStyle = MiuixTheme.textStyles.footnote1,
                     contentColor = MiuixTheme.colorScheme.onSurface, textContentDescription = UiStrings.rule_content)
             } else {
                 GkCopyableText(text = annotatedText, textToCopy = source, modifier = textModifier,
-                    contentPadding = PaddingValues(16.dp), textStyle = MiuixTheme.textStyles.footnote1,
+                    contentPadding = PaddingValues(GkUi.ContentPadding), textStyle = MiuixTheme.textStyles.footnote1,
                     contentColor = MiuixTheme.colorScheme.onSurface, textContentDescription = UiStrings.rule_content)
             }
         }

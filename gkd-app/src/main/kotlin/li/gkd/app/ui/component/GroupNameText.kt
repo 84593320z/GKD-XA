@@ -74,6 +74,7 @@ fun GroupNameText(
         )
     } else {
         Text(
+            modifier = modifier,
             text = if (preText.isNullOrEmpty()) {
                 text
             } else {

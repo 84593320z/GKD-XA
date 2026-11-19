@@ -1,51 +1,52 @@
 package li.gkd.app.feature.subscription
 
-import li.gkd.app.ui.component.GkPageBottomSpace
-import li.gkd.app.MainViewModel
 import androidx.activity.compose.BackHandler
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
-import li.gkd.app.ui.component.GkPageScaffold
-import li.gkd.app.ui.component.GkMultiSelectionActions
-import li.gkd.app.ui.component.GkBatchActionMenuItem
-import li.gkd.app.ui.component.rememberMultiSelectionState
-import li.gkd.app.util.ToastUtils.toast
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import li.gkd.app.domain.rule.CategorySetting
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
+import li.gkd.app.MainViewModel
+import li.gkd.app.domain.rule.CategorySetting
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
+import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkMultiSelectionActions
+import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleListItem
 import li.gkd.app.ui.component.GkRuleStats
 import li.gkd.app.ui.component.GkRuleStatsData
 import li.gkd.app.ui.component.GkSubscriptionPageContent
-import li.gkd.app.ui.component.GkTwoLineText
 import li.gkd.app.ui.component.GkTooltipIconButtonBox
+import li.gkd.app.ui.component.GkTwoLineText
 import li.gkd.app.ui.component.rememberListScrollState
+import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.share.ListPlaceholder
 import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.style.scaffoldPadding
+import li.gkd.app.ui.style.GkUi
+import li.gkd.app.util.ToastUtils.toast
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class SubsCategoryRoute(val subsItemId: Long) : NavKey
@@ -143,9 +144,13 @@ fun SubsCategoryPage(route: SubsCategoryRoute) {
                 }
             },
         ) { padding ->
+            // Apply every scaffold inset; the separate scrollable bottom gutter also
+            // clears the 56dp FAB and its 12dp offset, including while it animates out.
+            val bottomClearance = if (subs.isLocal) 56.dp + GkUi.SectionGap * 2 else GkUi.SectionGap
             LazyColumn(
-                modifier = Modifier.scaffoldPadding(padding),
+                modifier = Modifier.padding(padding).consumeWindowInsets(padding).fillMaxSize(),
                 state = scroll.listState,
+                contentPadding = PaddingValues(bottom = bottomClearance),
             ) {
                 items(state.categories, key = { it.category.key }) { summary ->
                     CategoryItemCard(
@@ -160,7 +165,6 @@ fun SubsCategoryPage(route: SubsCategoryRoute) {
                 }
                 item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
                     if (state.categories.isEmpty()) GkEmptyState(UiStrings.categories_empty)
-                    GkPageBottomSpace()
                 }
             }
         }
@@ -181,10 +185,10 @@ private fun CategoryItemCard(
     GkRuleListItem(onClick = onOpen, selectedMode = selectedMode, selected = selected,
         selectionEnabled = selectionEnabled, onLongClick = onLongClick, onSelect = onSelect, trailing = {
         GkTooltipIconButtonBox(contentDescription = summary.setting.label) {
-            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(GkUi.MinTouchTarget), contentAlignment = Alignment.Center) {
                 GkIcon(
                     imageVector = summary.setting.icon,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(GkUi.IconSize),
                     contentDescription = summary.setting.label,
                     tint = if (summary.setting == CategorySetting.FollowSubscription)
                         MiuixTheme.colorScheme.onSurfaceVariantSummary else MiuixTheme.colorScheme.primary,
@@ -195,10 +199,9 @@ private fun CategoryItemCard(
         Text(summary.category.name, style = MiuixTheme.textStyles.body1,
             maxLines = 2, overflow = TextOverflow.Ellipsis)
         summary.category.desc?.trim()?.takeIf { it.isNotEmpty() && it != summary.category.name.trim() }?.let { description ->
-            Text(description, style = MiuixTheme.textStyles.footnote1,
+            Text(description, style = MiuixTheme.textStyles.body2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         GkRuleStats(GkRuleStatsData(apps = summary.appCount, appGroups = summary.groupCount,
             enabledAppGroups = summary.enabledGroupCount, showZeroCounts = true))

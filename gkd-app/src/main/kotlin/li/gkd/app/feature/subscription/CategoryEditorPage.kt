@@ -43,6 +43,7 @@ import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkSubscriptionPageContent
 import li.gkd.app.ui.component.autoFocus
+import li.gkd.app.ui.style.GkUi
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.json
 import top.yukonga.miuix.kmp.basic.Card
@@ -110,10 +111,10 @@ private fun CategoryEditorContent(
                 .padding(padding)
                 .consumeWindowInsets(padding)
                 .imePadding()
-                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = GkUi.PageHorizontal, vertical = GkUi.SectionGap),
+            verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap)) {
                 GkFormTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -140,7 +141,8 @@ private fun CategoryEditorContent(
             }
             if (conflict) {
                 Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.errorContainer)) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(GkUi.ContentPadding),
+                        verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap)) {
                         Text(UiStrings.category_edit_conflict,
                             color = MiuixTheme.colorScheme.onErrorContainer)
                         if (category != null) {
@@ -207,14 +209,15 @@ private fun CategoryEditorContent(
                                     colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(12.dp),
+                                        modifier = Modifier.padding(GkUi.ContentPadding),
                                         verticalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        Text(group.name, style = MiuixTheme.textStyles.body1)
+                                        Text(group.name, style = MiuixTheme.textStyles.body1,
+                                            maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         group.desc?.takeIf { it.isNotBlank() }?.let {
                                             Text(
                                                 it,
-                                                style = MiuixTheme.textStyles.footnote1,
+                                                style = MiuixTheme.textStyles.body2,
                                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                             )
                                         }

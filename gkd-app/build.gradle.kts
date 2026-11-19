@@ -57,6 +57,7 @@ android {
     // "Method beginSection in android.os.Trace not mocked"；组合级单测需要它返回默认值。
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
     }
 
 
@@ -267,6 +268,9 @@ dependencies {
     // 因此 navigation3-runtime 与 lifecycle-viewmodel-navigation3 都不再需要。
 
     testImplementation(libs.junit)
+    testImplementation("org.robolectric:robolectric:4.18")
+    testImplementation("androidx.compose.ui:ui-test-junit4:1.12.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.12.1")
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.ktor.server.test.host)
 
@@ -275,7 +279,7 @@ dependencies {
     remapApi(project(":gkd-hidden-api"))
     implementation(libs.rikka.shizuku.api)
     implementation(libs.rikka.shizuku.provider)
-    implementation(libs.priv.kit.ui)
+    implementation(project(":gkd-priv-ui"))
     implementation(libs.lsposed.hiddenapibypass)
 
     implementation(libs.androidx.paging.runtime)

@@ -1,57 +1,56 @@
 package li.gkd.app.ui
 
-import li.gkd.app.ui.component.GkIconButtonDefaults
-import li.gkd.app.ui.component.GkPageBottomSpaceDefaults
-import li.gkd.app.ui.component.GkPageBottomSpace
-import li.gkd.app.MainViewModel
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
-import li.gkd.app.text.UiStrings
 import li.gkd.app.MainActivity
+import li.gkd.app.MainViewModel
 import li.gkd.app.store.AppStore.a11yScopeAppListFlow
 import li.gkd.app.store.AppStore.storeFlow
-import li.gkd.app.ui.component.PerfDropdownMenu
-import li.gkd.app.ui.icon.GkBackCloseIcon
-import li.gkd.app.ui.share.ListPlaceholder
-import li.gkd.app.ui.style.scaffoldPadding
-import li.gkd.app.util.AppGroupOption
-import li.gkd.app.util.AppSortOption
-import li.gkd.app.util.findOption
-import li.gkd.app.ui.share.launchUiAction
-import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkAnimatedBooleanContent
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
-import li.gkd.app.ui.icon.GkSearchCloseIconButton
 import li.gkd.app.ui.component.GkAppBarTextField
 import li.gkd.app.ui.component.GkAppCheckboxCard
 import li.gkd.app.ui.component.GkEmptyState
-import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkFilterIconButton
+import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMenuGroupCard
 import li.gkd.app.ui.component.GkMenuItemCheckbox
 import li.gkd.app.ui.component.GkMenuItemRadioButton
 import li.gkd.app.ui.component.GkMultiTextField
+import li.gkd.app.ui.component.GkPageBottomSpace
+import li.gkd.app.ui.component.GkPageBottomSpaceDefaults
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.PerfDropdownMenu
 import li.gkd.app.ui.component.isFullVisible
 import li.gkd.app.ui.component.rememberListScrollState
+import li.gkd.app.ui.icon.GkBackCloseIcon
+import li.gkd.app.ui.icon.GkSearchCloseIconButton
+import li.gkd.app.ui.share.ListPlaceholder
+import li.gkd.app.ui.share.launchUiAction
+import li.gkd.app.ui.style.GkUi
+import li.gkd.app.ui.style.scaffoldPadding
+import li.gkd.app.util.AppGroupOption
+import li.gkd.app.util.AppSortOption
+import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.util.findOption
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.nav.core.NavKey
 
 @Serializable
 data object A11YScopeAppListRoute : NavKey
@@ -91,8 +90,8 @@ fun A11yScopeAppListPage() {
                 canScroll = !editable && !store.blockA11yAppListFollowMatch,
                 navigationIcon = {
                     IconButton(
-                        minWidth = GkIconButtonDefaults.MinTouchTargetSize,
-                        minHeight = GkIconButtonDefaults.MinTouchTargetSize,
+                        minWidth = GkUi.MinTouchTarget,
+                        minHeight = GkUi.MinTouchTarget,
                         onClick = throttle(vm.scope.launchUiAction {
                             if (editable) {
                                 if (vm.textChanged) {
@@ -170,7 +169,7 @@ fun A11yScopeAppListPage() {
                                             )
                                         }
                                     }
-                                    GkMenuGroupCard(inTop = true, title = UiStrings.filter_title) {
+                                    GkMenuGroupCard(title = UiStrings.filter_title) {
                                         AppGroupOption.normalObjects.forEach { option ->
                                             val newValue = option.invert(store.a11yScopeAppGroupType)
                                             GkMenuItemCheckbox(
@@ -235,8 +234,8 @@ fun A11yScopeAppListPage() {
                     )
                 }
                 item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
-                    if (appInfos.isEmpty() && searchStr.isNotEmpty()) {
-                        GkEmptyState(text = UiStrings.search_no_results)
+                    if (appInfos.isEmpty()) {
+                        GkEmptyState(text = if (searchStr.isNotEmpty()) UiStrings.search_no_results else UiStrings.data_empty)
                         GkPageBottomSpace(height = GkPageBottomSpaceDefaults.CompactHeight)
                     } else {
                         GkPageBottomSpace()

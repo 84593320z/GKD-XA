@@ -1,24 +1,17 @@
 package li.gkd.app.feature.subscription
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.RadioButton
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,13 +21,19 @@ import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.CategorySetting
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkActionButton
-import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcon
+import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkRulePropertyIcon
 import li.gkd.app.ui.component.GkRuleSettingsSheet
 import li.gkd.app.ui.component.GkSwitch
-import li.gkd.app.ui.component.GkRulePropertyIcon
 import li.gkd.app.ui.component.RuleProperty
+import li.gkd.app.ui.style.GkUi
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.RadioButton
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun GkCategoryActionsSheet(
@@ -69,7 +68,7 @@ fun GkCategoryActionsSheet(
                             verticalAlignment = Alignment.CenterVertically) {
                             GkRulePropertyIcon(
                                 property = RuleProperty.CustomSetting,
-                                modifier = Modifier.padding(end = 12.dp).size(24.dp),
+                                modifier = Modifier.padding(end = 12.dp).size(GkUi.IconSize),
                                 contentDescription = null,
                                 tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
@@ -84,8 +83,6 @@ fun GkCategoryActionsSheet(
                             GkActionButton(
                                 enabled = !busy,
                                 onClick = onClearOverrides,
-                                modifier = Modifier.defaultMinSize(minWidth = 1.dp),
-                                contentPadding = PaddingValues(0.dp),
                             ) {
                                 Text(UiStrings.action_clear)
                             }
@@ -171,7 +168,7 @@ private fun CategoryDefaultContent(
                 Row(
                     modifier = Modifier.fillMaxWidth().then(interaction)
                         .heightIn(min = 72.dp)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = GkUi.ContentPadding, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(
@@ -188,7 +185,7 @@ private fun CategoryDefaultContent(
                             GkIcon(
                                 imageVector = iconSetting.icon,
                                 animateMorph = choice == CategoryChoice.Custom,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(GkUi.IconSize),
                                 contentDescription = null,
                                 tint = if (selected) MiuixTheme.colorScheme.primary
                                     else MiuixTheme.colorScheme.onSurfaceVariantSummary,

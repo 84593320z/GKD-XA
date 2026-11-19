@@ -3,11 +3,12 @@ package li.gkd.app.feature.snapshot
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.rememberPagerState
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -19,10 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
 import li.gkd.app.MainActivity
 import li.gkd.app.MainViewModel
@@ -39,6 +41,10 @@ import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkRetainedSheet
 import li.gkd.app.ui.component.SheetRequest
 import li.gkd.app.util.getShowActivityId
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class SnapshotPreviewRoute(
@@ -190,12 +196,18 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                 if (loadableState is Loadable.Loading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 } else {
-                    Text(
-                        text = (loadableState as? Loadable.Failure)?.cause?.message
-                            ?: UiStrings.snapshot_missing_or_deleted,
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.White,
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = (loadableState as? Loadable.Failure)?.cause?.message
+                                ?: UiStrings.snapshot_missing_or_deleted,
+                            style = MiuixTheme.textStyles.body2,
+                            textAlign = TextAlign.Center,
+                            color = Color.White,
+                        )
+                    }
                 }
             }
         }

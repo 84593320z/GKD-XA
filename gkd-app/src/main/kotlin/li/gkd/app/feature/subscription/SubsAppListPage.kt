@@ -1,63 +1,65 @@
 package li.gkd.app.feature.subscription
 
-import li.gkd.app.ui.component.GkPageBottomSpaceDefaults
-import li.gkd.app.ui.component.GkPageBottomSpace
-import li.gkd.app.MainViewModel
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
-import top.yukonga.miuix.kmp.nav.core.NavKey
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.serialization.Serializable
-import li.gkd.app.text.UiStrings
 import li.gkd.app.MainActivity
+import li.gkd.app.MainViewModel
 import li.gkd.app.core.state.Loadable
 import li.gkd.app.domain.rule.RuleConfigIndex
 import li.gkd.app.domain.rule.RuleSetting
 import li.gkd.app.store.AppStore.storeFlow
-import li.gkd.app.ui.component.PerfDropdownMenu
-import li.gkd.app.ui.share.ListPlaceholder
-import li.gkd.app.ui.share.filterSubsApps
-import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.style.scaffoldPadding
-import li.gkd.app.util.AppSortOption
-import li.gkd.app.util.ToastUtils.toast
-import li.gkd.app.util.findOption
-import li.gkd.app.util.TimeUtils.throttle
-import li.gkd.db.LOCAL_SUBS_IDS
-import li.gkd.app.ui.icon.GkSearchCloseIconButton
+import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkAppBarTextField
 import li.gkd.app.ui.component.GkAppFilterContent
 import li.gkd.app.ui.component.GkEmptyState
-import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkFilterIconButton
+import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleBatchMenuItems
 import li.gkd.app.ui.component.GkSubsAppCard
+import li.gkd.app.ui.component.GkSubscriptionLoadingState
 import li.gkd.app.ui.component.GkTwoLineText
+import li.gkd.app.ui.component.PerfDropdownMenu
 import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.ui.component.rememberListScrollState
 import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.component.rememberRuleControlEnvironment
 import li.gkd.app.ui.component.useSubs
+import li.gkd.app.ui.icon.GkSearchCloseIconButton
+import li.gkd.app.ui.share.ListPlaceholder
+import li.gkd.app.ui.share.filterSubsApps
+import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.GkUi
+import li.gkd.app.util.AppSortOption
+import li.gkd.app.util.TimeUtils.throttle
+import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.util.findOption
+import li.gkd.db.LOCAL_SUBS_IDS
+import top.yukonga.miuix.kmp.basic.FloatingActionButton
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class SubsAppListRoute(val subsItemId: Long) : NavKey
@@ -117,7 +119,7 @@ fun SubsAppListPage(route: SubsAppListRoute) {
             }
         }
     }
-    val showAllApps = apps.size == state?.subscription?.apps?.size
+    val hasFilteredApps = sortedApps.size < state?.subscription?.apps.orEmpty().size
     val pageScrollState = rememberListScrollState()
     val scrollBehavior = pageScrollState.scrollBehavior
     val listState = pageScrollState.listState
@@ -168,7 +170,7 @@ fun SubsAppListPage(route: SubsAppListRoute) {
                         enableWindowDim = false,
                         anchor = {
                             GkFilterIconButton(
-                                filtered = sortedApps.size < state?.subscription?.apps.orEmpty().size,
+                                filtered = hasFilteredApps,
                                 onClick = { expanded = true },
                             )
                         },
@@ -205,9 +207,18 @@ fun SubsAppListPage(route: SubsAppListRoute) {
             }
         },
     ) { contentPadding ->
+        // Miuix content padding includes system/side insets, but not the FAB overlay.
+        // Reserve its 56dp height + 12dp bottom offset and one section gap; keep the
+        // same extent during selection so the list does not jump as the FAB hides.
+        val bottomClearance = if (LOCAL_SUBS_IDS.contains(subsItemId)) {
+            56.dp + GkUi.SectionGap * 2
+        } else {
+            GkUi.SectionGap
+        }
         LazyColumn(
-            modifier = Modifier.scaffoldPadding(contentPadding),
-            state = listState
+            modifier = Modifier.padding(contentPadding).consumeWindowInsets(contentPadding).fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(bottom = bottomClearance),
         ) {
             items(apps, { it.id }) { app ->
                 val enabledGroupCount = remember(app, state, environment) {
@@ -247,19 +258,18 @@ fun SubsAppListPage(route: SubsAppListRoute) {
                 )
             }
             item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
-                if (apps.isEmpty() && !firstLoading) {
+                if (apps.isEmpty() && firstLoading) {
+                    GkSubscriptionLoadingState()
+                } else if (apps.isEmpty()) {
                     GkEmptyState(
                         text = if (loadError != null) {
                             loadError.message ?: UiStrings.subscription_load_failed
                         } else if (searchStr.isNotEmpty()) {
-                            if (showAllApps) UiStrings.search_no_results else UiStrings.search_no_results_filter_hint
+                            if (hasFilteredApps) UiStrings.search_no_results_filter_hint else UiStrings.search_no_results
                         } else {
                             UiStrings.rules_empty
                         }
                     )
-                    GkPageBottomSpace(height = GkPageBottomSpaceDefaults.CompactHeight)
-                } else {
-                    GkPageBottomSpace()
                 }
             }
         }

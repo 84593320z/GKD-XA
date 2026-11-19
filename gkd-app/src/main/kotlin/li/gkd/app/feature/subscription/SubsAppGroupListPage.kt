@@ -1,20 +1,10 @@
 package li.gkd.app.feature.subscription
 
-import li.gkd.app.ui.component.GkPageBottomSpace
-import li.gkd.app.MainViewModel
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import li.gkd.app.ui.component.GkAppRuleRestrictionCard
-import li.gkd.app.store.AppStore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,25 +13,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
-import li.gkd.app.text.UiStrings
+import li.gkd.app.MainViewModel
 import li.gkd.app.domain.rule.RuleConfigIndex
 import li.gkd.app.domain.rule.RuleSetting
-import li.gkd.app.ui.share.ListPlaceholder
-import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.style.scaffoldPadding
-import li.gkd.app.util.ToastUtils.copyText
-import li.gkd.app.util.ToastUtils.toast
+import li.gkd.app.store.AppStore
+import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
+import li.gkd.app.ui.component.GkAppRuleRestrictionCard
 import li.gkd.app.ui.component.GkBatchActionMenuItem
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
+import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRuleBatchMenuItems
 import li.gkd.app.ui.component.GkRuleEnableControl
@@ -59,6 +46,16 @@ import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.component.rememberReorderSession
 import li.gkd.app.ui.component.rememberRuleControlEnvironment
 import li.gkd.app.ui.component.rememberRuleListFocus
+import li.gkd.app.ui.share.ListPlaceholder
+import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.scaffoldPadding
+import li.gkd.app.util.ToastUtils.copyText
+import li.gkd.app.util.ToastUtils.toast
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class SubsAppGroupListRoute(
@@ -290,11 +287,10 @@ fun SubsAppGroupListPage(route: SubsAppGroupListRoute) {
                                 if (!isSelectedMode) GkRuleEnableControl(appControl, setApp, modifier = it,
                                     identity = li.gkd.app.domain.rule.RuleSwitchTarget.App(subsItemId, appId))
                             }) {
-                                Text(UiStrings.rule_enable_in_app, style = MiuixTheme.textStyles.subtitle)
+                                Text(UiStrings.rule_enable_in_app, style = MiuixTheme.textStyles.body1)
                                 val restriction = RulePropertyText.restrictionSummary(appControl)
                                 if (restriction != null) {
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(restriction, style = MiuixTheme.textStyles.footnote1,
+                                    Text(restriction, style = MiuixTheme.textStyles.body2,
                                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                                 }
                             }

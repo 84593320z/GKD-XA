@@ -81,7 +81,7 @@ fun GkAppNameText(
             }
         }
         val inlineContent = if (showSystemIcon) {
-            val contentColor = style.color.takeOrElse { LocalContentColor.current }
+            val contentColor = color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } }
             remember(style, contentColor) {
                 mapOf(
                     "icon" to InlineTextContent(

@@ -9,16 +9,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,38 +25,38 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import li.gkd.app.MainViewModel
-import li.gkd.app.ui.AppConfigRoute
-import li.gkd.app.ui.component.GkActionButton
-import li.gkd.app.ui.style.GkShapes
-import li.gkd.app.ui.style.itemHorizontalPadding
-import li.gkd.app.ui.component.GkLogTimeline
-import li.gkd.app.ui.component.GkLogTimeText
-import li.gkd.app.ui.component.gkLogTimelineRail
-import li.gkd.app.text.UiStrings
 import li.gkd.app.data.fixedName
 import li.gkd.app.data.isStateChanged
-import li.gkd.app.ui.share.LocalDarkTheme
-import li.gkd.app.ui.style.getJson5AnnotatedString
-import li.gkd.app.ui.style.iconTextSize
-import li.gkd.app.ui.style.scaffoldPadding
-import li.gkd.app.util.ToastUtils.copyText
-import li.gkd.app.util.toJson5String
-import li.gkd.db.A11yEventLog
+import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.AppConfigRoute
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkCopyableText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.GkLogTimeText
+import li.gkd.app.ui.component.GkLogTimeline
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.component.gkLogTimelineRail
 import li.gkd.app.ui.component.rememberListScrollState
+import li.gkd.app.ui.share.LocalDarkTheme
+import li.gkd.app.ui.style.GkShapes
+import li.gkd.app.ui.style.getJson5AnnotatedString
+import li.gkd.app.ui.style.itemHorizontalPadding
+import li.gkd.app.util.ToastUtils.copyText
+import li.gkd.app.util.toJson5String
+import li.gkd.db.A11yEventLog
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data object A11yEventLogRoute : NavKey
@@ -93,7 +92,7 @@ fun A11yEventLogPage() {
             appId = { it.appId },
             time = { it.ctime },
             onOpenApp = { mainVm.navigatePage(AppConfigRoute(it)) },
-            modifier = Modifier.scaffoldPadding(contentPadding),
+            modifier = Modifier.padding(contentPadding),
         ) { eventLog ->
             EventLogEntry(eventLog, onClick = { shownEventLog = eventLog })
         }
@@ -125,7 +124,7 @@ fun A11yEventLogPage() {
                         color = MiuixTheme.colorScheme.tertiaryContainer,
                         shape = GkShapes.compact,
                     )
-                    .padding(horizontal = 4.dp)
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
                 Column {
                     Text(text = UiStrings.event_type_prefix + if (eventLog.isStateChanged) UiStrings.event_window_state_changed else UiStrings.event_window_content_changed)
                     Spacer(modifier = Modifier.height(12.dp))
@@ -133,7 +132,7 @@ fun A11yEventLogPage() {
                     Row {
                         Text(
                             text = eventLog.appId,
-                            modifier = textModifier
+                            modifier = textModifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         CopyIcon(onClick = {
@@ -148,7 +147,7 @@ fun A11yEventLogPage() {
                             .fillMaxWidth()
                             .clip(GkShapes.compact)
                             .background(MiuixTheme.colorScheme.tertiaryContainer),
-                        contentPadding = PaddingValues(horizontal = 4.dp),
+                        contentPadding = PaddingValues(12.dp),
                         contentColor = MiuixTheme.colorScheme.onTertiaryContainer,
                     )
                     if (eventLog.isStateChanged) {
@@ -200,6 +199,7 @@ private fun EventLogEntry(eventLog: A11yEventLog, onClick: () -> Unit) {
             .fillMaxWidth()
             .gkLogTimelineRail(MiuixTheme.colorScheme.outline)
             .clickable(onClick = onClick)
+            .heightIn(min = 48.dp)
             .padding(start = 56.dp, end = itemHorizontalPadding, top = 6.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
@@ -263,11 +263,10 @@ private fun EventLogSummary(
 
 @Composable
 private fun CopyIcon(modifier: Modifier = Modifier, onClick: () -> Unit) {
-    GkIcon(
+    GkIconButton(
         imageVector = GkIcons.ContentCopy,
-        modifier = modifier
-            .clip(GkShapes.compact)
-            .clickable(onClick = onClick)
-            .iconTextSize(),
+        modifier = modifier,
+        contentDescription = UiStrings.action_copy,
+        onClick = onClick,
     )
 }

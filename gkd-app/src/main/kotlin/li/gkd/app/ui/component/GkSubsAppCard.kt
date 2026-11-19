@@ -4,15 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.Composable
 import li.gkd.app.data.AppInfo
 import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.RuleControlState
 import li.gkd.app.domain.rule.RuleSetting
 import li.gkd.app.domain.rule.RuleSwitchTarget
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @Composable
@@ -39,7 +40,8 @@ fun GkSubsAppCard(
         trailing = { GkRuleEnableControl(control, onSettingChange, modifier = it,
             identity = RuleSwitchTarget.App(subsId, rawApp.id)) },
     ) {
-        GkAppNameText(appId = appInfo?.id ?: rawApp.id, appInfo = appInfo, fallbackName = rawApp.name)
+        GkAppNameText(appId = appInfo?.id ?: rawApp.id, appInfo = appInfo, fallbackName = rawApp.name,
+            style = MiuixTheme.textStyles.body1)
         Row(
             Modifier.fillMaxWidth().heightIn(min = 20.dp),
             verticalAlignment = Alignment.CenterVertically,

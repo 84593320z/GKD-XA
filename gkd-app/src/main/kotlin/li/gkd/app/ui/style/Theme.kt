@@ -79,7 +79,7 @@ fun AppTheme(
         LocalIsTalkbackEnabled provides isTalkbackEnabled,
     ) {
         MiuixTheme(controller = controller) {
-            ApplyWindowChrome(darkTheme = darkTheme, background = MiuixTheme.colorScheme.background)
+            ApplyWindowChrome(darkTheme = darkTheme, background = MiuixTheme.colorScheme.surface)
             content()
         }
     }

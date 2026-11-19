@@ -167,7 +167,8 @@ fun HomePage() {
     // 避免新页首帧的重负载与模糊采样抢 GPU。
     // popTransition 覆盖预测性返回手势的预览窗口：此时返回栈尚未弹出（topRoute 仍是二级页），
     // 但首页已在播放返回进场动画，需要保持液态玻璃采样
-    val returningHome = mainVm.topRoute is HomeRoute || mainVm.popTransitionFlow.value
+    val popTransition by mainVm.popTransitionFlow.collectAsStateWithLifecycle()
+    val returningHome = mainVm.topRoute is HomeRoute || popTransition
     // 仅进页转场窗口内关毛玻璃；被盖住与返回时都保持（避免再出现“二级页底栏变实色”）
     val blurActive = appearance.blur && (!navTransitionRunning || returningHome)
     // 液态玻璃组件树保持不变，只关采样；否则转场开头会整棵底栏换树，反而更卡
