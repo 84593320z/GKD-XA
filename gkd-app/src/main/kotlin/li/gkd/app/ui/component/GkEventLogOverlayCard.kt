@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import li.gkd.app.data.fixedName
 import li.gkd.app.data.isStateChanged
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.iconTextSize
 import li.gkd.app.util.format
 import li.gkd.db.A11yEventLog
@@ -82,7 +82,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                         modifier = Modifier
                             .background(
                                 color = MiuixTheme.colorScheme.secondaryContainer,
-                                shape = MaterialTheme.shapes.extraSmall,
+                                shape = GkShapes.compact,
                             )
                             .padding(horizontal = 2.dp),
                     )
@@ -111,7 +111,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                                 modifier = Modifier
                                     .background(
                                         color = MiuixTheme.colorScheme.tertiaryContainer,
-                                        shape = MaterialTheme.shapes.extraSmall,
+                                        shape = GkShapes.compact,
                                     )
                                     .padding(horizontal = 2.dp),
                             )

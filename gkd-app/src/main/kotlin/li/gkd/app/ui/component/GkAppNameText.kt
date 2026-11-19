@@ -3,9 +3,7 @@ package li.gkd.app.ui.component
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +25,7 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.data.AppInfo
 import li.gkd.app.priv.currentUserId
 import li.gkd.app.data.appinfo.AppInfoRepository
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.placeholderHeight
 import li.gkd.app.ui.style.placeholderWidth
 
@@ -36,7 +35,7 @@ fun GkAppNameText(
     appId: String,
     appInfo: AppInfo? = null,
     fallbackName: String? = null,
-    style: TextStyle = LocalTextStyle.current,
+    style: TextStyle = MiuixTheme.textStyles.main,
     color: Color = Color.Unspecified,
 ) {
     val info = appInfo ?: AppInfoRepository.appInfoMapFlow.collectAsStateWithLifecycle().value[appId]
@@ -95,7 +94,7 @@ fun GkAppNameText(
                         GkIcon(
                             imageVector = GkIcons.VerifiedUser,
                             modifier = Modifier
-                                .clip(MaterialTheme.shapes.extraSmall)
+                                .clip(GkShapes.compact)
                                 .fillMaxSize(),
                             tint = contentColor
                         )

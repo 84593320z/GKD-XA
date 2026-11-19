@@ -15,11 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.contentColorFor
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -47,6 +44,8 @@ import kotlinx.coroutines.withContext
 import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.appScope
+import li.gkd.app.ui.style.GkProvideTextStyle
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.db.A11yEventLog
 import li.gkd.app.data.toA11yEventLog
 import li.gkd.app.notif.NotificationCatalog
@@ -81,7 +80,7 @@ class EventService : OverlayWindowService(positionKey = "event") {
                 imageVector = GkIcons.ExpandContent,
                 contentDescription = UiStrings.event_log_window_restore,
                 modifier = Modifier
-                    .clip(MaterialTheme.shapes.small)
+                    .clip(GkShapes.control)
                     .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = alpha))
                     .semantics {
                         onClick(label = UiStrings.event_log_window_restore) {
@@ -96,7 +95,7 @@ class EventService : OverlayWindowService(positionKey = "event") {
         } else {
             val bgColor = MiuixTheme.colorScheme.surface
             CompositionLocalProvider(
-                LocalContentColor provides contentColorFor(bgColor),
+                LocalContentColor provides MiuixTheme.colorScheme.onSurface,
             ) {
                 val latestEventId = eventLogs.lastOrNull()?.id ?: 0
                 val followState = rememberLazyListAutoFollowState(
@@ -105,7 +104,7 @@ class EventService : OverlayWindowService(positionKey = "event") {
                 )
                 Column(
                     modifier = Modifier
-                        .clip(MaterialTheme.shapes.small)
+                        .clip(GkShapes.control)
                         .background(bgColor.copy(alpha = 0.9f))
                         .width(256.dp)
                         .padding(4.dp)
@@ -116,9 +115,7 @@ class EventService : OverlayWindowService(positionKey = "event") {
                         minimizeContentDescription = UiStrings.event_log_window_minimize,
                     )
                     val textStyle = MiuixTheme.textStyles.footnote2
-                    CompositionLocalProvider(
-                        LocalTextStyle provides textStyle,
-                    ) {
+                    GkProvideTextStyle(textStyle) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()

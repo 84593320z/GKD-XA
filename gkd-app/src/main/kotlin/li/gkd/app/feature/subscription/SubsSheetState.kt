@@ -1,9 +1,9 @@
 package li.gkd.app.feature.subscription
 
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkPageBottomSpaceDefaults
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,18 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
+import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
+import top.yukonga.miuix.kmp.basic.rememberTooltipState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,6 +42,8 @@ import li.gkd.app.data.RawSubscription
 import li.gkd.app.data.mtimeStr
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.feature.log.ActionLogRoute
+import li.gkd.app.ui.component.GkTooltipBox
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.db.LOCAL_SUBS_ID
 import li.gkd.db.SubsItem
@@ -102,19 +98,16 @@ class SubsSheetState {
             missing = requested != null && subscriptions is Loadable.Ready && subscription == null &&
                 data?.loadErrors?.containsKey(requested?.key) != true && data?.updateErrors?.containsKey(requested?.key) != true,
             onDismissRequest = ::dismiss,
-        ) { _, displayed, sheetState, dismiss ->
+        ) { _, displayed, show, dismiss, onDismissFinished ->
             val subsItem = displayed.item
             val subscription = displayed.subscription
             val mainVm = MainViewModel.requireCurrent()
             val scope = mainVm.scope
             val scrollState = rememberScrollState()
-            val sheetGesturesEnabled by remember {
-                derivedStateOf { scrollState.value == 0 }
-            }
             GkModalBottomSheet(
                 onDismissRequest = dismiss,
-                sheetState = sheetState,
-                sheetGesturesEnabled = sheetGesturesEnabled,
+                show = show,
+                onDismissFinished = onDismissFinished,
             ) {
                 val showName = subscription?.name ?: UiStrings.subscription_id_description(subsItem.id)
                 val childModifier = remember {
@@ -168,23 +161,21 @@ class SubsSheetState {
                                 style = MiuixTheme.textStyles.footnote2,
                                 color = MiuixTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier
-                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .clip(GkShapes.compact)
                                     .background(MiuixTheme.colorScheme.tertiaryContainer)
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 maxLines = 1,
                                 softWrap = false,
                             )
-                            TooltipBox(
-                                tooltip = { PlainTooltip { Text(text = subsItem.mtimeStr) } },
+                            GkTooltipBox(
+                                text = subsItem.mtimeStr,
                                 state = timeTooltipState,
-                                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                                    TooltipAnchorPosition.Above
-                                ),
+                                positioning = TooltipAnchorPosition.Above,
                             ) {
                                 Text(
                                     text = timeStr,
                                     modifier = Modifier
-                                        .clip(MaterialTheme.shapes.extraSmall)
+                                        .clip(GkShapes.compact)
                                         .clickable {
                                             timeTooltipScope.launch { timeTooltipState.show() }
                                         }
@@ -361,7 +352,7 @@ class SubsSheetState {
                                     style = MiuixTheme.textStyles.button,
                                     color = MiuixTheme.colorScheme.error,
                                 )
-                                TextButton(onClick = throttle {
+                                GkActionButton(onClick = throttle {
                                     scope.launchUi {
                                         SubscriptionRepository.refresh().message?.let { toast(it) }
                                     }
@@ -422,7 +413,7 @@ private fun SubsSheetItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = itemHorizontalPadding, vertical = 4.dp)
-            .clip(MaterialTheme.shapes.large)
+            .clip(GkShapes.card)
             .background(MiuixTheme.colorScheme.surface)
             .clickable(onClickLabel = onClickLabel, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),

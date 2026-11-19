@@ -1,9 +1,6 @@
 package li.gkd.app.ui.component
 
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -121,22 +118,20 @@ class DialogRequests {
                     }
                 },
                 confirmButton = {
-                    TextButton(
+                    GkActionButton(
                         onClick = throttle(::confirmCurrent),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = if (currentRequest.error) {
+                        contentColor = if (currentRequest.error) {
                                 MiuixTheme.colorScheme.error
                             } else {
                                 Color.Unspecified
                             },
-                        ),
                     ) {
                         Text(text = currentRequest.confirmText)
                     }
                 },
                 dismissButton = currentRequest.dismissText?.let { dismissText ->
                     {
-                        TextButton(onClick = throttle(::dismissCurrent)) {
+                        GkActionButton(onClick = throttle(::dismissCurrent)) {
                             Text(text = dismissText)
                         }
                     }

@@ -3,7 +3,6 @@ package li.gkd.app.ui.style
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -14,6 +13,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isUnspecified
 import androidx.compose.ui.unit.sp
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 val itemHorizontalPadding = 16.dp
 val itemVerticalPadding = 12.dp
@@ -30,7 +30,7 @@ fun TextStyle.lineHeightDp(density: Density, fallback: Dp = 20.dp): Dp =
 
 /**
  * MIUIX 的多数 [TextStyle]（body1 / body2 / footnote2 …）只声明了 fontSize，**lineHeight 是
- * [TextUnit.Unspecified]**；而 `TextStyle.Default`（Material 的 LocalTextStyle 默认值）两个都是
+ * [TextUnit.Unspecified]**；而 `TextStyle.Default`两个都是
  * Unspecified。Compose 的 `Placeholder` 构造器会直接 require 失败：
  * `IllegalArgumentException: height cannot be TextUnit.Unspecified`。
  *
@@ -66,7 +66,7 @@ fun Modifier.scaffoldPadding(values: PaddingValues): Modifier {
 
 @Composable
 fun Modifier.iconTextSize(
-    textStyle: TextStyle = LocalTextStyle.current,
+    textStyle: TextStyle = MiuixTheme.textStyles.main,
     square: Boolean = true,
 ): Modifier {
     val density = LocalDensity.current

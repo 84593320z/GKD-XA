@@ -1,9 +1,10 @@
 package li.gkd.app.ui
 
+import li.gkd.app.ui.component.GkActionButton
+import li.gkd.app.ui.component.GkBottomActionBar
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.MainViewModel
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,19 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BottomAppBar
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -107,15 +103,15 @@ fun CrashReportPage() {
         },
         bottomBar = {
             if (crashDataList.isNotEmpty()) {
-                BottomAppBar {
+                GkBottomActionBar {
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(
+                    GkActionButton(
                         onClick = throttle { mainVm.openUrl(ISSUES_URL) },
                     ) {
                         Text(text = UiStrings.feedback_report)
                     }
                     Spacer(modifier = Modifier.width(itemHorizontalPadding))
-                    TextButton(
+                    GkActionButton(
                         onClick = { mainVm.shareLog.show() },
                     ) {
                         Text(text = UiStrings.logs_export)
@@ -185,9 +181,7 @@ private fun CrashReportDialog(
         text = {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 520.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 crashData.message?.takeIf { it.isNotBlank() }?.let { message ->
@@ -228,12 +222,12 @@ private fun CrashReportDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            GkActionButton(onClick = onDismiss) {
                 Text(text = UiStrings.action_close)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDelete) {
+            GkActionButton(onClick = onDelete) {
                 Text(text = UiStrings.crash_report_delete)
             }
         },

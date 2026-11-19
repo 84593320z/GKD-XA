@@ -7,9 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -18,6 +15,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import top.yukonga.miuix.kmp.theme.LocalContentColor
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private const val LAZY_TEXT_TARGET_CHUNK_SIZE = 2_000
 
@@ -27,7 +26,7 @@ fun GkLazyCopyableText(
     modifier: Modifier = Modifier,
     textToCopy: String = text.text,
     contentPadding: PaddingValues = PaddingValues.Zero,
-    textStyle: TextStyle = LocalTextStyle.current,
+    textStyle: TextStyle = MiuixTheme.textStyles.main,
     contentColor: Color = LocalContentColor.current,
     textContentDescription: String? = null,
 ) {
@@ -37,7 +36,7 @@ fun GkLazyCopyableText(
         copyIconVisible = true,
         contentColor = contentColor,
         modifier = modifier.defaultMinSize(
-            minHeight = LocalMinimumInteractiveComponentSize.current,
+            minHeight = GkIconButtonDefaults.MinTouchTargetSize,
         ),
     ) {
         SelectionContainer {

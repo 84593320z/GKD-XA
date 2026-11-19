@@ -41,7 +41,6 @@ compose-animation = { module = "androidx.compose.animation:animation", version.r
 compose-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 compose-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
 compose-icons = "androidx.compose.material:material-icons-extended:1.7.8"
-compose-material3 = "androidx.compose.material3:material3:1.4.0"
 compose-activity = "androidx.activity:activity-compose:1.13.0"
 androidx-appcompat = "androidx.appcompat:appcompat:1.8.0"
 androidx-concurrent-futures = "androidx.concurrent:concurrent-futures:1.3.0"

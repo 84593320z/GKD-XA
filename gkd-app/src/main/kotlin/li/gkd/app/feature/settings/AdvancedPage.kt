@@ -1,23 +1,16 @@
 package li.gkd.app.feature.settings
 
 import li.gkd.app.MainViewModel
-
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,12 +40,12 @@ import li.gkd.app.service.HttpService
 import li.gkd.app.service.TrackService
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.feature.settings.ai.AiProvidersPageRoute
+import li.gkd.app.ui.style.GkProvideTextStyle
 import li.gkd.app.util.ToastUtils.copyText
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.ui.style.EmptyHeight
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.itemVerticalPadding
-import li.gkd.app.ui.style.surfaceCardColors
 import li.gkd.app.ui.style.TABULAR_NUMBERS_FONT_FEATURE
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.share.launchUiAction
@@ -73,6 +65,7 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
@@ -380,9 +373,7 @@ private fun HttpServiceItem(
         onClick = null,
     )
     androidx.compose.animation.AnimatedVisibility(visible = running) {
-        CompositionLocalProvider(
-            LocalTextStyle provides MiuixTheme.textStyles.body2
-        ) {
+        GkProvideTextStyle(MiuixTheme.textStyles.body2) {
             Column(
                 modifier = Modifier.padding(
                     start = itemHorizontalPadding,

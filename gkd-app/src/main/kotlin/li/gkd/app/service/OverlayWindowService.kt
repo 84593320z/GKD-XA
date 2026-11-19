@@ -13,8 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +47,7 @@ import li.gkd.app.permission.PermissionStates
 import li.gkd.app.store.FileStateStore
 import li.gkd.app.ui.icon.DragPan
 import li.gkd.app.ui.style.AppTheme
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.iconTextSize
 import li.gkd.app.util.BarUtils
 import li.gkd.app.util.ScreenUtils
@@ -63,6 +62,7 @@ import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
+import top.yukonga.miuix.kmp.basic.Text
 
 private var tempShareContext: ShareContext? = null
 private fun acquireShareContext(): ShareContextLease {
@@ -157,7 +157,7 @@ abstract class OverlayWindowService(
                     imageVector = GkIcons.CollapseContent,
                     contentDescription = minimizeContentDescription,
                     modifier = Modifier
-                        .clip(MaterialTheme.shapes.extraSmall)
+                        .clip(GkShapes.compact)
                         .clickable(onClick = throttle(onMinimizeRequest))
                         .iconTextSize(),
                 )
@@ -165,7 +165,7 @@ abstract class OverlayWindowService(
             GkIcon(
                 imageVector = GkIcons.Close,
                 modifier = Modifier
-                    .clip(MaterialTheme.shapes.extraSmall)
+                    .clip(GkShapes.compact)
                     .clickable(onClick = throttle {
                         stopSelf()
                     })

@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.minimumInteractiveComponentSize
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -57,7 +57,7 @@ fun GkRuleGroupCard(
             GkRuleEnableControl(
                 control,
                 onSettingChange,
-                modifier = if (legacyStyle) Modifier.padding(8.dp).minimumInteractiveComponentSize() else it,
+                modifier = if (legacyStyle) Modifier.padding(8.dp).sizeIn(minWidth = 48.dp, minHeight = 48.dp) else it,
                 identity = group.toRuleGroupTarget(subs.id, appId).toSwitchTarget(),
             )
         },

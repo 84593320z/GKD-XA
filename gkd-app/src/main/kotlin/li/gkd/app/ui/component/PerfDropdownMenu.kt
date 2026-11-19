@@ -7,6 +7,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.BasicComponentColors
@@ -18,7 +22,10 @@ import top.yukonga.miuix.kmp.window.WindowListPopup
 
 /**
  * MIUIX 下拉菜单。使用 [WindowListPopup]，避免在毛玻璃顶栏内开 Overlay 触发 RenderThread 崩溃。
- * [anchor] 与弹层须同一父级以便定位。
+ * Prefer [anchor] so the button and popup share the measured parent used by Miuix for positioning.
+ * Without [anchor], callers must put both in the same non-empty Box; an empty sibling Box is not
+ * an anchor. The native window popup handles outside taps and Back without navigating the page.
+ * [enableWindowDim] only controls the scrim, not outside-tap dismissal.
  */
 @Composable
 fun PerfDropdownMenu(
@@ -79,6 +86,7 @@ private fun DropdownPopup(
     }
 }
 
+/** Native Miuix menu row. Use [titleColor] for destructive actions; callbacks own dismissal. */
 @Composable
 fun PerfDropdownMenuItem(
     text: String,
@@ -88,6 +96,8 @@ fun PerfDropdownMenuItem(
     titleColor: Color = Color.Unspecified,
     startAction: (@Composable () -> Unit)? = null,
     endActions: (@Composable RowScope.() -> Unit)? = null,
+    role: Role = Role.Button,
+    onClickLabel: String? = null,
 ) {
     val colors = if (titleColor == Color.Unspecified) {
         BasicComponentDefaults.titleColor()
@@ -98,11 +108,16 @@ fun PerfDropdownMenuItem(
         )
     }
     BasicComponent(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {
+            this.role = role
+            if (!enabled) disabled()
+        },
         title = text,
         titleColor = colors,
         enabled = enabled,
         onClick = onClick,
+        onClickLabel = onClickLabel,
+        role = role,
         startAction = startAction,
         endActions = endActions,
     )

@@ -17,10 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,7 +41,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAlertDialog
+import li.gkd.app.ui.style.GkShapes
 
 class PermissionRequestContent(
     private val coordinator: PermissionRequestCoordinator,
@@ -94,14 +94,14 @@ class PermissionRequestContent(
                     coordinator.dismissDialog(state.id)
                 },
                 confirmButton = {
-                    TextButton(onClick = {
+                    GkActionButton(onClick = {
                         coordinator.confirmDialog(state.id)
                     }) {
                         Text(text = state.confirmText)
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = {
+                    GkActionButton(onClick = {
                         coordinator.dismissDialog(state.id)
                     }) {
                         Text(text = state.dismissText)
@@ -169,10 +169,9 @@ class PermissionRequestContent(
                 .semantics(mergeDescendants = true) {
                     liveRegion = LiveRegionMode.Polite
                 },
-            shape = MaterialTheme.shapes.medium,
+            shape = GkShapes.panel,
             color = MiuixTheme.colorScheme.surfaceContainerHighest,
             contentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
-            tonalElevation = 6.dp,
             shadowElevation = 6.dp,
         ) {
             Column(

@@ -1,7 +1,7 @@
 package li.gkd.app.ui.component
 
-import androidx.compose.material3.LocalTextStyle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,7 +13,7 @@ fun GkFixedTimeText(
     text: String,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
-    style: TextStyle = LocalTextStyle.current,
+    style: TextStyle = MiuixTheme.textStyles.main,
 ) {
     Text(
         text = text,

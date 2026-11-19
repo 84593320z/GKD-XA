@@ -1,14 +1,13 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.runtime.Composable
@@ -78,7 +77,7 @@ fun GkRuleEnableControl(
     val reasonAction = if (state.canEnable) {
         Modifier
     } else {
-        Modifier.minimumInteractiveComponentSize().clickable(
+        Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(
             interactionSource = null,
             indication = null,
             role = Role.Button,
@@ -114,11 +113,11 @@ fun GkRuleEnableControl(
             title = { Text(if (state.canEnable) UiStrings.rule_status else UiStrings.rule_unavailable) },
             text = { Text(RulePropertyText.restrictionSummary(state) ?: UiStrings.rule_now_available) },
             confirmButton = {
-                TextButton(onClick = { showReason = false }) { Text(UiStrings.action_got_it) }
+                GkActionButton(onClick = { showReason = false }) { Text(UiStrings.action_got_it) }
             },
             dismissButton = {
                 if (state.configuredEnabled) {
-                    TextButton(onClick = {
+                    GkActionButton(onClick = {
                         showReason = false
                         onSettingChange(RuleSetting.Disabled)
                     }) { Text(UiStrings.rule_close) }

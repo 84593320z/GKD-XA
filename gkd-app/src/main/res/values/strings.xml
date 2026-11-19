@@ -1058,4 +1058,8 @@
     <string name="app_rule_whitelist_remove_confirm">将当前应用移出应用白名单？\n\n移除后，应用白名单将不再阻止此应用执行规则。规则开关配置保持不变。</string>
     <string name="app_rule_whitelist_remove_follow_confirm">将当前应用移出应用白名单？\n\n局部关闭正在跟随应用白名单，此应用的局部关闭也将同时解除。规则开关配置保持不变。</string>
     <string name="app_rule_partial_disable_remove_confirm">将当前应用移出无障碍白名单？\n\n移除后，不再因局部关闭功能在此应用内关闭服务。应用白名单和规则开关配置保持不变。</string>
+    <string name="pull_refresh_hint">下拉刷新</string>
+    <string name="pull_refresh_release">松手刷新</string>
+    <string name="pull_refresh_running">正在刷新…</string>
+    <string name="pull_refresh_finished">刷新结束</string>
 </resources>

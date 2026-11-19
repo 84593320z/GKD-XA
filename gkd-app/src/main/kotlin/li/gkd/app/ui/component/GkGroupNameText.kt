@@ -3,9 +3,7 @@ package li.gkd.app.ui.component
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +30,7 @@ fun GkGroupNameText(
     isGlobal: Boolean,
     text: String,
     color: Color = Color.Unspecified,
-    style: TextStyle = LocalTextStyle.current,
+    style: TextStyle = MiuixTheme.textStyles.main,
     overflow: TextOverflow = TextOverflow.Clip,
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,

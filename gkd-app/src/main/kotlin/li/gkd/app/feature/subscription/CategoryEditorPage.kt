@@ -3,24 +3,17 @@ package li.gkd.app.feature.subscription
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,22 +28,28 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.CategoryPolicy
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAppNameText
+import li.gkd.app.ui.component.GkEditorScaffold
+import li.gkd.app.ui.component.GkFormTextField
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.autoFocus
-import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
-import kotlinx.serialization.Serializable
-import li.gkd.app.ui.component.GkEditorScaffold
 import li.gkd.app.ui.component.GkSubscriptionPageContent
+import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.json
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data class CategoryEditorRoute(val subsId: Long, val categoryKey: Int? = null) : NavKey
@@ -115,14 +114,14 @@ private fun CategoryEditorContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
+                GkFormTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = {
-                        Text(nameError ?: UiStrings.category_name_prefix,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    },
+                    label = nameError ?: UiStrings.category_name_prefix,
+                    labelMaxLines = 1,
+                    labelOverflow = TextOverflow.Ellipsis,
                     isError = nameError != null,
+                    errorMessage = nameError ?: UiStrings.error_label,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(
@@ -130,10 +129,10 @@ private fun CategoryEditorContent(
                     ),
                     modifier = Modifier.fillMaxWidth().autoFocus(immediateFocus = true),
                 )
-                OutlinedTextField(
+                GkFormTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text(UiStrings.category_description) },
+                    label = UiStrings.category_description,
                     minLines = 1,
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth().focusRequester(descriptionFocusRequester),
@@ -145,7 +144,7 @@ private fun CategoryEditorContent(
                         Text(UiStrings.category_edit_conflict,
                             color = MiuixTheme.colorScheme.onErrorContainer)
                         if (category != null) {
-                            TextButton(onClick = {
+                            GkActionButton(onClick = {
                                 originalCategory = categorySnapshot
                                 name = category.name
                                 description = category.desc.orEmpty()

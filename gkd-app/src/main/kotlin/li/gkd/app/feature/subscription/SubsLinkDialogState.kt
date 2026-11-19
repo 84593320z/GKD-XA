@@ -6,11 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -18,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlin.coroutines.resume
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,19 +25,23 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import li.gkd.app.text.UiStrings
 import li.gkd.app.data.subscription.SubscriptionAddStage
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.data.subscription.SubscriptionResult
+import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
+import li.gkd.app.ui.component.GkAlertDialog
+import li.gkd.app.ui.component.GkFormTextField
+import li.gkd.app.ui.component.GkIconButton
+import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.ui.share.message
 import li.gkd.app.util.NetworkUtils
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
-import kotlin.coroutines.resume
-import li.gkd.app.ui.component.GkAlertDialog
-import li.gkd.app.ui.component.GkIconButton
-import li.gkd.app.ui.component.GkIcons
-import li.gkd.app.ui.component.autoFocus
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private data class SubsLinkDialogRequest(
     val initialValue: String,
@@ -204,7 +204,7 @@ class SubsLinkDialogState(
                 },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
+                        GkFormTextField(
                             value = currentRequest.value,
                             onValueChange = ::updateValue,
                             maxLines = 8,
@@ -212,9 +212,8 @@ class SubsLinkDialogState(
                                 .fillMaxWidth()
                                 .autoFocus(),
                             enabled = !busy,
-                            placeholder = {
-                                Text(text = UiStrings.subscription_link_input_hint)
-                            },
+                            placeholder = UiStrings.subscription_link_input_hint,
+                            errorMessage = UiStrings.link_invalid,
                             isError = currentRequest.value.isNotEmpty() &&
                                     !URLUtil.isNetworkUrl(currentRequest.value),
                         )
@@ -233,15 +232,15 @@ class SubsLinkDialogState(
                         currentRequest.error?.let { error ->
                             Text(
                                 text = error,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
+                                color = MiuixTheme.colorScheme.error,
+                                style = MiuixTheme.textStyles.footnote1,
                             )
                         }
                     }
                 },
                 onDismissRequest = ::cancel,
                 confirmButton = {
-                    TextButton(
+                    GkActionButton(
                         enabled = !busy && currentRequest.value.isNotEmpty(),
                         onClick = throttle {
                             submit(currentRequest)
@@ -251,7 +250,7 @@ class SubsLinkDialogState(
                     }
                 },
                 dismissButton = {
-                    TextButton(enabled = !saving, onClick = ::cancel) {
+                    GkActionButton(enabled = !saving, onClick = ::cancel) {
                         Text(text = UiStrings.action_cancel)
                     }
                 },

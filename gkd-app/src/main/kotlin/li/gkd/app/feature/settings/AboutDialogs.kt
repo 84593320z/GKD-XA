@@ -1,15 +1,11 @@
 package li.gkd.app.feature.settings
 
 import li.gkd.app.MainViewModel
-
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.MainActivity
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkTextListDialog
 import li.gkd.app.util.PLAY_STORE_URL
@@ -76,7 +73,7 @@ private fun VersionInfoDialog(
                             modifier = Modifier.clickable { IntentUtils.openUri(META.commitUrl) },
                             text = META.tagName ?: META.commitId.substring(0, 16),
                             color = MiuixTheme.colorScheme.primary,
-                            style = LocalTextStyle.current.copy(textDecoration = TextDecoration.Underline),
+                            style = MiuixTheme.textStyles.main.copy(textDecoration = TextDecoration.Underline),
                         )
                     }
                     Column {
@@ -86,7 +83,7 @@ private fun VersionInfoDialog(
                 }
             },
             confirmButton = {
-                TextButton(onClick = onDismissRequest) {
+                GkActionButton(onClick = onDismissRequest) {
                     Text(text = UiStrings.action_close)
                 }
             },

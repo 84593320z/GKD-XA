@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -157,7 +156,7 @@ fun AboutPage() {
                             modifier = Modifier.clickable { openUri(META.commitUrl) },
                             text = META.tagName ?: META.commitId.substring(0, 16),
                             color = MiuixTheme.colorScheme.primary,
-                            style = LocalTextStyle.current.copy(textDecoration = TextDecoration.Underline),
+                            style = MiuixTheme.textStyles.main.copy(textDecoration = TextDecoration.Underline),
                         )
                     }
                     Column {

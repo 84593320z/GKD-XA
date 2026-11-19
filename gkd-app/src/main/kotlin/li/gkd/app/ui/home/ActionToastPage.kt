@@ -15,12 +15,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,20 +25,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkEditorScaffold
+import li.gkd.app.ui.component.GkFormTextField
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSwitch
 import li.gkd.app.ui.component.GkTemplateVariableRow
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.ActionToastTemplate
-import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.ToastUtils.previewActionToast
+import li.gkd.app.util.ToastUtils.toast
+import top.yukonga.miuix.kmp.basic.RadioButton
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data object ActionToastRoute : NavKey
@@ -81,7 +82,7 @@ fun ActionToastPage() {
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                shape = GkShapes.card,
                 color = MiuixTheme.colorScheme.surfaceContainer,
             ) {
                 Row(
@@ -111,11 +112,11 @@ fun ActionToastPage() {
                     style = MiuixTheme.textStyles.footnote1,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
             }
-            OutlinedTextField(
+            GkFormTextField(
                 value = text,
                 onValueChange = { text = it.take(64) },
-                label = { Text(UiStrings.action_toast_text) },
-                placeholder = { Text(UiStrings.toast_text_input_hint) },
+                label = UiStrings.action_toast_text,
+                placeholder = UiStrings.toast_text_input_hint,
                 minLines = 2,
                 maxLines = 4,
                 supportingText = {
@@ -151,7 +152,7 @@ fun ActionToastPage() {
 private fun ActionToastCard(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = GkShapes.card,
         color = MiuixTheme.colorScheme.surfaceContainer,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
@@ -163,13 +164,17 @@ private fun ActionToastStyleOption(label: String, selected: Boolean, onClick: ()
     Row(
         modifier = Modifier.fillMaxWidth()
             .heightIn(min = 56.dp)
-            .clip(MaterialTheme.shapes.small)
+            .clip(GkShapes.control)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        RadioButton(selected = selected, onClick = null)
+        RadioButton(
+            selected = selected,
+            onClick = null,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
         Text(label, style = MiuixTheme.textStyles.body1)
     }
 }

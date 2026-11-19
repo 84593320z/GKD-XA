@@ -1,22 +1,21 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import li.gkd.app.ui.style.GkShapes
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
 
-/**
- * MIUIX 对话框。使用 [WindowDialog]（独立窗口），不依赖 Scaffold Overlay 宿主。
- */
+/** Miuix-styled alert dialog that retains Compose DialogProperties behavior. */
 @Composable
 fun PerfAlertDialog(
     onDismissRequest: () -> Unit,
@@ -27,32 +26,38 @@ fun PerfAlertDialog(
     text: @Composable (() -> Unit)? = null,
     properties: DialogProperties = DialogProperties(),
 ) {
-    WindowDialog(
-        show = true,
-        modifier = modifier,
-        onDismissRequest = onDismissRequest.takeIf {
-            properties.dismissOnClickOutside || properties.dismissOnBackPress
-        } ?: onDismissRequest,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+    GkDialog(onDismissRequest = onDismissRequest, properties = properties) {
+        GkDialogSurface(
+            modifier = modifier,
+            shape = GkShapes.dialog,
+            containerColor = MiuixTheme.colorScheme.background,
+            contentColor = MiuixTheme.colorScheme.onSurface,
+            shadowElevation = 0.dp,
         ) {
             title?.let {
-                CompositionLocalProvider(
-                    LocalTextStyle provides MiuixTheme.textStyles.title3,
+                GkProvideDialogTextStyle(
+                    style = MiuixTheme.textStyles.title3,
+                    contentColor = MiuixTheme.colorScheme.onSurface,
                     content = it,
                 )
             }
             text?.let {
-                CompositionLocalProvider(
-                    LocalTextStyle provides MiuixTheme.textStyles.body1,
-                    content = it,
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    GkProvideDialogTextStyle(
+                        style = MiuixTheme.textStyles.body1,
+                        contentColor = MiuixTheme.colorScheme.onSurfaceSecondary,
+                        content = it,
+                    )
+                }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 dismissButton?.invoke(this)
                 confirmButton()

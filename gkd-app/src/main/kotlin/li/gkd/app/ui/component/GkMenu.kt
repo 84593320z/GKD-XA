@@ -1,27 +1,33 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
-import top.yukonga.miuix.kmp.basic.RadioButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import li.gkd.app.util.TimeUtils.throttle
+import top.yukonga.miuix.kmp.basic.RadioButton
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 inline fun GkMenuGroupCard(inTop: Boolean = false, title: String, content: @Composable () -> Unit) {
     Text(
         text = title,
-        modifier = Modifier
-            .padding(MenuDefaults.DropdownMenuItemContentPadding)
-            .padding(top = if (inTop) 0.dp else 8.dp, bottom = 4.dp),
+        modifier = Modifier.padding(
+            start = 16.dp,
+            end = 16.dp,
+            top = if (inTop) 8.dp else 16.dp,
+            bottom = 12.dp,
+        ),
         style = MiuixTheme.textStyles.footnote2,
         color = MiuixTheme.colorScheme.primary,
     )
@@ -35,17 +41,21 @@ fun GkMenuItemCheckbox(
     onClick: () -> Unit,
     enabled: Boolean = true,
 ) {
-    val actualOnClick = throttle(onClick)
-    DropdownMenuItem(
-        text = { Text(text = text) },
-        trailingIcon = {
+    PerfDropdownMenuItem(
+        text = text,
+        modifier = Modifier.semantics {
+            toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
+        },
+        role = Role.Checkbox,
+        endActions = {
+            // The whole menu row owns the action and checked semantics, not a second tap target.
             GkCheckbox(
+                modifier = Modifier.clearAndSetSemantics {},
                 checked = checked,
-                onCheckedChange = { actualOnClick() },
                 enabled = enabled,
             )
         },
-        onClick = actualOnClick,
+        onClick = throttle(onClick),
         enabled = enabled,
     )
 }
@@ -69,19 +79,19 @@ fun GkMenuItemRadioButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
 ) {
-    val actualOnClick = throttle(onClick)
-    DropdownMenuItem(
-        text = {
-            Text(text = text)
-        },
-        trailingIcon = {
+    PerfDropdownMenuItem(
+        text = text,
+        modifier = Modifier.semantics { this.selected = selected },
+        role = Role.RadioButton,
+        endActions = {
             RadioButton(
+                modifier = Modifier.clearAndSetSemantics {},
                 selected = selected,
-                onClick = actualOnClick,
+                onClick = null,
                 enabled = enabled,
             )
         },
-        onClick = actualOnClick,
+        onClick = throttle(onClick),
         enabled = enabled,
     )
 }

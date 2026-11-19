@@ -1,7 +1,5 @@
 package li.gkd.app.ui.component
 
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -26,34 +24,45 @@ fun <K : Any, T : Any> GkRetainedSheet(
     missing: Boolean,
     onDismissRequest: (SheetRequest<K>) -> Unit,
     retainContent: Boolean = false,
-    content: @Composable (SheetRequest<K>, T, SheetState, () -> Unit) -> Unit,
+    content: @Composable (
+        SheetRequest<K>,
+        T,
+        Boolean,
+        () -> Unit,
+        () -> Unit,
+    ) -> Unit,
 ) {
     var retained by remember { mutableStateOf<SheetPresentation<K, T>?>(null) }
     val live = if (request != null && snapshot != null && !missing && !retainContent) {
         SheetPresentation(request, snapshot)
-    } else null
+    } else {
+        null
+    }
     if (live != null) {
         SideEffect { retained = live }
     }
     LaunchedEffect(request, missing) {
         if (request != null && missing) onDismissRequest(request)
     }
+
     val presentation = live ?: retained
     if (presentation != null) {
         key(presentation.request) {
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            val closing = request !== presentation.request || missing
-            LaunchedEffect(closing) {
-                if (closing) {
-                    sheetState.hide()
-                    if (!sheetState.isVisible && retained?.request === presentation.request) {
+            // Keep the last valid snapshot mounted while the Miuix sheet runs its exit
+            // animation. A newly-created request object reopens immediately and is protected
+            // from an old request's onDismissFinished callback by identity comparison.
+            val show = request === presentation.request && !missing
+            content(
+                presentation.request,
+                presentation.snapshot,
+                show,
+                { onDismissRequest(presentation.request) },
+                {
+                    if (!show && retained?.request === presentation.request) {
                         retained = null
                     }
-                }
-            }
-            content(presentation.request, presentation.snapshot, sheetState) {
-                onDismissRequest(presentation.request)
-            }
+                },
+            )
         }
     }
 }

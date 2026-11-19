@@ -15,11 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -33,6 +29,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.ToastUtils.copyText
 import li.gkd.app.util.TimeUtils.throttle
 
@@ -42,7 +39,7 @@ fun GkCopyableText(
     modifier: Modifier = Modifier,
     textToCopy: String = text.text,
     contentPadding: PaddingValues = PaddingValues.Zero,
-    textStyle: TextStyle = LocalTextStyle.current,
+    textStyle: TextStyle = MiuixTheme.textStyles.main,
     contentColor: Color = LocalContentColor.current,
     textContentDescription: String? = null,
 ) {
@@ -67,7 +64,7 @@ fun GkCopyableText(
         copyIconVisible = textFieldState.selection.collapsed,
         contentColor = contentColor,
         modifier = modifier.defaultMinSize(
-            minHeight = LocalMinimumInteractiveComponentSize.current,
+            minHeight = GkIconButtonDefaults.MinTouchTargetSize,
         ),
     ) {
         BasicTextField(
@@ -112,7 +109,7 @@ fun GkCopyIconOverlay(
             GkIconButton(
                 imageVector = GkIcons.ContentCopy,
                 onClick = throttle { copyText(textToCopy) },
-                colors = IconButtonDefaults.iconButtonColors(
+                colors = GkIconButtonDefaults.iconButtonColors(
                     contentColor = contentColor.copy(alpha = 0.5f),
                 ),
             )
@@ -128,7 +125,7 @@ fun GkCopyTextCard(
     contentColor: Color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
     textStyle: TextStyle = MiuixTheme.textStyles.body1,
 ) {
-    val shape = MaterialTheme.shapes.extraSmall
+    val shape = GkShapes.compact
     GkCopyableText(
         text = remember(text) { AnnotatedString(text) },
         modifier = modifier

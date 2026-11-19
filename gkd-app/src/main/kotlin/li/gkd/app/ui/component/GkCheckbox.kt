@@ -5,15 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import top.yukonga.miuix.kmp.basic.Checkbox
 
-/**
- * 复选框（MIUIX 渲染版）。
- *
- * 上游底座用 Material3 [androidx.compose.material3.Checkbox] 渲染；
- * 本版本改用 MIUIX [Checkbox]，以达成「外观用 MIUIX」的目标。
- *
- * 说明：MIUIX 的 Checkbox 以 [ToggleableState] 表达状态，此处做 Boolean 适配；
- * 原 `colors: CheckboxColors` 参数已移除（底座内无调用方传入）。
- */
+/** 布尔状态适配 Miuix 的三态复选框。 */
 @Composable
 fun GkCheckbox(
     checked: Boolean,

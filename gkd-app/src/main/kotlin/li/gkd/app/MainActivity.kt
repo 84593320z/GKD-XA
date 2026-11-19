@@ -12,14 +12,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,6 +31,7 @@ import li.gkd.app.permission.PermissionStates
 import li.gkd.app.service.StatusService
 import li.gkd.app.service.updateTopTaskAppId
 import li.gkd.app.store.AppStore.storeFlow
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.share.ActivityImeController
 import li.gkd.app.ui.share.ActivityResultRequests
 import li.gkd.app.ui.app.AppRoot
@@ -45,6 +42,11 @@ import li.gkd.app.util.mapState
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.tryStartActivity
 import java.io.File
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.ThemeController
 
 class MainActivity : ComponentActivity() {
     val mainVm by viewModels<MainViewModel>()
@@ -123,8 +125,10 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             val failure by appStartupFailure.collectAsState()
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+            val startupTheme = remember { ThemeController() }
+            MiuixTheme(controller = startupTheme) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MiuixTheme.colorScheme.background,
+                    contentColor = MiuixTheme.colorScheme.onBackground) {
                     Column(
                         modifier = Modifier.padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
@@ -137,7 +141,7 @@ class MainActivity : ComponentActivity() {
                             Text("应用数据准备失败")
                             Text(failure?.message ?: "请稍后重试")
                             Text("原有数据已保留。请检查存储空间后重试。")
-                            Button(onClick = ::retryAppStartup) { Text("重试") }
+                            GkActionButton(emphasized = true, onClick = ::retryAppStartup) { Text("重试") }
                         }
                     }
                 }

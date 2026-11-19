@@ -1,24 +1,17 @@
 package li.gkd.app.util
 
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.TimeUtils.throttle
-
 import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -50,6 +43,8 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.time.Duration.Companion.days
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
 
 
 private val UPDATE_URL: String
@@ -251,7 +246,6 @@ class UpdateStatus(val scope: CoroutineScope) {
                     }
                 }".trimEnd()
             }
-            val scrollState = rememberScrollState()
             GkAlertDialog(
                 title = {
                     Text(text = UiStrings.update_new_version)
@@ -259,15 +253,12 @@ class UpdateStatus(val scope: CoroutineScope) {
                 text = {
                     Text(
                         text = text,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 400.dp)
-                            .verticalScroll(scrollState)
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 },
                 onDismissRequest = { },
                 confirmButton = {
-                    TextButton(onClick = {
+                    GkActionButton(onClick = {
                         newVersionFlow.value = null
                         startDownload(newVersionVal)
                     }) {
@@ -276,7 +267,7 @@ class UpdateStatus(val scope: CoroutineScope) {
                 },
                 dismissButton = {
                     // 升级前先备份（对齐上游 98139c4b）：导出后拉起分享，弹窗保留，用户备份完再点下载
-                    TextButton(onClick = throttle {
+                    GkActionButton(onClick = throttle {
                         backupScope.launch {
                             try {
                                 val file = BackupManager.exportData()
@@ -291,11 +282,11 @@ class UpdateStatus(val scope: CoroutineScope) {
                     }) {
                         Text(text = "先备份")
                     }
-                    TextButton(onClick = { newVersionFlow.value = null }) {
+                    GkActionButton(onClick = { newVersionFlow.value = null }) {
                         Text(text = UiStrings.action_cancel)
                     }
                     if (!lastManual) {
-                        TextButton(onClick = {
+                        GkActionButton(onClick = {
                             newVersionFlow.value = null
                             val code = newVersionVal.versionCode
                             if (code != null) ignoreVersionListFlow.update { it + code }
@@ -316,12 +307,12 @@ class UpdateStatus(val scope: CoroutineScope) {
                         title = { Text(text = UiStrings.image_downloading) },
                         text = {
                             LinearProgressIndicator(
-                                progress = { downloadStatusVal.progress },
+                                progress = downloadStatusVal.progress,
                             )
                         },
                         onDismissRequest = {},
                         confirmButton = {
-                            TextButton(onClick = {
+                            GkActionButton(onClick = {
                                 downloadJob?.cancel()
                                 downloadStatusFlow.value = LoadStatus.Failure(
                                     Exception(UiStrings.download_abort)
@@ -343,7 +334,7 @@ class UpdateStatus(val scope: CoroutineScope) {
                         },
                         onDismissRequest = { downloadStatusFlow.value = null },
                         confirmButton = {
-                            TextButton(onClick = {
+                            GkActionButton(onClick = {
                                 downloadStatusFlow.value = null
                             }) {
                                 Text(text = UiStrings.action_close)
@@ -360,14 +351,14 @@ class UpdateStatus(val scope: CoroutineScope) {
                         },
                         onDismissRequest = {},
                         dismissButton = {
-                            TextButton(onClick = {
+                            GkActionButton(onClick = {
                                 downloadStatusFlow.value = null
                             }) {
                                 Text(text = UiStrings.action_close)
                             }
                         },
                         confirmButton = {
-                            TextButton(onClick = throttle {
+                            GkActionButton(onClick = throttle {
                                 installDownloadedApk(downloadStatusVal.result)
                             }) {
                                 Text(text = UiStrings.action_install)

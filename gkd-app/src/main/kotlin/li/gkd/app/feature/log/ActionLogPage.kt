@@ -15,8 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,6 +41,7 @@ import li.gkd.app.feature.subscription.SubsAppGroupListRoute
 import li.gkd.app.feature.subscription.SubsGlobalGroupListRoute
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.AppConfigRoute
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkLogTimeline
 import li.gkd.app.ui.component.GkLogTimeText
 import li.gkd.app.ui.component.gkLogTimelineRail
@@ -60,13 +58,11 @@ import li.gkd.app.ui.component.GkRuleSettingsContent
 import li.gkd.app.ui.component.GkRuleSettingsSheet
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
-import li.gkd.app.ui.component.GkTwoLineText
 import li.gkd.app.ui.component.animateListItem
 import li.gkd.app.ui.component.rememberListScrollState
 import li.gkd.app.ui.component.rememberRuleControlEnvironment
 import li.gkd.app.ui.component.useSubs
 import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.share.noRippleClickable
 import li.gkd.app.ui.style.appItemPadding
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.scaffoldPadding
@@ -245,10 +241,10 @@ private fun ActionLogAppFilterDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        TextButton(onClick = throttle { selected = appIds.toSet() }) {
+                        GkActionButton(onClick = throttle { selected = appIds.toSet() }) {
                             Text(text = UiStrings.selection_all)
                         }
-                        TextButton(onClick = throttle { selected = emptySet() }) {
+                        GkActionButton(onClick = throttle { selected = emptySet() }) {
                             Text(text = UiStrings.reset_filter)
                         }
                     }
@@ -275,10 +271,10 @@ private fun ActionLogAppFilterDialog(
                         .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.End,
                 ) {
-                    TextButton(onClick = throttle(onDismiss)) {
+                    GkActionButton(onClick = throttle(onDismiss)) {
                         Text(text = UiStrings.action_cancel)
                     }
-                    TextButton(onClick = throttle { onConfirm(appIds.filter { it in selected }) }) {
+                    GkActionButton(onClick = throttle { onConfirm(appIds.filter { it in selected }) }) {
                         Text(text = UiStrings.action_confirm)
                     }
                 }

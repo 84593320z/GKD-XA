@@ -1,7 +1,6 @@
 package li.gkd.app.ui
 
 import li.gkd.app.MainViewModel
-
 import android.webkit.URLUtil
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -27,8 +26,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.IconButtonDefaults
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
@@ -50,7 +48,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
@@ -81,6 +78,7 @@ import kotlinx.serialization.Serializable
 import li.gkd.app.text.UiStrings
 import li.gkd.app.MainActivity
 import li.gkd.app.app
+import li.gkd.app.ui.component.GkIconButtonDefaults
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.FolderUtils
 import li.gkd.app.util.TimeUtils.throttle
@@ -147,7 +145,7 @@ fun ImagePreviewPage(route: ImagePreviewRoute) {
                 GkIconButton(
                     imageVector = GkIcons.OpenInNew,
                     onClick = throttle(fn = { mainVm.openUrl(currentUri) }),
-                    colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+                    colors = GkIconButtonDefaults.iconButtonColors(contentColor = Color.White),
                 )
             }
         },
@@ -268,7 +266,7 @@ fun GkImagePreviewContent(
                         GkIconButton(
                             imageVector = GkIcons.ArrowBack,
                             onClick = onBack,
-                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                            colors = GkIconButtonDefaults.iconButtonColors(contentColor = Color.White)
                         )
                     },
                     titleText = run {

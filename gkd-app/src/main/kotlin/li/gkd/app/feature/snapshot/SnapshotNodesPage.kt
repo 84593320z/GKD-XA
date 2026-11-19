@@ -18,12 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.Checkbox
 import androidx.compose.ui.draw.clipToBounds
 import kotlinx.coroutines.CancellationException
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
@@ -54,6 +51,8 @@ import li.gkd.app.data.ComplexSnapshot
 import li.gkd.app.data.NodeInfo
 import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
+import li.gkd.app.ui.component.GkCheckbox
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkIconButton
@@ -248,14 +247,15 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                     style = MiuixTheme.textStyles.body2,
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(
+                GkActionButton(
                     onClick = { selectedIds = emptySet() },
                     enabled = selectedIds.isNotEmpty(),
                 ) {
                     Text(text = UiStrings.snapshot_nodes_clear)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(
+                GkActionButton(
+                    emphasized = true,
                     onClick = {
                         val ids = selectedIds
                         scope.launch {
@@ -273,7 +273,7 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                 Modifier.fillMaxWidth().padding(horizontal = itemHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Checkbox(checked = includeAllNodes, onCheckedChange = { includeAllNodes = it })
+                GkCheckbox(checked = includeAllNodes, onCheckedChange = { includeAllNodes = it })
                 Text("保留完整节点树", style = MiuixTheme.textStyles.footnote1)
             }
             LazyColumn(modifier = Modifier.weight(1f)) {

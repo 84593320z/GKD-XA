@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +34,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import li.gkd.app.MainViewModel
 import li.gkd.app.ui.AppConfigRoute
+import li.gkd.app.ui.component.GkActionButton
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.component.GkLogTimeline
 import li.gkd.app.ui.component.GkLogTimeText
@@ -45,7 +44,6 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.data.fixedName
 import li.gkd.app.data.isStateChanged
 import li.gkd.app.ui.share.LocalDarkTheme
-import li.gkd.app.ui.share.noRippleClickable
 import li.gkd.app.ui.style.getJson5AnnotatedString
 import li.gkd.app.ui.style.iconTextSize
 import li.gkd.app.ui.style.scaffoldPadding
@@ -125,7 +123,7 @@ fun A11yEventLogPage() {
                 val textModifier = Modifier
                     .background(
                         color = MiuixTheme.colorScheme.tertiaryContainer,
-                        shape = MaterialTheme.shapes.extraSmall,
+                        shape = GkShapes.compact,
                     )
                     .padding(horizontal = 4.dp)
                 Column {
@@ -148,7 +146,7 @@ fun A11yEventLogPage() {
                         text = eventText,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.extraSmall)
+                            .clip(GkShapes.compact)
                             .background(MiuixTheme.colorScheme.tertiaryContainer),
                         contentPadding = PaddingValues(horizontal = 4.dp),
                         contentColor = MiuixTheme.colorScheme.onTertiaryContainer,
@@ -185,7 +183,7 @@ fun A11yEventLogPage() {
                 }
             },
             confirmButton = {
-                TextButton(onClick = onDismissRequest) {
+                GkActionButton(onClick = onDismissRequest) {
                     Text(text = UiStrings.action_close)
                 }
             },
@@ -268,7 +266,7 @@ private fun CopyIcon(modifier: Modifier = Modifier, onClick: () -> Unit) {
     GkIcon(
         imageVector = GkIcons.ContentCopy,
         modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
+            .clip(GkShapes.compact)
             .clickable(onClick = onClick)
             .iconTextSize(),
     )

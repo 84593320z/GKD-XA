@@ -160,8 +160,8 @@ fun HomePage() {
     }
 
     val store by storeFlow.collectAsStateWithLifecycle()
-    val useFloating = store.useFloatingNavBar
-    val blurWanted = store.enableMiuixBlur && isRuntimeShaderSupported()
+    val appearance = homeAppearance(store.useFloatingNavBar, store.enableMiuixBlur,
+        store.enableLiquidGlass, isRuntimeShaderSupported())
     // 返回转场（栈顶已回到首页）期间保持毛玻璃采样：否则底栏液态玻璃会在返回动画里
     // 先退化成普通模糊、落定后才恢复，肉眼可见断层。进二级页（首页被覆盖）仍降级，
     // 避免新页首帧的重负载与模糊采样抢 GPU。
@@ -169,17 +169,15 @@ fun HomePage() {
     // 但首页已在播放返回进场动画，需要保持液态玻璃采样
     val returningHome = mainVm.topRoute is HomeRoute || mainVm.popTransitionFlow.value
     // 仅进页转场窗口内关毛玻璃；被盖住与返回时都保持（避免再出现“二级页底栏变实色”）
-    val blurActive = blurWanted && (!navTransitionRunning || returningHome)
+    val blurActive = appearance.blur && (!navTransitionRunning || returningHome)
     // 液态玻璃组件树保持不变，只关采样；否则转场开头会整棵底栏换树，反而更卡
-    val liquidGlass = useFloating && store.enableLiquidGlass && blurWanted
-
-    if (useFloating) {
+    if (appearance.floating) {
         MiuixFloatingNavScaffold(
             pages = pages,
             navItems = navItems,
             homePager = homePager,
             blurActive = blurActive,
-            liquidGlass = liquidGlass,
+            liquidGlass = appearance.glass,
             lightPager = lightPager,
             offscreenLayer = navTransitionRunning,
         )

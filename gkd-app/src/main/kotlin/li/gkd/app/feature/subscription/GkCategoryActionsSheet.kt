@@ -1,7 +1,6 @@
 package li.gkd.app.feature.subscription
 
 import androidx.compose.animation.animateContentSize
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
@@ -17,10 +16,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import li.gkd.app.data.RawSubscription
 import li.gkd.app.domain.rule.CategorySetting
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
@@ -83,7 +81,7 @@ fun GkCategoryActionsSheet(
                                     style = MiuixTheme.textStyles.footnote1,
                                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
                             }
-                            TextButton(
+                            GkActionButton(
                                 enabled = !busy,
                                 onClick = onClearOverrides,
                                 modifier = Modifier.defaultMinSize(minWidth = 1.dp),

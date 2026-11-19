@@ -1,7 +1,6 @@
 package li.gkd.app.feature.settings
 
 import li.gkd.app.MainViewModel
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.RadioButton
+import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -328,7 +326,7 @@ private fun PrivilegeAuthButton(
 private fun TextListItem(
     list: List<String>,
     modifier: Modifier = Modifier,
-    style: TextStyle = LocalTextStyle.current,
+    style: TextStyle = MiuixTheme.textStyles.main,
 ) {
     // MIUIX 部分 TextStyle 的 lineHeight 不是 Sp，直接 toDp() 会抛
     // IllegalStateException: Only Sp can convert to Px，必须走带 fallback 的工具

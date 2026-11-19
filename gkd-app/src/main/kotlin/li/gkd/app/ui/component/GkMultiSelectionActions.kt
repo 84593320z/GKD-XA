@@ -1,23 +1,19 @@
 package li.gkd.app.ui.component
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.SelectAll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import li.gkd.app.text.UiStrings
 import li.gkd.app.domain.rule.RuleSetting
 
@@ -45,17 +41,21 @@ fun <K> RowScope.GkMultiSelectionActions(
         enabled = enabled && keys.isNotEmpty(),
         onClick = { selectionState.invert(keys) },
     )
-    Box {
-        GkIconButton(
-            imageVector = GkIcons.MoreVert,
-            contentDescription = UiStrings.more_label,
-            enabled = enabled && selectedKeys.isNotEmpty(),
-            onClick = { expanded = true },
-        )
-        DropdownMenu(
-            expanded = expanded && enabled && selectedKeys.isNotEmpty(),
-            onDismissRequest = { expanded = false },
-        ) {
+    PerfDropdownMenu(
+        expanded = expanded && enabled && selectedKeys.isNotEmpty(),
+        onDismissRequest = { expanded = false },
+        enableWindowDim = false,
+        anchor = {
+            GkIconButton(
+                imageVector = GkIcons.MoreVert,
+                contentDescription = UiStrings.more_label,
+                enabled = enabled && selectedKeys.isNotEmpty(),
+                onClick = { expanded = true },
+            )
+        },
+    ) {
+        // Retain the public ColumnScope menu-content API inside Miuix's scrollable popup column.
+        Column {
             menuContent { expanded = false }
         }
     }
@@ -69,14 +69,10 @@ fun GkBatchActionMenuItem(
     enabled: Boolean = true,
     destructive: Boolean = false,
 ) {
-    DropdownMenuItem(
-        text = { Text(text) },
+    PerfDropdownMenuItem(
+        text = text,
         enabled = enabled,
-        colors = if (destructive) {
-            MenuDefaults.itemColors(textColor = MiuixTheme.colorScheme.error)
-        } else {
-            MenuDefaults.itemColors()
-        },
+        titleColor = if (destructive) MiuixTheme.colorScheme.error else Color.Unspecified,
         onClick = {
             onDismiss()
             onClick()

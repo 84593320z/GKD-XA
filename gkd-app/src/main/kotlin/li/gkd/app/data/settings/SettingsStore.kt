@@ -108,10 +108,10 @@ data class SettingsStore(
     val enableDynamicColor: Boolean = true,
     /** MIUIX：顶栏/底栏模糊（需 RuntimeShader） */
     val enableMiuixBlur: Boolean = true,
-    /** MIUIX：悬浮底栏（类 Apple / FloatingNavigationBar） */
-    val useFloatingNavBar: Boolean = true,
+    /** MIUIX：悬浮底栏（关闭时使用停靠底栏） */
+    val useFloatingNavBar: Boolean = false,
     /** MIUIX：悬浮底栏液态玻璃高光（依赖模糊） */
-    val enableLiquidGlass: Boolean = true,
+    val enableLiquidGlass: Boolean = false,
     /** 系统预测式返回手势（Android 13+，切换后需重建 Activity） */
     val enablePredictiveBack: Boolean = false,
     val useSystemToast: Boolean = false,

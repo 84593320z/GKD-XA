@@ -11,11 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,18 +24,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
 import li.gkd.app.data.subscription.SubscriptionState
 import li.gkd.app.notif.replaceNotificationTemplate
-import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.store.AppStore.actionCountFlow
+import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkEditorScaffold
+import li.gkd.app.ui.component.GkFormTextField
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSwitch
 import li.gkd.app.ui.component.GkTemplateVariableRow
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.ToastUtils.toast
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 data object NotificationTextRoute : NavKey
@@ -74,7 +74,7 @@ fun NotificationTextPage() {
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                shape = GkShapes.card,
                 color = MiuixTheme.colorScheme.surfaceContainer,
             ) {
                 Column(
@@ -92,11 +92,11 @@ fun NotificationTextPage() {
                     }
                 }
             }
-            OutlinedTextField(
+            GkFormTextField(
                 value = title,
                 onValueChange = { title = it.filter { c -> c !in "\n\r" }.take(32) },
-                label = { Text(UiStrings.notification_title_label) },
-                placeholder = { Text(UiStrings.template_text_input_hint) },
+                label = UiStrings.notification_title_label,
+                placeholder = UiStrings.template_text_input_hint,
                 singleLine = true,
                 supportingText = {
                     Text(UiStrings.progress_fraction(title.length, 32),
@@ -104,11 +104,11 @@ fun NotificationTextPage() {
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(
+            GkFormTextField(
                 value = text,
                 onValueChange = { text = it.take(64) },
-                label = { Text(UiStrings.notification_body_label) },
-                placeholder = { Text(UiStrings.template_text_input_hint) },
+                label = UiStrings.notification_body_label,
+                placeholder = UiStrings.template_text_input_hint,
                 minLines = 2,
                 maxLines = 4,
                 supportingText = {
@@ -138,7 +138,7 @@ private fun NotificationTextPreview(title: String, text: String) {
     }
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = GkShapes.card,
         color = MiuixTheme.colorScheme.surfaceContainer,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -154,7 +154,7 @@ private fun NotificationTextPreview(title: String, text: String) {
 private fun NotificationTemplateVariables() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = GkShapes.card,
         color = MiuixTheme.colorScheme.surfaceContainer,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

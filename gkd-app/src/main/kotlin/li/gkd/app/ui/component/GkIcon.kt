@@ -54,17 +54,20 @@ import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material.icons.outlined.ToggleOff
 import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material.icons.outlined.VerifiedUser
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LocalContentColor
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun GkIcon(
@@ -73,7 +76,8 @@ fun GkIcon(
     tint: Color = LocalContentColor.current,
     contentDescription: String? = getIconDefaultDesc(imageVector),
     animateMorph: Boolean = false,
-) {    if (animateMorph) {
+) {
+    if (animateMorph) {
         AnimatedMorphIcon(
             imageVector = imageVector,
             modifier = modifier,
@@ -91,13 +95,41 @@ fun GkIcon(
     }
 }
 
+/** Material-free colors for [GkIconButton], including explicit disabled-state colors. */
+@Immutable
+data class GkIconButtonColors(
+    val containerColor: Color,
+    val contentColor: Color,
+    val disabledContainerColor: Color,
+    val disabledContentColor: Color,
+)
+
+object GkIconButtonDefaults {
+    // Miuix defaults to 40.dp; keep the existing toolbar/copy buttons' 48.dp touch targets.
+    val MinTouchTargetSize = 48.dp
+
+    /** Named color arguments intentionally match the former Material icon-button factory. */
+    @Composable
+    fun iconButtonColors(
+        containerColor: Color = Color.Transparent,
+        contentColor: Color = defaultIconTint(),
+        disabledContainerColor: Color = containerColor,
+        disabledContentColor: Color = contentColor.copy(alpha = contentColor.alpha * 0.38f),
+    ): GkIconButtonColors = GkIconButtonColors(
+        containerColor = containerColor,
+        contentColor = contentColor,
+        disabledContainerColor = disabledContainerColor,
+        disabledContentColor = disabledContentColor,
+    )
+}
+
 @Composable
 fun GkIconButton(
     imageVector: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
+    colors: GkIconButtonColors = GkIconButtonDefaults.iconButtonColors(),
     contentDescription: String? = getIconDefaultDesc(imageVector),
     onClickLabel: String? = null,
     animateMorph: Boolean = false,
@@ -105,18 +137,24 @@ fun GkIconButton(
     contentDescription = contentDescription,
 ) {
     IconButton(
-        modifier = modifier.semantics {
+        modifier = modifier.semantics(mergeDescendants = true) {
+            // Miuix 0.9.4 omits clickable semantics entirely when disabled.
+            role = Role.Button
+            if (!enabled) disabled()
             if (onClickLabel != null) {
                 this.onClick(label = onClickLabel, action = null)
             }
         },
         enabled = enabled,
         onClick = onClick,
-        colors = colors,
+        backgroundColor = if (enabled) colors.containerColor else colors.disabledContainerColor,
+        minWidth = GkIconButtonDefaults.MinTouchTargetSize,
+        minHeight = GkIconButtonDefaults.MinTouchTargetSize,
     ) {
         GkIcon(
             imageVector = imageVector,
             contentDescription = contentDescription,
+            tint = if (enabled) colors.contentColor else colors.disabledContentColor,
             animateMorph = animateMorph,
         )
     }

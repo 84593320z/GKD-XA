@@ -1,29 +1,20 @@
 package li.gkd.app.ui
 
 import li.gkd.app.MainViewModel
-
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import top.yukonga.miuix.kmp.nav.core.NavKey
 import com.kevinnzou.web.AccompanistWebViewClient
 import com.kevinnzou.web.LoadingState
@@ -37,7 +28,8 @@ import kotlinx.serialization.Serializable
 import li.gkd.app.text.UiStrings
 import li.gkd.app.META
 import li.gkd.app.MainActivity
-import li.gkd.app.ui.style.iconTextSize
+import li.gkd.app.ui.component.PerfDropdownMenu
+import li.gkd.app.ui.component.PerfDropdownMenuItem
 import li.gkd.app.ui.style.scaffoldPadding
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.LogUtils
@@ -90,45 +82,37 @@ fun WebViewPage(route: WebViewRoute) {
                     )
                 }
                 var expanded by remember { mutableStateOf(false) }
-                GkIconButton(imageVector = GkIcons.MoreVert, onClick = { expanded = true })
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize(Alignment.TopStart)
+                PerfDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    enableWindowDim = false,
+                    anchor = {
+                        GkIconButton(imageVector = GkIcons.MoreVert, onClick = { expanded = true })
+                    },
                 ) {
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        if (webViewState.loadingState !is LoadingState.Loading) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = UiStrings.webview_reload)
-                                },
-                                onClick = {
-                                    expanded = false
-                                    webView?.reload()
-                                }
-                            )
-                        }
-                        DropdownMenuItem(
-                            text = {
-                                Text(text = UiStrings.link_copy)
-                            },
+                    if (webViewState.loadingState !is LoadingState.Loading) {
+                        PerfDropdownMenuItem(
+                            text = UiStrings.webview_reload,
                             onClick = {
                                 expanded = false
-                                copyText(webView?.url ?: initUrl)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = {
-                                Text(text = UiStrings.link_open_external)
-                            },
-                            onClick = {
-                                expanded = false
-                                IntentUtils.openUri(webView?.url ?: initUrl)
+                                webView?.reload()
                             }
                         )
                     }
+                    PerfDropdownMenuItem(
+                        text = UiStrings.link_copy,
+                        onClick = {
+                            expanded = false
+                            copyText(webView?.url ?: initUrl)
+                        }
+                    )
+                    PerfDropdownMenuItem(
+                        text = UiStrings.link_open_external,
+                        onClick = {
+                            expanded = false
+                            IntentUtils.openUri(webView?.url ?: initUrl)
+                        }
+                    )
                 }
             }
         )

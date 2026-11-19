@@ -5,15 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -21,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,10 +28,12 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.util.Github.uploadFileToGithub
 import li.gkd.app.util.GithubCookieException
 import li.gkd.app.util.LogUtils
-import li.gkd.app.util.networkFailureSummary
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
-import java.io.File
+import li.gkd.app.util.networkFailureSummary
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 class GithubUploadItem(
     val label: String,
@@ -295,22 +289,22 @@ class GithubUploadState(
                     }
                 },
                 text = {
-                    OutlinedTextField(
+                    GkFormTextField(
                         value = cookieDraft,
                         onValueChange = ::updateCookieDraft,
-                        placeholder = { Text(text = UiStrings.github_cookie_input_hint) },
+                        placeholder = UiStrings.github_cookie_input_hint,
                         modifier = Modifier.fillMaxWidth().autoFocus(),
                         maxLines = 10,
                     )
                 },
                 confirmButton = {
-                    TextButton(
+                    GkActionButton(
                         enabled = activeRequest == null || cookieDraft.isNotBlank(),
                         onClick = ::saveCookie,
                     ) { Text(text = UiStrings.action_confirm) }
                 },
                 dismissButton = {
-                    TextButton(onClick = ::dismissCookieEditor) {
+                    GkActionButton(onClick = ::dismissCookieEditor) {
                         Text(text = UiStrings.action_cancel)
                     }
                 },
@@ -337,7 +331,7 @@ class GithubUploadState(
                     },
                     onDismissRequest = {},
                     confirmButton = {
-                        TextButton(onClick = ::stopTask) { Text(UiStrings.upload_abort) }
+                        GkActionButton(onClick = ::stopTask) { Text(UiStrings.upload_abort) }
                     },
                 )
             }
@@ -357,8 +351,6 @@ class GithubUploadState(
                     text = {
                         if (visibleStatus.batch) {
                             Column(
-                                modifier = Modifier.heightIn(max = 360.dp)
-                                    .verticalScroll(rememberScrollState()),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 Text(UiStrings.upload_batch_summary(
@@ -381,13 +373,13 @@ class GithubUploadState(
                     onDismissRequest = ::closeUploadStatus,
                     dismissButton = if (visibleStatus.cookieExpired) {
                         {
-                            TextButton(onClick = ::showCookieEditor) {
+                            GkActionButton(onClick = ::showCookieEditor) {
                                 Text(UiStrings.cookie_change)
                             }
                         }
                     } else null,
                     confirmButton = {
-                        TextButton(onClick = ::closeUploadStatus) { Text(UiStrings.action_close) }
+                        GkActionButton(onClick = ::closeUploadStatus) { Text(UiStrings.action_close) }
                     },
                 )
             }
@@ -400,7 +392,7 @@ private fun UploadProgress(progress: Float) {
     val showExactProgress = progress > 0f && progress < 1f
     AnimatedContent(showExactProgress) { showExact ->
         if (showExact) {
-            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
         } else {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }

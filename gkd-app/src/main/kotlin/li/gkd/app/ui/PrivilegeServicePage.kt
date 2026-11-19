@@ -1,14 +1,11 @@
 package li.gkd.app.ui
 
 import li.gkd.app.MainViewModel
-
 import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 import li.gkd.app.text.UiStrings
 import li.gkd.app.priv.gkdPrivilegeUiConfig
+import li.gkd.app.ui.component.GkActionButton
+import li.gkd.app.ui.style.PrivilegeKitTheme
 import li.gkd.app.util.TimeUtils.throttle
 import priv.kit.ui.PrivilegeScaffold
 import priv.kit.ui.PrivilegeUiViewModel
@@ -55,30 +54,32 @@ fun PrivilegeServicePage() {
             onDismissRequest = { privilegeVm.setInfoDialogVisible(false) },
         )
     }
-    PrivilegeScaffold(
-        modifier = Modifier.fillMaxSize(),
-        viewModel = privilegeVm,
-        topBar = {
-            GkTopAppBar(
-                navigationIcon = {
-                    GkIconButton(
-                        imageVector = GkIcons.ArrowBack,
-                        onClick = mainVm::popPage,
-                    )
-                },
-                titleText = UiStrings.privilege_service,
-                actions = {
-                    GkIconButton(
-                        imageVector = GkIcons.Info,
-                        contentDescription = UiStrings.page_help,
-                        onClick = throttle {
-                            privilegeVm.setInfoDialogVisible(true)
-                        },
-                    )
-                },
-            )
-        },
-    )
+    PrivilegeKitTheme {
+        PrivilegeScaffold(
+            modifier = Modifier.fillMaxSize(),
+            viewModel = privilegeVm,
+            topBar = {
+                GkTopAppBar(
+                    navigationIcon = {
+                        GkIconButton(
+                            imageVector = GkIcons.ArrowBack,
+                            onClick = mainVm::popPage,
+                        )
+                    },
+                    titleText = UiStrings.privilege_service,
+                    actions = {
+                        GkIconButton(
+                            imageVector = GkIcons.Info,
+                            contentDescription = UiStrings.page_help,
+                            onClick = throttle {
+                                privilegeVm.setInfoDialogVisible(true)
+                            },
+                        )
+                    },
+                )
+            },
+        )
+    }
 }
 
 @Composable
@@ -118,7 +119,7 @@ private fun PrivilegeServiceInfoDialog(onDismissRequest: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismissRequest) {
+            GkActionButton(onClick = onDismissRequest) {
                 Text(text = UiStrings.action_understood)
             }
         },

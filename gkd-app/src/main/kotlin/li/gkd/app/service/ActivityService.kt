@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.contentColorFor
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -40,6 +38,7 @@ import li.gkd.app.a11y.updateTopActivity
 import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.priv.privilegeContextFlow
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.iconTextSize
 import li.gkd.app.util.ToastUtils.copyText
 import li.gkd.app.util.IntentUtils
@@ -61,12 +60,12 @@ class ActivityService : OverlayWindowService(
         val bgColor = MiuixTheme.colorScheme.surface
         Column(
             modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
+                .clip(GkShapes.control)
                 .background(bgColor.copy(alpha = 0.9f))
                 .width(IntrinsicSize.Max)
                 .padding(4.dp)
         ) {
-            CompositionLocalProvider(LocalContentColor provides contentColorFor(bgColor)) {
+            CompositionLocalProvider(LocalContentColor provides MiuixTheme.colorScheme.onSurface) {
                 val topActivity by topActivityFlow.collectAsStateWithLifecycle(initialValue = currentTopActivity)
                 val hasAuth by activityOkFlow.collectAsStateWithLifecycle()
                 ClosableTitle(
@@ -91,7 +90,7 @@ class ActivityService : OverlayWindowService(
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .zIndex(1f)
-                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .clip(GkShapes.compact)
                                     .padding(end = 4.dp),
                             )
                         }
@@ -152,7 +151,7 @@ private fun RowText(text: String?, color: Color = Color.Unspecified) {
             GkIcon(
                 imageVector = GkIcons.ContentCopy,
                 modifier = Modifier
-                    .clip(MaterialTheme.shapes.extraSmall)
+                    .clip(GkShapes.compact)
                     .clickable(onClick = {
                         copyText(text)
                     })

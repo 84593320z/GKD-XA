@@ -17,11 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.SheetState
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -50,13 +46,17 @@ fun GkRuleSettingsSheet(
     },
     footerLeadingContent: (@Composable () -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    show: Boolean = true,
+    allowDismiss: Boolean = true,
+    onDismissFinished: () -> Unit = {},
     headerBottomPadding: Dp = 8.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     GkModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
+        show = show,
+        allowDismiss = allowDismiss,
+        onDismissFinished = onDismissFinished,
     ) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
@@ -112,7 +112,7 @@ fun GkRuleSettingsContent(
                 GkIconButton(
                     imageVector = GkIcons.Flowchart,
                     contentDescription = UiStrings.rule_control_view,
-                    colors = IconButtonDefaults.iconButtonColors(
+                    colors = GkIconButtonDefaults.iconButtonColors(
                         contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     ),
                     onClick = onViewControl,
@@ -122,7 +122,7 @@ fun GkRuleSettingsContent(
                 imageVector = ResetSettings,
                 contentDescription = UiStrings.settings_reset_default,
                 enabled = state.hasCustomSetting,
-                colors = IconButtonDefaults.iconButtonColors(
+                colors = GkIconButtonDefaults.iconButtonColors(
                     contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 ),
                 onClick = { onSettingChange(RuleSetting.FollowDefault) },

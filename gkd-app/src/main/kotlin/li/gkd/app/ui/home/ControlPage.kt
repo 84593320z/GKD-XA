@@ -4,17 +4,13 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
@@ -31,9 +27,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import li.gkd.app.META
@@ -85,7 +79,6 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleClip
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
 @Composable
 fun useControlPage(): ScaffoldExt {
@@ -162,7 +155,7 @@ fun useControlPage(): ScaffoldExt {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
                         .semantics(mergeDescendants = true) {
                             this.onClick(label = "前往解除限制页面", action = null)
                         },
@@ -334,137 +327,55 @@ private fun StatusOverviewSection() {
         if (privilegeContext != null) "未运行" else "未授权"
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .padding(horizontal = 12.dp)
-            .padding(top = if (appOpsRestricted) 4.dp else 12.dp, bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = if (appOpsRestricted) 4.dp else 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Card(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            colors = CardDefaults.defaultColors(
-                color = statusColors.container,
-            ),
-            onClick = throttle {
-                mainVm.navigatePage(PrivilegeServiceRoute)
-            },
-            showIndication = true,
-            pressFeedbackType = PressFeedbackType.Tilt,
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.defaultColors(color = statusColors.container, contentColor = colorScheme.onSurface),
+            onClick = throttle { mainVm.navigatePage(PrivilegeServiceRoute) },
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .offset(38.dp, 45.dp),
-                    contentAlignment = Alignment.BottomEnd,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(170.dp),
-                        imageVector = if (serviceRunning) {
-                            Icons.Rounded.CheckCircleOutline
-                        } else {
-                            Icons.Rounded.ErrorOutline
-                        },
-                        tint = statusColors.icon,
-                        contentDescription = null,
-                    )
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    modifier = Modifier.size(32.dp),
+                    imageVector = if (serviceRunning) Icons.Rounded.CheckCircleOutline else Icons.Rounded.ErrorOutline,
+                    tint = statusColors.icon,
+                    contentDescription = null,
+                )
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(all = 16.dp),
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = statusTitle,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "版本: ${META.versionName}",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = colorScheme.onSurfaceVariantSummary,
-                    )
+                    Text(if (useA11y) "无障碍服务" else "自动化服务", style = MiuixTheme.textStyles.body2)
+                    Text(statusTitle, style = MiuixTheme.textStyles.title2)
+                    Text("版本 ${META.versionName}", style = MiuixTheme.textStyles.footnote1,
+                        color = colorScheme.onSurfaceSecondary)
                 }
+                PerfIcon(imageVector = PerfIcon.KeyboardArrowRight, tint = colorScheme.onSurfaceSecondary)
             }
         }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                insideMargin = PaddingValues(16.dp),
-                onClick = throttle {
-                    mainVm.handleClickTab(BottomNavItem.SubsManage)
-                },
-                showIndication = true,
-                pressFeedbackType = PressFeedbackType.Tilt,
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start,
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "订阅",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp,
-                        color = colorScheme.onSurfaceVariantSummary,
-                    )
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = subsCount.toString(),
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colorScheme.onSurface,
-                    )
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                insideMargin = PaddingValues(16.dp),
-                onClick = throttle {
-                    mainVm.handleClickTab(BottomNavItem.AppList)
-                },
-                showIndication = true,
-                pressFeedbackType = PressFeedbackType.Tilt,
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start,
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "应用",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp,
-                        color = colorScheme.onSurfaceVariantSummary,
-                    )
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = appCount.toString(),
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colorScheme.onSurface,
-                    )
-                }
-            }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            DashboardMetric("订阅", subsCount, modifier = Modifier.weight(1f),
+                onClick = throttle { mainVm.handleClickTab(BottomNavItem.SubsManage) })
+            DashboardMetric("应用", appCount, modifier = Modifier.weight(1f),
+                onClick = throttle { mainVm.handleClickTab(BottomNavItem.AppList) })
         }
+    }
+}
+
+@Composable
+private fun DashboardMetric(label: String, count: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Card(modifier = modifier, insideMargin = PaddingValues(16.dp), onClick = onClick) {
+        Text(text = count.toString(), style = MiuixTheme.textStyles.title2)
+        Text(text = label, style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
     }
 }
 

@@ -109,7 +109,7 @@ class RuleGroupState(
             snapshot = snapshot,
             missing = target != null && subscriptions is Loadable.Ready && (subscription == null || group == null),
             onDismissRequest = ::dismissGroupShow,
-        ) { _, displayed, sheetState, dismiss ->
+        ) { _, displayed, show, dismiss, onDismissFinished ->
             val showGroupState = displayed.target
             val showSubs = displayed.subscription
             val showGroup = displayed.group
@@ -119,7 +119,8 @@ class RuleGroupState(
                 ExcludeData.parse(subsConfig?.exclude)
             }
             RuleGroupDialog(
-                sheetState = sheetState,
+                show = show,
+                onDismissFinished = onDismissFinished,
                 subs = showSubs,
                 group = showGroup,
                 appId = showGroupState.pageAppId,

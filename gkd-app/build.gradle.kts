@@ -254,9 +254,8 @@ dependencies {
     debugImplementation(libs.compose.tooling)
 
     implementation(libs.compose.activity)
-    implementation(libs.compose.material3)
 
-    // MIUIX：界面渲染层（视觉替换目标）
+    // MIUIX：界面组件、主题和导航。
     implementation(libs.miuix.ui)
     implementation(libs.miuix.preference)
     implementation(libs.miuix.icons)

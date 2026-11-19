@@ -13,8 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +39,7 @@ import li.gkd.app.ui.component.GkIconButton
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.db.SubscriptionConfigSnapshot
 
 @Composable
@@ -213,7 +213,7 @@ private fun ControlTimelineStep(
                 decisive -> MiuixTheme.colorScheme.primaryContainer
                 else -> MiuixTheme.colorScheme.surface
             },
-            shape = MaterialTheme.shapes.medium,
+            shape = GkShapes.panel,
             modifier = Modifier.weight(1f).padding(bottom = 4.dp).semantics(mergeDescendants = true) {
                 stateDescription = listOfNotNull(step.value,
                     if (decisive) UiStrings.rule_control_deciding_step else if (!active) skippedReason else null).joinToString("，")

@@ -1,22 +1,12 @@
 package li.gkd.app.feature.subscription
 
 import li.gkd.app.MainViewModel
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetState
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
-import androidx.compose.material3.rememberModalBottomSheetState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,8 +24,12 @@ import li.gkd.app.domain.rule.RuleControlState
 import li.gkd.app.domain.rule.RuleSetting
 import li.gkd.app.ui.ImagePreviewItem
 import li.gkd.app.ui.ImagePreviewRoute
+import li.gkd.app.ui.component.GkActionButton
+import li.gkd.app.ui.component.PerfDropdownMenu
+import li.gkd.app.ui.component.PerfDropdownMenuItem
 import li.gkd.app.ui.icon.RuleList
 import li.gkd.app.ui.share.LocalDarkTheme
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.JSON5_LARGE_TEXT_THRESHOLD
 import li.gkd.app.ui.style.getJson5AnnotatedString
 import li.gkd.app.ui.style.scaffoldPadding
@@ -51,7 +45,6 @@ import li.gkd.app.ui.component.GkRuleSettingsSheet
 import li.gkd.app.ui.component.GkGroupNameText
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
-import li.gkd.app.ui.component.GkTwoLineText
 import li.gkd.app.ui.component.removeRuleCategoryPrefix
 
 @Composable
@@ -67,7 +60,8 @@ fun RuleGroupDialog(
     control: RuleControlState?,
     onSettingChange: (RuleSetting) -> Unit,
     onClickDelete: () -> Unit = {},
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    show: Boolean = true,
+    onDismissFinished: () -> Unit = {},
 ) {
     val mainVm = MainViewModel.requireCurrent()
     // Keep the header width stable during dismissal after navigating to the list.
@@ -101,7 +95,8 @@ fun RuleGroupDialog(
     var menu by remember { mutableStateOf(false) }
     var showSource by remember(group) { mutableStateOf(false) }
     GkRuleSettingsSheet(
-        sheetState = sheetState,
+        show = show,
+        onDismissFinished = onDismissFinished,
         title = title,
         titleContent = {
             GkGroupNameText(
@@ -113,26 +108,17 @@ fun RuleGroupDialog(
         subtitle = group.desc?.takeIf { it.isNotBlank() },
         footerLeadingContent = if (category != null) {
             {
-                AssistChip(
+                GkActionButton(
                     onClick = {
                         val route = SubsCategoryGroupRoute(subs.id, category.key)
                         onDismissRequest()
                         if (mainVm.topRoute != route) mainVm.navigatePage(route)
                     },
-                    label = { Text(category.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    modifier = Modifier.minimumInteractiveComponentSize(),
-                    trailingIcon = {
-                        GkIcon(GkIcons.KeyboardArrowRight, Modifier.size(16.dp),
-                            contentDescription = null)
-                    },
-                    shape = MaterialTheme.shapes.extraLarge,
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = MiuixTheme.colorScheme.secondaryContainer,
-                        labelColor = MiuixTheme.colorScheme.onSecondaryContainer,
-                        trailingIconContentColor = MiuixTheme.colorScheme.onSecondaryContainer,
-                    ),
-                    border = null,
-                )
+                ) {
+                    Text(category.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false))
+                    GkIcon(GkIcons.KeyboardArrowRight, Modifier.size(16.dp), contentDescription = null)
+                }
             }
         } else null,
         onDismissRequest = onDismissRequest,
@@ -156,30 +142,40 @@ fun RuleGroupDialog(
                     onClick = onClickEdit,
                 )
             }
-            Box {
-                GkIconButton(imageVector = GkIcons.MoreVert, modifier = Modifier.size(48.dp),
-                    onClick = { menu = true })
-                DropdownMenu(menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text(UiStrings.rule_view_source) }, onClick = {
-                        menu = false
-                        showSource = true
-                    })
-                    if (group.allExampleUrls.isNotEmpty()) {
-                        DropdownMenuItem(text = { Text(UiStrings.rule_view_examples) }, onClick = {
-                            menu = false
-                            onDismissRequest()
-                            mainVm.navigatePage(ImagePreviewRoute(title = group.name, items = buildRuleGroupPreviewItems(group)))
-                        })
-                    }
-                    DropdownMenuItem(text = { Text(UiStrings.subscription_settings) }, onClick = {
+            PerfDropdownMenu(
+                expanded = menu,
+                onDismissRequest = { menu = false },
+                enableWindowDim = false,
+                anchor = {
+                    GkIconButton(
+                        imageVector = GkIcons.MoreVert,
+                        contentDescription = UiStrings.more_label,
+                        onClick = { menu = true },
+                    )
+                },
+            ) {
+                PerfDropdownMenuItem(text = UiStrings.rule_view_source, onClick = {
+                    menu = false
+                    showSource = true
+                })
+                if (group.allExampleUrls.isNotEmpty()) {
+                    PerfDropdownMenuItem(text = UiStrings.rule_view_examples, onClick = {
                         menu = false
                         onDismissRequest()
-                        mainVm.subsSheet.show(subs.id)
+                        mainVm.navigatePage(ImagePreviewRoute(title = group.name, items = buildRuleGroupPreviewItems(group)))
                     })
-                    if (subs.isLocal) {
-                        DropdownMenuItem(text = { Text(UiStrings.rule_delete) },
-                            onClick = { menu = false; onClickDelete() })
-                    }
+                }
+                PerfDropdownMenuItem(text = UiStrings.subscription_settings, onClick = {
+                    menu = false
+                    onDismissRequest()
+                    mainVm.subsSheet.show(subs.id)
+                })
+                if (subs.isLocal) {
+                    PerfDropdownMenuItem(
+                        text = UiStrings.rule_delete,
+                        titleColor = MiuixTheme.colorScheme.error,
+                        onClick = { menu = false; onClickDelete() },
+                    )
                 }
             }
         },
@@ -220,7 +216,7 @@ private fun RuleSourceDialog(group: RawSubscription.RawGroupProps, onDismissRequ
             )
         }) { contentPadding ->
             val textModifier = Modifier.scaffoldPadding(contentPadding).padding(16.dp)
-                .fillMaxSize().clip(MaterialTheme.shapes.large)
+                .fillMaxSize().clip(GkShapes.card)
                 .background(MiuixTheme.colorScheme.surfaceContainerHigh)
             if (source.length > JSON5_LARGE_TEXT_THRESHOLD) {
                 GkLazyCopyableText(text = annotatedText, modifier = textModifier,

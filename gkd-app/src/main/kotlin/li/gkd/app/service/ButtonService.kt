@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.snapshot.SnapshotCapture
 import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.util.IntentUtils
 import li.gkd.app.ui.component.GkIcon
@@ -50,7 +50,7 @@ class ButtonService : OverlayWindowService(
             GkIcon(
                 imageVector = GkIcons.CenterFocusWeak,
                 modifier = Modifier
-                    .clip(MaterialTheme.shapes.small)
+                    .clip(GkShapes.control)
                     .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = alpha))
                     .size(40.dp),
                 tint = MiuixTheme.colorScheme.primary.copy(alpha = alpha),
@@ -61,7 +61,7 @@ class ButtonService : OverlayWindowService(
         // 收不到「点外部」事件，所以收起只能靠显式的「算了」项。
         Column(
             modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
+                .clip(GkShapes.control)
                 .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.94f))
                 .padding(6.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -83,7 +83,7 @@ class ButtonService : OverlayWindowService(
             text = label,
             color = MiuixTheme.colorScheme.onSurface,
             modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
+                .clip(GkShapes.control)
                 .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = 0.9f))
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 10.dp),

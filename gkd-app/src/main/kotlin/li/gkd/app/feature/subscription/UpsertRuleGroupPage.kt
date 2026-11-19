@@ -1,43 +1,24 @@
 package li.gkd.app.feature.subscription
 
-import li.gkd.app.MainViewModel
-
-import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import li.gkd.app.ui.component.GkEditorScaffold
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.serialization.Serializable
+import li.gkd.app.MainViewModel
 import li.gkd.app.text.UiStrings
-import li.gkd.app.MainActivity
+import li.gkd.app.ui.component.GkEditorScaffold
+import li.gkd.app.ui.component.GkMultiTextField
+import li.gkd.app.ui.component.GkSubscriptionPageContent
 import li.gkd.app.ui.share.LocalDarkTheme
 import li.gkd.app.ui.style.getJson5Transformation
 import li.gkd.app.ui.style.scaffoldPadding
-import li.gkd.app.ui.component.GkSubscriptionPageContent
-import li.gkd.app.ui.component.autoFocus
+import top.yukonga.miuix.kmp.nav.core.NavKey
 
 @Serializable
 data class UpsertRuleGroupRoute(
@@ -54,7 +35,6 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
     val forward = route.forward
 
     val mainVm = MainViewModel.requireCurrent()
-    val context = LocalActivity.current as MainActivity
     val vm = viewModel { UpsertRuleGroupVm(route) }
     GkSubscriptionPageContent(vm.uiState) { state ->
         val editedText by vm.textFlow.collectAsStateWithLifecycle()
@@ -78,55 +58,14 @@ fun UpsertRuleGroupPage(route: UpsertRuleGroupRoute) {
                 }
             },
         ) { paddingValues ->
-            val textColors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
+            GkMultiTextField(
+                modifier = Modifier.scaffoldPadding(paddingValues).fillMaxSize(),
+                text = text,
+                onTextChange = vm::setText,
+                immediateFocus = true,
+                visualTransformation = getJson5Transformation(LocalDarkTheme.current),
+                placeholderText = if (vm.isApp) UiStrings.app_rule_input_hint else UiStrings.global_rule_input_hint,
             )
-            Box(
-                modifier = Modifier
-                    .scaffoldPadding(paddingValues)
-                    .fillMaxSize(),
-            ) {
-                CompositionLocalProvider(LocalTextStyle provides MiuixTheme.textStyles.body1) {
-                    val imeShowing by context.imeController.showAnimationRunningFlow.collectAsStateWithLifecycle()
-                    val modifier = Modifier
-                        .autoFocus(immediateFocus = true)
-                        .fillMaxSize()
-                        .run {
-                            if (imeShowing) {
-                                this
-                            } else {
-                                imePadding()
-                            }
-                        }
-                    TextField(
-                        value = text,
-                        onValueChange = vm::setText,
-                        modifier = modifier,
-                        shape = RectangleShape,
-                        colors = textColors,
-                        visualTransformation = getJson5Transformation(LocalDarkTheme.current),
-                        placeholder = {
-                            Text(text = if (vm.isApp) UiStrings.app_rule_input_hint else UiStrings.global_rule_input_hint)
-                        },
-                    )
-                }
-                if (text.isNotEmpty()) {
-                    Text(
-                        text = text.length.toString(),
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .align(Alignment.TopEnd)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(MiuixTheme.colorScheme.surfaceContainer)
-                            .padding(horizontal = 2.dp),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                }
-            }
         }
     }
 }

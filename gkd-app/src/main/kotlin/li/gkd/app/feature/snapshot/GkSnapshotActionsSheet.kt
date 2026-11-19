@@ -14,9 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetState
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +37,7 @@ import li.gkd.app.ui.component.GkFixedTimeText
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkModalBottomSheet
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.IMPORT_SHORT_URL
 import li.gkd.app.util.format
 import li.gkd.app.util.getShowActivityId
@@ -49,8 +48,9 @@ import li.gkd.db.Snapshot
 fun GkSnapshotActionsSheet(
     snapshot: Snapshot,
     appName: String,
-    sheetState: SheetState,
     onDismissRequest: () -> Unit,
+    show: Boolean = true,
+    onDismissFinished: () -> Unit = {},
     onShare: () -> Unit,
     onSaveToDownloads: () -> Unit,
     onUpload: () -> Unit,
@@ -65,7 +65,8 @@ fun GkSnapshotActionsSheet(
     }
     GkModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
+        show = show,
+        onDismissFinished = onDismissFinished,
     ) {
         Column(
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -197,7 +198,7 @@ private fun SnapshotActionRow(
 ) {
     val contentColor = MiuixTheme.colorScheme.onSurface
     Row(
-        modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+        modifier = Modifier.fillMaxWidth().clip(GkShapes.panel)
             .clickable(onClick = onClick)
             .heightIn(min = if (subtitle == null) 48.dp else 56.dp)
             .padding(horizontal = 12.dp, vertical = 8.dp),

@@ -18,11 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -78,6 +75,7 @@ import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.ui.share.statusText
 import li.gkd.app.ui.style.EmptyHeight
+import li.gkd.app.ui.style.GkProvideTextStyle
 import li.gkd.app.ui.style.iconTextSize
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.lineHeightDp
@@ -92,7 +90,6 @@ import li.gkd.app.util.ToastUtils.showActionTip
 import li.gkd.app.util.FolderUtils
 import li.gkd.app.util.IntentUtils.openAppDetailsSettings
 import li.gkd.app.util.TimeUtils.throttle
-import li.gkd.app.util.ToastUtils.previewActionToast
 import li.gkd.app.util.ToastUtils.toast
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -101,6 +98,7 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.squircle.squircleClip
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private const val ZIP_MIME_TYPE = "application/zip"
@@ -612,6 +610,8 @@ fun useSettingsPage(): ScaffoldExt {
             }
 
             val shaderOk = isRuntimeShaderSupported()
+            val appearance = homeAppearance(store.useFloatingNavBar, store.enableMiuixBlur,
+                store.enableLiquidGlass, shaderOk)
             PreferenceGroup(title = "外观") {
                 TextMenu(
                     title = "深色模式",
@@ -633,21 +633,25 @@ fun useSettingsPage(): ScaffoldExt {
                     title = "模糊",
                     subtitle = if (shaderOk) "启用顶栏和底栏的模糊效果"
                     else "当前设备不支持 RuntimeShader，无法启用模糊",
-                    checked = store.enableMiuixBlur && shaderOk,
+                    checked = appearance.blur,
                     enabled = shaderOk,
                     onCheckedChange = { vm.setMiuixBlur(it) },
                 )
                 TextSwitch(
                     title = "悬浮底栏",
-                    subtitle = "使用类 Apple 风格的悬浮底栏",
-                    checked = store.useFloatingNavBar,
+                    subtitle = "在 Miuix 停靠底栏与悬浮底栏之间切换",
+                    checked = appearance.floating,
                     onCheckedChange = { vm.setFloatingNavBar(it) },
                 )
                 TextSwitch(
                     title = "液态玻璃",
-                    subtitle = "悬浮底栏与右下角加号按钮使用液态玻璃效果",
-                    checked = store.enableLiquidGlass && store.enableMiuixBlur && shaderOk,
-                    enabled = store.enableMiuixBlur && shaderOk,
+                    subtitle = when {
+                        !shaderOk -> "当前设备不支持液态玻璃"
+                        !appearance.glassAvailable -> "需同时开启模糊和悬浮底栏"
+                        else -> "为悬浮底栏和添加按钮启用液态玻璃效果"
+                    },
+                    checked = appearance.glass,
+                    enabled = appearance.glassAvailable,
                     onCheckedChange = { vm.setLiquidGlass(it) },
                 )
                 if (AndroidTarget.TIRAMISU) {
@@ -751,7 +755,7 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
                 .padding(contentPadding)
                 .padding(horizontal = itemHorizontalPadding)
         ) {
-            CompositionLocalProvider(LocalTextStyle provides MiuixTheme.textStyles.body2) {
+            GkProvideTextStyle(MiuixTheme.textStyles.body2) {
                 Text(text = "「局部关闭」可在白名单应用内关闭服务，来解决界面异常，游戏掉帧或无障碍检测的问题")
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = "使用须知", style = MiuixTheme.textStyles.title3)
@@ -854,7 +858,7 @@ private fun RequiredTextItem(
             }
             .padding(horizontal = 4.dp),
     ) {
-        val lineHeightDp = LocalDensity.current.let { LocalTextStyle.current.lineHeightDp(it) }
+        val lineHeightDp = LocalDensity.current.let { MiuixTheme.textStyles.main.lineHeightDp(it) }
         Spacer(
             modifier = Modifier
                 .padding(vertical = (lineHeightDp - 4.dp) / 2)

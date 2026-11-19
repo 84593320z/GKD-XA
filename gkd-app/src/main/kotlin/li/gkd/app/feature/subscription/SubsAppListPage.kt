@@ -3,30 +3,26 @@ package li.gkd.app.feature.subscription
 import li.gkd.app.ui.component.GkPageBottomSpaceDefaults
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
-
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import top.yukonga.miuix.kmp.basic.FloatingActionButton
 import top.yukonga.miuix.kmp.nav.core.NavKey
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.serialization.Serializable
 import li.gkd.app.text.UiStrings
 import li.gkd.app.MainActivity
@@ -34,6 +30,7 @@ import li.gkd.app.core.state.Loadable
 import li.gkd.app.domain.rule.RuleConfigIndex
 import li.gkd.app.domain.rule.RuleSetting
 import li.gkd.app.store.AppStore.storeFlow
+import li.gkd.app.ui.component.PerfDropdownMenu
 import li.gkd.app.ui.share.ListPlaceholder
 import li.gkd.app.ui.share.filterSubsApps
 import li.gkd.app.ui.share.launchUi
@@ -165,32 +162,32 @@ fun SubsAppListPage(route: SubsAppListRoute) {
                             else closeSearch()
                         },
                     )
-                    GkFilterIconButton(
-                        filtered = sortedApps.size < state?.subscription?.apps.orEmpty().size,
-                        onClick = {
-                            expanded = true
-                        },
-                    )
-                    Box(
-                        modifier = Modifier.wrapContentSize(Alignment.TopStart)
-                    ) {
-                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                            GkAppFilterContent(
-                                sort = store.subsAppSort,
-                                groupType = store.subsAppGroupType,
-                                showBlockApps = store.subsAppShowBlock,
-                                onSort = vm::setSortType,
-                                onAppGroup = vm::setAppGroupType,
-                                onToggleBlock = vm::toggleShowBlockApps,
+                    PerfDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        enableWindowDim = false,
+                        anchor = {
+                            GkFilterIconButton(
+                                filtered = sortedApps.size < state?.subscription?.apps.orEmpty().size,
+                                onClick = { expanded = true },
                             )
-                        }
+                        },
+                    ) {
+                        GkAppFilterContent(
+                            sort = store.subsAppSort,
+                            groupType = store.subsAppGroupType,
+                            showBlockApps = store.subsAppShowBlock,
+                            onSort = vm::setSortType,
+                            onAppGroup = vm::setAppGroupType,
+                            onToggleBlock = vm::toggleShowBlockApps,
+                        )
                     }
                 }
             })
         },
         floatingActionButton = {
             if (LOCAL_SUBS_IDS.contains(subsItemId) && !selection.active) {
-                FloatingActionButton(onClick = throttle {
+                FloatingActionButton(minWidth = 56.dp, minHeight = 56.dp, onClick = throttle {
                     mainVm.navigatePage(
                         UpsertRuleGroupRoute(
                             subsId = subsItemId,
@@ -202,6 +199,7 @@ fun SubsAppListPage(route: SubsAppListRoute) {
                 }) {
                     GkIcon(
                         imageVector = GkIcons.Add,
+                        tint = MiuixTheme.colorScheme.onPrimary,
                     )
                 }
             }

@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.IntentUtils
 import li.gkd.app.util.TimeUtils.throttle
 
@@ -74,7 +73,7 @@ class TextDialogState {
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 320.dp),
-                        shape = MaterialTheme.shapes.small,
+                        shape = GkShapes.control,
                         color = MiuixTheme.colorScheme.surfaceVariant,
                     ) {
                         GkCopyableText(
@@ -90,11 +89,11 @@ class TextDialogState {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
                     ) {
-                        TextButton(onClick = throttle(::dismiss)) {
+                        GkActionButton(onClick = throttle(::dismiss)) {
                             Text(text = UiStrings.action_close)
                         }
                         if (currentRequest.openable) {
-                            TextButton(onClick = throttle { open(currentRequest) }) {
+                            GkActionButton(onClick = throttle { open(currentRequest) }) {
                                 Text(text = UiStrings.action_open)
                             }
                         }

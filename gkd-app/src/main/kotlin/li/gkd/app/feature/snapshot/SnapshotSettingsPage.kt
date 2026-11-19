@@ -1,8 +1,8 @@
 package li.gkd.app.feature.snapshot
 
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
-
 import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,9 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
@@ -27,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -251,14 +248,14 @@ private fun CaptureScreenshotConfigDialog(
         },
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            TextButton(
+            GkActionButton(
                 onClick = throttle { onConfirm(appIdValue, eventSelectorValue) },
             ) {
                 Text(text = UiStrings.action_confirm)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
+            GkActionButton(onClick = onDismissRequest) {
                 Text(text = UiStrings.action_cancel)
             }
         },

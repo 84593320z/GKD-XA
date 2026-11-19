@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -236,7 +236,7 @@ fun SubsItemCard(
                 alpha = 0.5f + (1 - 0.5f) * percent.value,
             ).run {
                 if (isSelectedMode) {
-                    minimumInteractiveComponentSize()
+                    sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                 } else {
                     this
                 }

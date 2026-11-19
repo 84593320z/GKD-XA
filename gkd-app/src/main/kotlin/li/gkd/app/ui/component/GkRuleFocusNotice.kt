@@ -4,7 +4,6 @@ import li.gkd.app.text.UiStrings
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable

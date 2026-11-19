@@ -26,18 +26,13 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.IconButtonDefaults
+import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.CheckboxDefaults
+import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
+import top.yukonga.miuix.kmp.basic.rememberTooltipState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import androidx.compose.material3.PlainTooltip
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import androidx.compose.material3.TriStateCheckbox
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -52,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -88,12 +82,14 @@ import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkFixedTimeText
 import li.gkd.app.ui.component.GkIconButton
+import li.gkd.app.ui.component.GkIconButtonDefaults
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkRetainedSheet
+import li.gkd.app.ui.component.GkTooltipBox
 import li.gkd.app.ui.component.SheetRequest
 import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.share.ListPlaceholder
@@ -430,7 +426,7 @@ fun SnapshotPage() {
         onDismissRequest = { request ->
             if (actionRequest === request) actionRequest = null
         },
-    ) { _, snapshot, sheetState, dismiss ->
+    ) { _, snapshot, show, dismiss, onDismissFinished ->
         val actions = SnapshotActionHandler(
             mainVm = mainVm,
             vm = vm,
@@ -442,7 +438,8 @@ fun SnapshotPage() {
         GkSnapshotActionsSheet(
             snapshot = snapshot,
             appName = appNames[snapshot.appId] ?: snapshot.appId,
-            sheetState = sheetState,
+            show = show,
+            onDismissFinished = onDismissFinished,
             onDismissRequest = dismiss,
             onShare = { actions.share(snapshot) },
             onSaveToDownloads = { actions.saveToDownloads(snapshot) },
@@ -493,7 +490,7 @@ private fun SnapshotGroupHeader(
         }
         Box(modifier = Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
             if (selectedMode) {
-                TriStateCheckbox(
+                Checkbox(
                     state = groupSelectionState,
                     onClick = onToggleSelection,
                     modifier = Modifier.semantics {
@@ -592,16 +589,16 @@ private fun SnapshotCard(
                 ) {
                     if (selectedMode) {
                         Checkbox(
-                            checked = selected,
-                            onCheckedChange = null,
+                            state = if (selected) ToggleableState.On else ToggleableState.Off,
+                            onClick = null,
                             modifier = Modifier.clearAndSetSemantics {},
-                            colors = CheckboxDefaults.colors(uncheckedColor = Color.White),
+                            colors = CheckboxDefaults.checkboxColors(uncheckedBackgroundColor = Color.White.copy(alpha = 0.8f)),
                         )
                     } else {
                         GkIconButton(
                             imageVector = GkIcons.MoreVert,
                             contentDescription = UiStrings.more_label,
-                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+                            colors = GkIconButtonDefaults.iconButtonColors(contentColor = Color.White),
                             onClick = onMore,
                         )
                     }
@@ -627,12 +624,10 @@ private fun SnapshotCard(
                 )
                 val timeTooltipState = rememberTooltipState()
                 val timeTooltipScope = rememberCoroutineScope()
-                TooltipBox(
-                    tooltip = { PlainTooltip { Text(fullTime) } },
+                GkTooltipBox(
+                    text = fullTime,
                     state = timeTooltipState,
-                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                        TooltipAnchorPosition.Above,
-                    ),
+                    positioning = TooltipAnchorPosition.Above,
                     enableUserInput = false,
                 ) {
                     GkFixedTimeText(

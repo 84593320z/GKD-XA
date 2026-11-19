@@ -3,7 +3,6 @@ package li.gkd.app.ui.home
 import li.gkd.app.ui.component.GkPageBottomSpaceDefaults
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
-
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,9 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -39,6 +37,7 @@ import li.gkd.app.permission.PermissionStates
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.ui.AppConfigRoute
 import li.gkd.app.ui.EditBlockAppListRoute
+import li.gkd.app.ui.component.GkPullToRefresh
 import li.gkd.app.ui.share.ListPlaceholder
 import li.gkd.app.util.AppGroupOption
 import li.gkd.app.util.AppSortOption
@@ -205,11 +204,12 @@ fun useAppListPage(): ScaffoldExt {
             )
         }
     ) { contentPadding ->
-        PullToRefreshBox(
+        GkPullToRefresh(
             // 不在此处 padding：会压缩整个容器高度，导致列表提前结束、底部出现死白且吃不到底栏模糊。
             // 改由 LazyColumn 的 contentPadding 承担，容器继续铺满全屏，内容延伸到底栏下方。
             modifier = Modifier.fillMaxSize(),
             state = pullToRefreshState,
+            contentPadding = contentPadding,
             isRefreshing = refreshing,
             onRefresh = vm::refresh,
         ) {

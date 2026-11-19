@@ -1,7 +1,6 @@
 package li.gkd.app.ui.component
 
 import androidx.annotation.DrawableRes
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -12,6 +11,7 @@ import androidx.compose.ui.semantics.semantics
 import li.gkd.app.ui.icon.Rocket
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 
 /** 跟随明暗主题的默认图标色：优先 LocalContentColor，否则 MIUIX onSurface */
 @Composable

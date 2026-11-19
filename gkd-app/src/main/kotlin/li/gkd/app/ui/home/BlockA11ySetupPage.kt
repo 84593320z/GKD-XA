@@ -1,8 +1,9 @@
 package li.gkd.app.ui.home
 
+import li.gkd.app.ui.component.GkActionButton
+import li.gkd.app.ui.component.GkBottomActionBar
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
-
 import android.view.KeyEvent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +50,7 @@ import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkTopAppBar
 import li.gkd.app.ui.share.launchUi
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.util.IntentUtils
 import li.gkd.app.util.ToastUtils.toast
@@ -89,7 +88,7 @@ fun BlockA11ySetupPage() {
             )
         },
         bottomBar = {
-            BottomAppBar {
+            GkBottomActionBar {
                 Text(
                     text = if (remainingRequirements == 0) UiStrings.partial_disable_ready
                     else UiStrings.partial_disable_remaining(remainingRequirements),
@@ -97,7 +96,8 @@ fun BlockA11ySetupPage() {
                     style = MiuixTheme.textStyles.body2,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
-                Button(
+                GkActionButton(
+                    emphasized = true,
                     enabled = store.enableBlockA11yAppList || remainingRequirements == 0,
                     onClick = {
                         mainVm.popPage()
@@ -244,7 +244,7 @@ private fun BlockA11ySectionTitle(text: String, optional: Boolean = false) {
 @Composable
 private fun BlockA11ySettingsCard(content: @Composable ColumnScope.() -> Unit) {
     Surface(
-        shape = MaterialTheme.shapes.large,
+        shape = GkShapes.card,
         color = MiuixTheme.colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth(),
     ) {

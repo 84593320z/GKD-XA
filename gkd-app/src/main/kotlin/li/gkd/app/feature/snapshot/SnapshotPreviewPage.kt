@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +34,7 @@ import li.gkd.app.ui.ImagePreviewItem
 import li.gkd.app.ui.ImagePreviewRoute
 import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkIconButton
+import li.gkd.app.ui.component.GkIconButtonDefaults
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkRetainedSheet
 import li.gkd.app.ui.component.SheetRequest
@@ -107,7 +106,7 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                         GkIconButton(
                             imageVector = GkIcons.MoreVert,
                             contentDescription = UiStrings.more_label,
-                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+                            colors = GkIconButtonDefaults.iconButtonColors(contentColor = Color.White),
                             onClick = { actionRequest = SheetRequest(item.id) },
                         )
                     }
@@ -124,7 +123,7 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                 onDismissRequest = { request ->
                     if (actionRequest === request) actionRequest = null
                 },
-            ) { _, snapshot, sheetState, dismiss ->
+            ) { _, snapshot, show, dismiss, onDismissFinished ->
                 val routeAfterDelete = if (previewSnapshots.size == 1) {
                     null
                 } else {
@@ -162,7 +161,8 @@ fun SnapshotPreviewPage(route: SnapshotPreviewRoute) {
                 GkSnapshotActionsSheet(
                     snapshot = snapshot,
                     appName = state?.appNames?.get(snapshot.appId) ?: snapshot.appId,
-                    sheetState = sheetState,
+                    show = show,
+                    onDismissFinished = onDismissFinished,
                     onDismissRequest = dismiss,
                     onShare = { actions.share(snapshot) },
                     onSaveToDownloads = { actions.saveToDownloads(snapshot) },

@@ -6,9 +6,6 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -21,8 +18,12 @@ import androidx.compose.ui.graphics.vector.group
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import li.gkd.app.text.UiStrings
+import li.gkd.app.ui.component.GkIconButtonDefaults
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkTooltipIconButtonBox
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 
 @Composable
 fun GkSearchCloseIconButton(
@@ -32,7 +33,11 @@ fun GkSearchCloseIconButton(
     tint: Color = LocalContentColor.current,
     contentDescription: String = if (isSearchOpen) UiStrings.search_close else UiStrings.search_open,
 ) = GkTooltipIconButtonBox(contentDescription = contentDescription) {
-    IconButton(onClick = onClick) {
+    IconButton(
+        onClick = onClick,
+        minWidth = GkIconButtonDefaults.MinTouchTargetSize,
+        minHeight = GkIconButtonDefaults.MinTouchTargetSize,
+    ) {
         GkSearchCloseIcon(
             isSearchOpen = isSearchOpen,
             modifier = modifier,

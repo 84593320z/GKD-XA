@@ -1,15 +1,12 @@
 package li.gkd.app.ui.component
 
 import li.gkd.app.MainViewModel
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.material3.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,7 +41,7 @@ fun GkQueryPkgAuthCard(
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             textAlign = TextAlign.Center,
         )
-        TextButton(
+        GkActionButton(
             enabled = !AppInfoRepository.updating.collectAsStateWithLifecycle().value,
             onClick = throttle(fn = mainVm.scope.launchUiAction {
                 mainVm.permissionRequests.ensurePermissions(PermissionStates.queryPackages)

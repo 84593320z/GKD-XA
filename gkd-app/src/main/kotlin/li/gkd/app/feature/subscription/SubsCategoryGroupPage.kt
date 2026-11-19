@@ -2,23 +2,18 @@ package li.gkd.app.feature.subscription
 
 import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
-
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.DropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import top.yukonga.miuix.kmp.nav.core.NavKey
@@ -44,6 +39,7 @@ import li.gkd.app.ui.component.GkRuleGroupCard
 import li.gkd.app.ui.component.GkRuleListHeader
 import li.gkd.app.ui.component.GkSubscriptionPageContent
 import li.gkd.app.ui.component.GkTwoLineText
+import li.gkd.app.ui.component.PerfDropdownMenu
 import li.gkd.app.ui.component.rememberListScrollState
 import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.component.rememberRuleControlEnvironment
@@ -154,20 +150,24 @@ fun SubsCategoryGroupPage(route: SubsCategoryGroupRoute) {
                                 )
                             }
                         } else {
-                            Box {
-                                GkFilterIconButton(filtered = visibleTargets.size < state.targets.size,
-                                    contentDescription = UiStrings.app_sort_filter,
-                                    onClick = { showFilter = true })
-                                DropdownMenu(expanded = showFilter, onDismissRequest = { showFilter = false }) {
-                                    GkAppFilterContent(
-                                        sort = settings.subsCategorySort,
-                                        groupType = settings.subsCategoryGroupType,
-                                        showBlockApps = settings.subsCategoryShowBlock,
-                                        onSort = vm::setSortType,
-                                        onAppGroup = vm::setAppGroupType,
-                                        onToggleBlock = vm::toggleShowBlockApps,
-                                    )
-                                }
+                            PerfDropdownMenu(
+                                expanded = showFilter,
+                                onDismissRequest = { showFilter = false },
+                                enableWindowDim = false,
+                                anchor = {
+                                    GkFilterIconButton(filtered = visibleTargets.size < state.targets.size,
+                                        contentDescription = UiStrings.app_sort_filter,
+                                        onClick = { showFilter = true })
+                                },
+                            ) {
+                                GkAppFilterContent(
+                                    sort = settings.subsCategorySort,
+                                    groupType = settings.subsCategoryGroupType,
+                                    showBlockApps = settings.subsCategoryShowBlock,
+                                    onSort = vm::setSortType,
+                                    onAppGroup = vm::setAppGroupType,
+                                    onToggleBlock = vm::toggleShowBlockApps,
+                                )
                             }
                             GkIconButton(imageVector = GkIcons.MoreVert,
                                 contentDescription = UiStrings.more_actions,
