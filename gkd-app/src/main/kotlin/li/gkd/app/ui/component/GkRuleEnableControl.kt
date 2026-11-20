@@ -1,10 +1,14 @@
 package li.gkd.app.ui.component
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
@@ -73,39 +77,59 @@ fun GkRuleEnableControl(
     // Lazy layouts can reuse the MIUIX switch thumb node after a target changes.
     // Reset only when its business target changes, never when checked changes.
     var showReason by remember { mutableStateOf(false) }
+    val controlDescription = buildString {
+        append(state.label)
+        if (!state.canEnable) {
+            append(UiStrings.rule_unavailable_reason_action_suffix)
+        } else if (state.configuredEnabled && state.restrictions.isNotEmpty()) {
+            append(UiStrings.rule_temporarily_unavailable_prefix)
+            append(state.restrictions.joinToString("，"))
+        }
+    }
+    val showReasonAction = { showReason = true }
     val reasonAction = if (state.canEnable) {
         Modifier
     } else {
-        Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(
-            interactionSource = null,
-            indication = null,
-            role = Role.Button,
-            onClickLabel = UiStrings.rule_unavailable_reason_view,
-        ) { showReason = true }
-    }
-    // The MIUIX switch keeps its track at its native size inside the expanded touch target.
-    // Its own interaction source draws press feedback on the thumb, not the whole target.
-    GkSwitch(
-        modifier = modifier.then(reasonAction).semantics {
-            contentDescription = UiStrings.rule_switch
-            stateDescription = buildString {
-                append(state.label)
-                if (!state.canEnable) {
-                    append(UiStrings.rule_unavailable_reason_action_suffix)
-                } else if (state.configuredEnabled && state.restrictions.isNotEmpty()) {
-                    append(UiStrings.rule_temporarily_unavailable_prefix)
-                    append(state.restrictions.joinToString("，"))
+        Modifier
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Button,
+                onClickLabel = UiStrings.rule_unavailable_reason_view,
+                onClick = showReasonAction,
+            )
+            .clearAndSetSemantics {
+                // One enabled explanation action; do not merge the disabled switch into it.
+                role = Role.Button
+                contentDescription = UiStrings.rule_switch
+                stateDescription = controlDescription
+                onClick(label = UiStrings.rule_unavailable_reason_view) {
+                    showReasonAction()
+                    true
                 }
             }
-        },
-        checked = state.configuredEnabled,
-        onCheckedChange = if (state.canEnable) {
-            { onSettingChange(RuleSetting.from(it)) }
-        } else null,
-        enabled = state.canEnable,
-        // Keep the switch itself MIUIX-native; custom overrides remain discoverable through
-        // the rule-details panel, while the legacy Switch implementation ignored thumbContent.
-    )
+    }
+    Box(
+        modifier = modifier.then(reasonAction),
+        contentAlignment = Alignment.Center,
+        // Keep the expanded trailing slot as the native switch's touch target.
+        propagateMinConstraints = true,
+    ) {
+        // The native switch stays disabled when unavailable; only its wrapper opens the reason.
+        GkSwitch(
+            modifier = Modifier.semantics {
+                contentDescription = UiStrings.rule_switch
+                stateDescription = controlDescription
+            },
+            checked = state.configuredEnabled,
+            onCheckedChange = if (state.canEnable) {
+                { onSettingChange(RuleSetting.from(it)) }
+            } else null,
+            enabled = state.canEnable,
+            // Custom overrides remain discoverable through the rule-details panel.
+        )
+    }
     if (showReason) {
         GkAlertDialog(
             onDismissRequest = { showReason = false },

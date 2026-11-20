@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -46,6 +48,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -171,22 +174,25 @@ fun GkImagePreviewContent(
     val activePagerState = pagerState ?: localPagerState
     val currentPage = activePagerState.currentPage
 
-    val controller = remember {
+    val controller = remember(context) {
         WindowCompat.getInsetsController(context.window, context.window.decorView)
     }
-    DisposableEffect(null) {
+    DisposableEffect(controller) {
         val oldBehavior = controller.systemBarsBehavior
-        val oldLight = controller.isAppearanceLightStatusBars
+        val oldLightStatusBars = controller.isAppearanceLightStatusBars
+        val oldLightNavigationBars = controller.isAppearanceLightNavigationBars
         controller.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightNavigationBars = false
         onDispose {
             controller.systemBarsBehavior = oldBehavior
-            controller.isAppearanceLightStatusBars = oldLight
+            controller.isAppearanceLightStatusBars = oldLightStatusBars
+            controller.isAppearanceLightNavigationBars = oldLightNavigationBars
             controller.show(WindowInsetsCompat.Type.statusBars())
         }
     }
-    LaunchedEffect(showBars) {
+    LaunchedEffect(controller, showBars) {
         if (showBars) {
             controller.show(WindowInsetsCompat.Type.statusBars())
         } else {
@@ -429,12 +435,18 @@ private fun UriImage(
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        modifier = Modifier.pointerInput(uri) {
-                            detectTapGestures(onTap = { reload() })
-                        },
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .clickable(
+                                role = Role.Button,
+                                onClickLabel = UiStrings.action_reload,
+                                onClick = reload,
+                            )
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
                         text = UiStrings.image_load_failed_retry,
                         color = MiuixTheme.colorScheme.error,
-                        style = MiuixTheme.textStyles.body2
+                        style = MiuixTheme.textStyles.body2,
+                        textAlign = TextAlign.Center,
                     )
                     stateVal.result.throwable.message?.let { msg ->
                         Spacer(modifier = Modifier.height(8.dp))

@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,30 +36,29 @@ fun PerfAlertDialog(
             contentColor = MiuixTheme.colorScheme.onSurface,
             shadowElevation = 0.dp,
         ) {
-            title?.let {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    GkProvideDialogTextStyle(
-                        style = MiuixTheme.textStyles.title4.copy(textAlign = TextAlign.Center),
-                        contentColor = DialogDefaults.titleColor(),
-                        content = it,
-                    )
-                }
-            }
-            text?.let {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    GkProvideDialogTextStyle(
-                        style = MiuixTheme.textStyles.body1,
-                        contentColor = DialogDefaults.summaryColor(),
-                        content = it,
-                    )
+            if (title != null || text != null) {
+                GkDialogContent { viewportHeight ->
+                    title?.let {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            GkProvideDialogTextStyle(
+                                style = MiuixTheme.textStyles.title4.copy(textAlign = TextAlign.Center),
+                                contentColor = DialogDefaults.titleColor(),
+                                content = it,
+                            )
+                        }
+                    }
+                    text?.let {
+                        GkDialogBody(viewportHeight) {
+                            GkProvideDialogTextStyle(
+                                style = MiuixTheme.textStyles.body1,
+                                contentColor = DialogDefaults.summaryColor(),
+                                content = it,
+                            )
+                        }
+                    }
                 }
             }
             // Keep these RowScope slots: existing callers intentionally use Modifier.weight.

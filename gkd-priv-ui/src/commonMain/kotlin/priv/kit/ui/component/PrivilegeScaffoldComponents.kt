@@ -219,8 +219,8 @@ internal fun CommandBlock(commandLine: String) {
 internal fun PrivilegeUiScreenScope.AutoRecoveryWarning() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = PrivilegeMiuixTheme.colorScheme.secondaryContainer,
-        contentColor = PrivilegeMiuixTheme.colorScheme.onSecondaryContainer,
+        color = PrivilegeMiuixTheme.colorScheme.surfaceContainerLow,
+        contentColor = PrivilegeMiuixTheme.colorScheme.onSurface,
         shape = PrivilegeMiuixTheme.shapes.medium,
     ) {
         Column(
@@ -242,6 +242,7 @@ internal fun PrivilegeUiScreenScope.AutoRecoveryWarning() {
                 Text(
                     text = stringResource(R.string.priv_ui_auto_recovery_disconnected_message),
                     style = PrivilegeMiuixTheme.typography.bodySmall,
+                    color = PrivilegeMiuixTheme.colorScheme.onSurfaceVariant,
                 )
             }
             PrivilegeTextButton(

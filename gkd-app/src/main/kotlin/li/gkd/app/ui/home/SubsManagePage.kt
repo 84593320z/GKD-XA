@@ -131,16 +131,22 @@ private fun useLoadedSubsManagePage(
     val pullToRefreshState = rememberPullToRefreshState()
     // 多选仅属于当前订阅 Tab 的临时交互状态，切换 Tab 后按设计清空，不要改为可保存状态。
     val selectionState = rememberMultiSelectionState<Long>()
+    val tab by mainVm.tabFlow.collectAsStateWithLifecycle()
+    val isSubsTab = tab == BottomNavItem.SubsManage.key
     val allIds = remember(subItems) { subItems.mapTo(mutableSetOf()) { it.id } }
-    val selectedIds = selectionState.selectedKeys intersect allIds
-    val isSelectedMode = selectionState.active
+    val selectedIds = if (isSubsTab) selectionState.selectedKeys intersect allIds else emptySet()
+    val isSelectedMode = isSubsTab && selectionState.active
     val reorderSession = rememberReorderSession(subItems) { it.id }
     val orderSubItems = reorderSession.items
-    BackHandler(isSelectedMode) {
+    BackHandler(enabled = isSelectedMode) {
         selectionState.clear()
     }
-    LaunchedEffect(allIds) {
-        selectionState.retain(allIds)
+    LaunchedEffect(isSubsTab, allIds) {
+        if (isSubsTab) {
+            selectionState.retain(allIds)
+        } else {
+            selectionState.clear()
+        }
     }
 
     if (settingsDialogVisible) {
@@ -425,7 +431,7 @@ private fun useLoadedSubsManagePage(
                     itemsIndexed(orderSubItems, { _, subItem -> subItem.id }) { index, subItem ->
                         // Keep the initial gesture alive after it enters selection mode.
                         val canDrag = reorderSession.dragging ||
-                            (!refreshing && !batchBusy && !isSelectedMode && orderSubItems.size > 1)
+                            (isSubsTab && !refreshing && !batchBusy && !isSelectedMode && orderSubItems.size > 1)
                         ReorderableItem(
                             state = reorderableLazyColumnState,
                             key = subItem.id,
@@ -438,7 +444,7 @@ private fun useLoadedSubsManagePage(
                                     interactionSource = interactionSource,
                                     onDragStarted = {
                                         reorderSession.startDragging()
-                                        if (!isSelectedMode) {
+                                        if (isSubsTab && !isSelectedMode) {
                                             selectionState.select(subItem.id)
                                         }
                                     },
@@ -464,7 +470,7 @@ private fun useLoadedSubsManagePage(
                                 isSelectedMode = isSelectedMode,
                                 isSelected = selectedIds.contains(subItem.id),
                                 matchingEnabled = store.enableMatch,
-                                selectionEnabled = !batchBusy && !refreshing && !reorderSession.dragging,
+                                selectionEnabled = isSubsTab && !batchBusy && !refreshing && !reorderSession.dragging,
                                 handlesLongPress = !canDrag,
                                 loadError = state.loadErrors[subItem.id],
                                 refreshError = state.refreshErrors[subItem.id],
@@ -473,11 +479,13 @@ private fun useLoadedSubsManagePage(
                                     vm.requestSubscriptionEnabled(subItem, checked)
                                 },
                                 onSelect = {
-                                    if (!batchBusy && !refreshing && !reorderSession.dragging) {
+                                    if (isSubsTab && !batchBusy && !refreshing && !reorderSession.dragging) {
                                         selectionState.select(subItem.id)
                                     }
                                 },
-                                onSelectedChange = { selectionState.toggle(subItem.id) },
+                                onSelectedChange = {
+                                    if (isSubsTab) selectionState.toggle(subItem.id)
+                                },
                             )
                         }
                     }

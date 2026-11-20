@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
@@ -76,10 +79,10 @@ fun PerfIconButton(
     contentDescription = contentDescription,
 ) {
     MiuixIconButton(
-        modifier = modifier.semantics {
-            if (onClickLabel != null) {
-                this.onClick(label = onClickLabel, action = null)
-            }
+        modifier = modifier.semantics(mergeDescendants = true) {
+            role = Role.Button
+            if (!enabled) disabled()
+            if (onClickLabel != null) this.onClick(label = onClickLabel, action = null)
         },
         enabled = enabled,
         minWidth = GkIconButtonDefaults.MinTouchTargetSize,

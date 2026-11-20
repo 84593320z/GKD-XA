@@ -403,7 +403,7 @@ private fun EditHttpPortDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
-    var value by remember { mutableStateOf(currentPort.toString()) }
+    var value by rememberSaveable(currentPort) { mutableStateOf(currentPort.toString()) }
     PerfAlertDialog(
         properties = DialogProperties(dismissOnClickOutside = false),
         title = { Text(text = UiStrings.http_port) },

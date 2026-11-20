@@ -29,10 +29,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Dialog as PlatformDialog
@@ -166,7 +169,69 @@ internal fun GkProvideDialogTextStyle(
     }
 }
 
-/** Shared Miuix dialog frame; a bounded inner height leaves scrolling to each content slot. */
+/**
+ * One shrinking viewport for icon/title/body, leaving the following action row unweighted.
+ * The viewport scrolls the header too, not just the text that a long title can otherwise starve.
+ */
+@Composable
+internal fun ColumnScope.GkDialogContent(
+    content: @Composable ColumnScope.(viewportHeight: Int) -> Unit,
+) {
+    BoxWithConstraints(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+        val viewportHeight = constraints.maxHeight
+        Column(
+            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            content(viewportHeight)
+        }
+    }
+}
+
+/**
+ * Give ordinary text its natural height in the shared scroll viewport, but never pass an
+ * infinite height to a self-scrolling/subcomposed body (e.g. a caller's LazyColumn).
+ * SubcomposeLayout intentionally has no intrinsic measurements. In that case the caller's
+ * scrolling content owns overflow inside a finite viewport, without eagerly composing a list.
+ */
+@Composable
+internal fun GkDialogBody(
+    viewportHeight: Int,
+    content: @Composable () -> Unit,
+) {
+    Layout(content = content, modifier = Modifier.fillMaxWidth()) { measurables, constraints ->
+        val placeables = measurables.map { measurable ->
+            val intrinsicHeight = try {
+                measurable.maxIntrinsicHeight(constraints.maxWidth)
+            } catch (error: IllegalStateException) {
+                if (error.message?.startsWith("Asking for intrinsic measurements of SubcomposeLayout") != true) {
+                    throw error
+                }
+                0
+            }
+            val maxHeight = maxOf(
+                viewportHeight,
+                intrinsicHeight.takeUnless { it == Constraints.Infinity } ?: 0,
+            )
+            measurable.measure(
+                Constraints.fitPrioritizingWidth(
+                    minWidth = constraints.minWidth,
+                    maxWidth = constraints.maxWidth,
+                    minHeight = 0,
+                    maxHeight = maxHeight,
+                ),
+            )
+        }
+        layout(
+            width = constraints.maxWidth,
+            height = constraints.constrainHeight(placeables.maxOfOrNull { it.height } ?: 0),
+        ) {
+            placeables.forEach { it.placeRelative(0, 0) }
+        }
+    }
+}
+
+/** Shared Miuix dialog frame; content slots stay within the actual available window height. */
 @Composable
 internal fun GkDialogSurface(
     modifier: Modifier = Modifier,
@@ -249,42 +314,45 @@ fun GkAlertDialog(
             contentColor = MiuixTheme.colorScheme.onSurface,
             shadowElevation = shadowElevation,
         ) {
-            icon?.let {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CompositionLocalProvider(
-                        LocalContentColor provides resolvedIconContentColor,
-                        content = it,
-                    )
-                }
-            }
-            title?.let {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    GkProvideDialogTextStyle(
-                        style = MiuixTheme.textStyles.title4.copy(textAlign = TextAlign.Center),
-                        contentColor = resolvedTitleContentColor,
-                        content = it,
-                    )
-                }
-            }
-            text?.let {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState()),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    GkProvideDialogTextStyle(
-                        style = MiuixTheme.textStyles.body1.copy(textAlign = TextAlign.Center),
-                        contentColor = resolvedTextContentColor,
-                        content = it,
-                    )
+            if (icon != null || title != null || text != null) {
+                GkDialogContent { viewportHeight ->
+                    icon?.let {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CompositionLocalProvider(
+                                LocalContentColor provides resolvedIconContentColor,
+                                content = it,
+                            )
+                        }
+                    }
+                    title?.let {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            GkProvideDialogTextStyle(
+                                style = MiuixTheme.textStyles.title4.copy(textAlign = TextAlign.Center),
+                                contentColor = resolvedTitleContentColor,
+                                content = it,
+                            )
+                        }
+                    }
+                    text?.let {
+                        GkDialogBody(viewportHeight) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                GkProvideDialogTextStyle(
+                                    style = MiuixTheme.textStyles.body1.copy(textAlign = TextAlign.Center),
+                                    contentColor = resolvedTextContentColor,
+                                    content = it,
+                                )
+                            }
+                        }
+                    }
                 }
             }
             FlowRow(

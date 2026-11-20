@@ -79,6 +79,11 @@ fun AiProviderModelsTab(provider: AiConfig) {
         }
     }
 
+    // The displayed list is also the complete scope of every bulk action.
+    val filteredIds = remember(filtered) { filtered.mapTo(mutableSetOf()) { it.modelId } }
+    val selectedIds = selected.intersect(filteredIds)
+    val allFilteredSelected = filteredIds.isNotEmpty() && selectedIds == filteredIds
+
     fun saveModels(models: List<AiModel>) {
         AiProviders.mutate(provider.id) { it.copy(models = models) }
     }
@@ -139,7 +144,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
                     AiRowDivider(hasLeading = false)
                     BasicComponent(
                         title = if (selectionMode) "退出多选" else "批量管理模型",
-                        summary = "多选后可一次删除；退出多选可用左侧关闭按钮",
+                        summary = "仅对当前列表多选、全选和删除；更改搜索会清空选择",
                         enabled = !fetching,
                         startAction = { AiRowIcon(imageVector = GkIcons.Check) },
                         onClick = throttle {
@@ -160,7 +165,10 @@ fun AiProviderModelsTab(provider: AiConfig) {
             item(key = "search") {
                 TextField(
                     value = query,
-                    onValueChange = { query = it },
+                    onValueChange = {
+                        if (query != it) selected = emptySet()
+                        query = it
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -191,7 +199,6 @@ fun AiProviderModelsTab(provider: AiConfig) {
                     }
                 }
             } else {
-                val visible = if (selectionMode) provider.models else filtered
                 item(key = "models_title") {
                     SmallTitle(
                         text = listTitle,
@@ -199,18 +206,18 @@ fun AiProviderModelsTab(provider: AiConfig) {
                         insideMargin = PaddingValues(start = 32.dp, end = 32.dp, top = 12.dp, bottom = 8.dp),
                     )
                 }
-                items(visible, key = { "model:${it.modelId}" }) { model ->
+                items(filtered, key = { "model:${it.modelId}" }) { model ->
                     PreferenceGroup {
                         ModelRow(
                             provider = provider,
                             model = model,
                             selectionMode = selectionMode,
-                            checked = model.modelId in selected,
+                            checked = model.modelId in selectedIds,
                             onToggleChecked = {
-                                selected = if (model.modelId in selected) {
-                                    selected - model.modelId
+                                selected = if (model.modelId in selectedIds) {
+                                    selectedIds - model.modelId
                                 } else {
-                                    selected + model.modelId
+                                    selectedIds + model.modelId
                                 }
                             },
                             onEdit = {
@@ -232,7 +239,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
             PreferenceGroup {
                 Column {
                     Text(
-                        text = "已选 ${selected.size} 个",
+                        text = "当前列表：已选 ${selectedIds.size} / ${filtered.size} 个模型",
                         style = MiuixTheme.textStyles.body2,
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
                     )
@@ -255,36 +262,38 @@ fun AiProviderModelsTab(provider: AiConfig) {
                             contentDescription = "退出多选",
                         )
                         TextButton(
-                            text = if (selected.size == provider.models.size) "取消全选" else "全选",
-                            enabled = !fetching,
+                            text = when {
+                                allFilteredSelected -> "取消全选"
+                                keyword.isNotEmpty() -> "全选匹配项"
+                                else -> "全选"
+                            },
+                            enabled = filteredIds.isNotEmpty() && !fetching,
                             modifier = Modifier.weight(1f),
                             onClick = throttle {
-                                selected = if (selected.size == provider.models.size) {
-                                    emptySet()
-                                } else {
-                                    provider.models.mapTo(mutableSetOf()) { it.modelId }
-                                }
+                                selected = if (allFilteredSelected) emptySet() else filteredIds
                             },
                         )
                         TextButton(
                             text = "删除",
-                            enabled = selected.isNotEmpty() && !fetching,
+                            enabled = selectedIds.isNotEmpty() && !fetching,
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.textButtonColorsPrimary(
                                 color = colorScheme.error,
                                 textColor = colorScheme.onError,
                             ),
                             onClick = throttle {
+                                // Confirm and delete the same visible selection, even if state changes.
+                                val idsToDelete = selectedIds
                                 scope.launch {
                                     if (!mainVm.dialogRequests.confirm(
                                             title = "删除模型",
-                                            text = "确定删除选中的 ${selected.size} 个模型？",
+                                            text = "确定删除当前列表中选中的 ${idsToDelete.size} 个模型？",
                                             confirmText = "删除",
                                             error = true,
                                         )
                                     ) return@launch
-                                    saveModels(provider.models.filterNot { it.modelId in selected })
-                                    toast("已删除 ${selected.size} 个模型")
+                                    saveModels(provider.models.filterNot { it.modelId in idsToDelete })
+                                    toast("已删除 ${idsToDelete.size} 个模型")
                                     selected = emptySet()
                                 }
                             },

@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
@@ -27,6 +29,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -345,6 +348,7 @@ private fun MiuixFloatingNavScaffold(
     }
     val glassActive = blurActive
     val floatingBarColor = if (glassActive) Color.Transparent else surfaceContainer
+    val layoutDirection = LocalLayoutDirection.current
     val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val floatingBarBody = if (liquidGlass) 72.dp + 40.dp else 52.dp + 40.dp
     val contentBottomSpace = 112.dp + navInset
@@ -387,7 +391,9 @@ private fun MiuixFloatingNavScaffold(
                             pages = pages,
                             homePager = homePager,
                             contentPadding = PaddingValues(
+                                start = padding.calculateStartPadding(layoutDirection),
                                 top = padding.calculateTopPadding(),
+                                end = padding.calculateEndPadding(layoutDirection),
                                 bottom = listBottomSpace,
                             ),
                             lightPager = lightPager,

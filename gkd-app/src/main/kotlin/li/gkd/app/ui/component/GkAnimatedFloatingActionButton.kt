@@ -1,8 +1,5 @@
 package li.gkd.app.ui.component
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationConstants.DefaultDurationMillis
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -10,12 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import li.gkd.app.ui.component.rememberGkVisibilityProgress
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +22,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import li.gkd.app.store.AppStore.storeFlow
@@ -78,43 +72,28 @@ fun GkAnimatedFloatingActionButton(
 ) {
     val density = LocalDensity.current
     val maxTranslationX = remember(density.density) { density.run { 24.dp.toPx() } }
-    var innerVisible by remember { mutableStateOf(visible) }
-    val percent = remember { Animatable(if (visible) 1f else 0f) }
-    LaunchedEffect(visible) {
-        if (visible != innerVisible) {
-            if (visible) {
-                innerVisible = true
-                percent.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = DefaultDurationMillis - elevationDurationMillis)
-                )
-            } else {
-                percent.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(durationMillis = DefaultDurationMillis - elevationDurationMillis)
-                )
-                innerVisible = false
-            }
-        }
-    }
-    if (innerVisible) {
+    val visibility = rememberGkVisibilityProgress(
+        visible = visible,
+        durationMillis = androidx.compose.animation.core.AnimationConstants.DefaultDurationMillis - elevationDurationMillis,
+    )
+    val percent = visibility.fraction
+    if (visibility.mounted) {
         val fabModifier = modifier
             .graphicsLayer(
-                alpha = percent.value,
-                translationX = (1f - percent.value) * maxTranslationX
+                alpha = percent,
+                translationX = (1f - percent) * maxTranslationX
             )
             .semantics {
                 if (contentDescription != null) {
                     this.contentDescription = contentDescription
-                }
-                if (onClickLabel != null) {
-                    this.onClick(label = onClickLabel, action = null)
                 }
             }
         GkTooltipIconButtonBox(contentDescription) {
             LiquidGlassFab(
                 onClick = throttle(onClick),
                 imageVector = imageVector,
+                enabled = visible,
+                onClickLabel = onClickLabel,
                 modifier = fabModifier,
             )
         }
@@ -125,13 +104,16 @@ fun GkAnimatedFloatingActionButton(
 private fun LiquidGlassFab(
     onClick: () -> Unit,
     imageVector: ImageVector,
+    enabled: Boolean,
     modifier: Modifier = Modifier,
+    onClickLabel: String? = null,
 ) {
     val store by storeFlow.collectAsState()
     val backdrop = LocalLayerBackdrop.current
     val isDark = LocalDarkTheme.current
     val shaderOk = isRuntimeShaderSupported()
-    val liquidOk = store.enableLiquidGlass && store.enableMiuixBlur && shaderOk && backdrop != null
+    val liquidBackdrop = if (store.enableLiquidGlass && store.enableMiuixBlur && shaderOk) backdrop else null
+    val liquidOk = liquidBackdrop != null
     val shape = remember { CircleShape }
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = if (liquidOk) surfaceContainer.copy(alpha = 0.4f) else surfaceContainer
@@ -152,7 +134,7 @@ private fun LiquidGlassFab(
             .then(
                 if (liquidOk) {
                     Modifier.drawBackdrop(
-                        backdrop = backdrop!!,
+                        backdrop = checkNotNull(liquidBackdrop),
                         shape = { shape },
                         effects = {
                             vibrancy()
@@ -173,9 +155,11 @@ private fun LiquidGlassFab(
                 },
             )
             .clickable(
+                enabled = enabled,
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Button,
+                onClickLabel = onClickLabel,
                 onClick = onClick,
             ),
         contentAlignment = Alignment.Center,

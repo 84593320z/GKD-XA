@@ -42,7 +42,6 @@ import li.gkd.app.ui.component.GkFormTextField
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkSubscriptionPageContent
-import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.ui.style.GkUi
 import li.gkd.app.util.ToastUtils.toast
 import li.gkd.app.util.json
@@ -98,7 +97,9 @@ private fun CategoryEditorContent(
         previewCategoryKey?.let(edited::getCategoryApps)
     }.orEmpty()
     val nameError = error?.takeIf { !conflict && name.isNotBlank() }
+    val nameFocusRequester = remember { FocusRequester() }
     val descriptionFocusRequester = remember { FocusRequester() }
+    var initialFocusRequested by remember { mutableStateOf(false) }
     GkEditorScaffold(
         title = if (categoryKey == null) UiStrings.category_add else UiStrings.category_edit,
         hasChanges = { name.trim() != originalName.trim() || description.trim() != originalDescription.trim() },
@@ -110,86 +111,111 @@ private fun CategoryEditorContent(
                 .fillMaxSize()
                 .padding(padding)
                 .consumeWindowInsets(padding)
-                .imePadding()
-                .padding(horizontal = GkUi.PageHorizontal, vertical = GkUi.SectionGap),
-            verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
+                .imePadding(),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap)) {
-                GkFormTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = nameError ?: UiStrings.category_name_prefix,
-                    labelMaxLines = 1,
-                    labelOverflow = TextOverflow.Ellipsis,
-                    isError = nameError != null,
-                    errorMessage = nameError ?: UiStrings.error_label,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(
-                        onNext = { descriptionFocusRequester.requestFocus() },
-                    ),
-                    modifier = Modifier.fillMaxWidth().autoFocus(immediateFocus = true),
-                )
-                GkFormTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = UiStrings.category_description,
-                    minLines = 1,
-                    maxLines = 3,
-                    modifier = Modifier.fillMaxWidth().focusRequester(descriptionFocusRequester),
-                )
-            }
-            if (conflict) {
-                Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.errorContainer)) {
-                    Column(Modifier.fillMaxWidth().padding(GkUi.ContentPadding),
-                        verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap)) {
-                        Text(UiStrings.category_edit_conflict,
-                            color = MiuixTheme.colorScheme.onErrorContainer)
-                        if (category != null) {
-                            GkActionButton(onClick = {
-                                originalCategory = categorySnapshot
-                                name = category.name
-                                description = category.desc.orEmpty()
-                                originalName = name
-                                originalDescription = description
-                            }) { Text(UiStrings.action_reload_latest) }
+            // One bounded, weighted workspace lets the form scroll with its preview under
+            // the IME or large fonts, without measuring a nested LazyColumn at infinity.
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentPadding = PaddingValues(
+                    start = GkUi.PageHorizontal,
+                    top = GkUi.SectionGap,
+                    end = GkUi.PageHorizontal,
+                    bottom = 16.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item(key = "form", contentType = "form") {
+                    // Keep both fields composed together so IME Next always has a target.
+                    Column(verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap)) {
+                        GkFormTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = nameError ?: UiStrings.category_name_prefix,
+                            labelMaxLines = 1,
+                            labelOverflow = TextOverflow.Ellipsis,
+                            isError = nameError != null,
+                            errorMessage = nameError ?: UiStrings.error_label,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(
+                                onNext = { descriptionFocusRequester.requestFocus() },
+                            ),
+                            modifier = Modifier.fillMaxWidth().focusRequester(nameFocusRequester),
+                        )
+                        GkFormTextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            label = UiStrings.category_description,
+                            minLines = 1,
+                            maxLines = 3,
+                            modifier = Modifier.fillMaxWidth().focusRequester(descriptionFocusRequester),
+                        )
+                    }
+                    LaunchedEffect(Unit) {
+                        // Do not steal focus when this lazy item is scrolled back into view.
+                        if (!initialFocusRequested) {
+                            nameFocusRequester.requestFocus()
+                            initialFocusRequested = true
                         }
                     }
                 }
-            }
-            if (!conflict && name.isNotBlank()) {
-                if (apps.isEmpty()) {
-                    Text(
-                        text = UiStrings.category_no_matching_groups,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(apps.size.toString(), style = MiuixTheme.textStyles.body2)
-                        GkIcon(
-                            imageVector = GkIcons.Android,
-                            modifier = Modifier.size(18.dp),
-                            contentDescription = UiStrings.app_count(apps.size),
-                        )
-                        val groupCount = apps.sumOf { it.groups.size }
-                        Text(groupCount.toString(), style = MiuixTheme.textStyles.body2)
-                        GkIcon(
-                            imageVector = GkIcons.FlashOn,
-                            modifier = Modifier.size(18.dp),
-                            contentDescription = UiStrings.category_group_count(groupCount),
-                        )
+                if (conflict) {
+                    item(key = "conflict", contentType = "conflict") {
+                        Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.errorContainer)) {
+                            Column(
+                                Modifier.fillMaxWidth().padding(GkUi.ContentPadding),
+                                verticalArrangement = Arrangement.spacedBy(GkUi.SectionGap),
+                            ) {
+                                Text(
+                                    UiStrings.category_edit_conflict,
+                                    color = MiuixTheme.colorScheme.onErrorContainer,
+                                )
+                                if (category != null) {
+                                    GkActionButton(onClick = {
+                                        originalCategory = categorySnapshot
+                                        name = category.name
+                                        description = category.desc.orEmpty()
+                                        originalName = name
+                                        originalDescription = description
+                                    }) { Text(UiStrings.action_reload_latest) }
+                                }
+                            }
+                        }
                     }
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        contentPadding = PaddingValues(bottom = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
+                }
+                if (!conflict && name.isNotBlank()) {
+                    if (apps.isEmpty()) {
+                        item(key = "preview_empty", contentType = "summary") {
+                            Text(
+                                text = UiStrings.category_no_matching_groups,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                    } else {
+                        item(key = "preview_summary", contentType = "summary") {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(apps.size.toString(), style = MiuixTheme.textStyles.body2)
+                                GkIcon(
+                                    imageVector = GkIcons.Android,
+                                    modifier = Modifier.size(18.dp),
+                                    contentDescription = UiStrings.app_count(apps.size),
+                                )
+                                val groupCount = apps.sumOf { it.groups.size }
+                                Text(groupCount.toString(), style = MiuixTheme.textStyles.body2)
+                                GkIcon(
+                                    imageVector = GkIcons.FlashOn,
+                                    modifier = Modifier.size(18.dp),
+                                    contentDescription = UiStrings.category_group_count(groupCount),
+                                )
+                            }
+                        }
                         apps.forEachIndexed { index, app ->
                             item(key = "app:${app.id}", contentType = "app") {
                                 GkAppNameText(
@@ -212,8 +238,10 @@ private fun CategoryEditorContent(
                                         modifier = Modifier.padding(GkUi.ContentPadding),
                                         verticalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        Text(group.name, style = MiuixTheme.textStyles.body1,
-                                            maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        Text(
+                                            group.name, style = MiuixTheme.textStyles.body1,
+                                            maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                        )
                                         group.desc?.takeIf { it.isNotBlank() }?.let {
                                             Text(
                                                 it,

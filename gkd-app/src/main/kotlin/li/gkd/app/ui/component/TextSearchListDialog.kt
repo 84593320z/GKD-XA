@@ -1,11 +1,15 @@
 package li.gkd.app.ui.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -14,11 +18,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import li.gkd.app.util.TimeUtils.throttle
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -78,24 +89,33 @@ fun TextSearchListDialog(
                     Column(
                         modifier = Modifier
                             .heightIn(max = 360.dp)
+                            .selectableGroup()
                             .verticalScroll(rememberScrollState()),
                     ) {
                         filtered.forEach { (text, onClickItem) ->
-                            Text(
-                                text = text,
-                                color = if (text == selectedText) {
-                                    MiuixTheme.colorScheme.primary
-                                } else {
-                                    Color.Unspecified
+                            val isSelected = text == selectedText
+                            BasicComponent(
+                                modifier = Modifier.semantics { selected = isSelected },
+                                insideMargin = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                                role = if (selectedText != null) Role.RadioButton else Role.Button,
+                                onClickLabel = if (selectedText != null) "选择 $text" else null,
+                                onClick = throttle {
+                                    onDismiss()
+                                    onClickItem()
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(onClick = throttle {
-                                        onDismiss()
-                                        onClickItem()
-                                    })
-                                    .padding(16.dp),
-                            )
+                                endActions = if (selectedText != null) {
+                                    {
+                                        RadioButton(
+                                            selected = isSelected,
+                                            onClick = null,
+                                            modifier = Modifier.clearAndSetSemantics {},
+                                        )
+                                    }
+                                } else null,
+                            ) {
+                                Text(text, style = MiuixTheme.textStyles.headline1,
+                                    color = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface)
+                            }
                         }
                     }
                 }

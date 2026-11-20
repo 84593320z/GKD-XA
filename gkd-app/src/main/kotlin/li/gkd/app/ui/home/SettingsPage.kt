@@ -115,9 +115,9 @@ fun useSettingsPage(): ScaffoldExt {
     val actionScope = vm.scope
 
     // ---------------- 触发提示文案 ----------------
-    var showToastInputDlg by remember { mutableStateOf(false) }
+    var showToastInputDlg by rememberSaveable { mutableStateOf(false) }
     if (showToastInputDlg) {
-        var value by remember { mutableStateOf(store.actionToast) }
+        var value by rememberSaveable { mutableStateOf(store.actionToast) }
         val maxCharLen = 64
         PerfAlertDialog(
             properties = DialogProperties(dismissOnClickOutside = false),
@@ -190,10 +190,10 @@ fun useSettingsPage(): ScaffoldExt {
     }
 
     // ---------------- 通知文案 ----------------
-    var showNotifTextInputDlg by remember { mutableStateOf(false) }
+    var showNotifTextInputDlg by rememberSaveable { mutableStateOf(false) }
     if (showNotifTextInputDlg) {
-        var titleValue by remember { mutableStateOf(store.customNotifTitle) }
-        var textValue by remember { mutableStateOf(store.customNotifText) }
+        var titleValue by rememberSaveable { mutableStateOf(store.customNotifTitle) }
+        var textValue by rememberSaveable { mutableStateOf(store.customNotifText) }
         PerfAlertDialog(
             properties = DialogProperties(dismissOnClickOutside = false),
             title = {
@@ -283,7 +283,7 @@ fun useSettingsPage(): ScaffoldExt {
     }
 
     // ---------------- 局部关闭引导 ----------------
-    var showA11yBlockDlg by remember { mutableStateOf(false) }
+    var showA11yBlockDlg by rememberSaveable { mutableStateOf(false) }
     if (showA11yBlockDlg) {
         BlockA11yDialog(onDismissRequest = { showA11yBlockDlg = false })
     }
@@ -360,9 +360,9 @@ fun useSettingsPage(): ScaffoldExt {
 
             PreferenceGroup(title = "常规", showTop = false) {
                 var showToastSettingsDlg by rememberSaveable { mutableStateOf(false) }
-                var showLiveDurationDlg by remember { mutableStateOf(false) }
+                var showLiveDurationDlg by rememberSaveable { mutableStateOf(false) }
                 if (showLiveDurationDlg) {
-                    var value by remember { mutableStateOf(store.resolveActionTipLiveDurationSec().toString()) }
+                    var value by rememberSaveable { mutableStateOf(store.resolveActionTipLiveDurationSec().toString()) }
                     val parsedSec = value.toIntOrNull()
                     val validSec = parsedSec != null &&
                         parsedSec in ActionTipNotif.MIN_DURATION_SEC..ActionTipNotif.MAX_DURATION_SEC
@@ -768,6 +768,7 @@ private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(o
                         enabled = privilegeContext == null,
                         imageVector = if (privilegeContext != null) PerfIcon.Check else PerfIcon.ArrowForward,
                         onClick = {
+                            onDismissRequest()
                             mainVm.navigatePage(PrivilegeServiceRoute)
                         },
                     )

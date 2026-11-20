@@ -266,6 +266,7 @@ private fun AppItemCard(
     onClick: () -> Unit,
 ) {
     val summary = stats?.takeIf { it.hasRules }?.description ?: appInfo.id
+    val throttledClick = throttle(onClick)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -283,7 +284,10 @@ private fun AppItemCard(
                 }
                 onClick(
                     label = if (editWhiteListMode) if (inWhiteList) UiStrings.whitelist_remove else UiStrings.whitelist_add else UiStrings.rule_summary_open,
-                    action = null
+                    action = {
+                        throttledClick()
+                        true
+                    },
                 )
             },
         insideMargin = PaddingValues(0.dp),
@@ -291,7 +295,7 @@ private fun AppItemCard(
         BasicComponent(
             title = appInfo.name,
             summary = summary,
-            onClick = throttle(onClick),
+            onClick = throttledClick,
             startAction = {
                 AppIcon(appId = appInfo.id)
             },
