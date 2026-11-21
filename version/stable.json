@@ -3,7 +3,7 @@
   "versionName": "1.5.4",
   "changelog": "v1.5.4\n\n- 完成 Miuix 界面排版、控件风格与对比度的第二轮收敛\n- 修复 AI 服务商停用项误选、重复模型选择入口与列表滚动定位\n- 统一设置行、开关、菜单、导航箭头和订阅/快照细节\n- 加强开关、单选、快照和授权状态的无障碍语义与文字可读性\n- 自动化回归、架构门禁和授权 fork 审计通过；真机 IME、TalkBack、手势及授权流程仍需单独验收",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.4/GKD-XA-v1.5.4.apk",
-  "fileSize": 0,
+  "fileSize": 5842766,
   "versionLogs": [
     {
       "name": "1.5.4",
@@ -145,5 +145,6 @@
       "code": 92,
       "desc": "- 全量 MIUIX 界面（顶栏模糊、悬浮底栏、液态玻璃 FAB）\n- 预测式返回开关；动态取色默认关闭\n- 订阅添加/修改/刷新时显示加载进度\n- 触发提示支持流体云 / 灵动岛实时通知，并可自定义存在时间"
     }
-  ]
+  ],
+  "sha256": "a032f382097b1ae8aabadfe90b5c53e1aba4890fee0dbd875dd3935d4949878a"
 }
