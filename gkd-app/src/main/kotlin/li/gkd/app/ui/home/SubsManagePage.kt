@@ -13,7 +13,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -36,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -369,11 +373,25 @@ private fun useLoadedSubsManagePage(
             )
         },
     ) { contentPadding ->
+        val layoutDirection = LocalLayoutDirection.current
+        val listContentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding())
         val reorderableLazyColumnState =
-            rememberReorderableLazyListState(lazyListState) { from, to ->
+            rememberReorderableLazyListState(
+                lazyListState = lazyListState,
+                scrollThresholdPadding = listContentPadding,
+            ) { from, to ->
                 reorderSession.move(from.index, to.index)
             }
-        Column(modifier = Modifier.padding(contentPadding).fillMaxSize()) {
+        // 底栏留白放进滚动内容；暂停提示仍在列表外，避免改变拖拽与选择索引。
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = contentPadding.calculateStartPadding(layoutDirection),
+                    top = contentPadding.calculateTopPadding(),
+                    end = contentPadding.calculateEndPadding(layoutDirection),
+                )
+                .fillMaxSize(),
+        ) {
             AnimatedVisibility(
                 visible = !store.enableMatch,
                 enter = expandVertically(expandFrom = Alignment.Top),
@@ -421,12 +439,14 @@ private fun useLoadedSubsManagePage(
             GkPullToRefresh(
                 modifier = Modifier.weight(1f),
                 state = pullToRefreshState,
+                contentPadding = listContentPadding,
                 isRefreshing = refreshing,
                 onRefresh = vm::refresh,
             ) {
                 LazyColumn(
                     state = lazyListState,
                     modifier = Modifier.fillMaxSize(),
+                    contentPadding = listContentPadding,
                 ) {
                     itemsIndexed(orderSubItems, { _, subItem -> subItem.id }) { index, subItem ->
                         // Keep the initial gesture alive after it enters selection mode.

@@ -86,6 +86,7 @@ import li.gkd.app.ui.component.rememberMultiSelectionState
 import li.gkd.app.ui.share.ListPlaceholder
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.style.GkShapes
+import li.gkd.app.ui.style.readableTextColor
 import li.gkd.app.ui.style.lineHeightDp
 import li.gkd.app.util.IMPORT_SHORT_URL
 import li.gkd.app.util.SnapshotDisplayModeOption
@@ -533,6 +534,7 @@ private fun SnapshotCard(
     val context = LocalContext.current
     val colorScheme = MiuixTheme.colorScheme
     val cardShape = GkShapes.card
+    val cardBackground = colorScheme.surfaceContainer
     val screenshotFile = snapshot.screenshotFile
     val modifiedAt = screenshotFile.lastModified()
     val cacheKey = remember(snapshot.id, modifiedAt, thumbnailVersion) {
@@ -565,8 +567,9 @@ private fun SnapshotCard(
                 }
             },
         colors = CardDefaults.defaultColors(
-            color = if (selected) colorScheme.primaryContainer else colorScheme.surfaceContainer,
-            contentColor = if (selected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceContainer,
+            // The border and checkmark show selection; keep small metadata on a neutral surface.
+            color = cardBackground,
+            contentColor = readableTextColor(cardBackground, colorScheme.onSurfaceContainer),
         ),
     ) {
         Box(
@@ -615,7 +618,10 @@ private fun SnapshotCard(
                         GkIconButton(
                             imageVector = GkIcons.MoreVert,
                             contentDescription = UiStrings.more_label,
-                            colors = GkIconButtonDefaults.iconButtonColors(contentColor = Color.White),
+                            colors = GkIconButtonDefaults.iconButtonColors(
+                                containerColor = Color.Black.copy(alpha = 0.6f),
+                                contentColor = Color.White,
+                            ),
                             onClick = onMore,
                         )
                     }
@@ -676,8 +682,11 @@ private fun SnapshotCard(
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
                 style = MiuixTheme.textStyles.footnote2,
-                color = if (activityLabel == null) colorScheme.onSurfaceVariantActions
-                    else colorScheme.onSurface,
+                color = if (activityLabel == null) {
+                    readableTextColor(cardBackground, colorScheme.onSurfaceVariantSummary)
+                } else {
+                    Color.Unspecified
+                },
             )
         }
     }

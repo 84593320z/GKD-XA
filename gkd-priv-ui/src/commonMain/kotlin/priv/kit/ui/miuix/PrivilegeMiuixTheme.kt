@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -21,6 +23,22 @@ import top.yukonga.miuix.kmp.theme.TextStyles
 
 /** Presentation tokens for the retained upstream layouts, not a Material theme bridge. */
 internal object PrivilegeMiuixTheme {
+    fun textColorForContrast(background: Color, preferred: Color): Color {
+        val surfaceLuminance = background.luminance()
+        fun contrast(foreground: Color): Float {
+            val visible = foreground.compositeOver(background).luminance()
+            val light = maxOf(visible, surfaceLuminance)
+            val dark = minOf(visible, surfaceLuminance)
+            return (light + 0.05f) / (dark + 0.05f)
+        }
+        if (contrast(preferred) >= 4.5f) return preferred
+        return if (contrast(Color.Black) >= contrast(Color.White)) {
+            Color.Black
+        } else {
+            Color.White
+        }
+    }
+
     val colorScheme: PrivilegePalette
         @Composable get() {
             val colors = MiuixTheme.colorScheme

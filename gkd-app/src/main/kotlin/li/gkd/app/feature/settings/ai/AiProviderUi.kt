@@ -1,5 +1,6 @@
 package li.gkd.app.feature.settings.ai
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
@@ -7,19 +8,26 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.PreferenceGroup
 import li.gkd.app.ui.style.GkShapes
+import li.gkd.app.ui.style.readableTextColor
 import li.gkd.app.util.TimeUtils.throttle
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
@@ -67,33 +75,78 @@ fun AiRowIcon(
     }
 }
 
-/** 能力 / 状态小胶囊。 */
+/** 能力 / 状态标签使用成对主题色，允许窄屏和大字号下自然换行。 */
 @Composable
 fun AiTagChip(
     text: String,
     emphasized: Boolean = false,
 ) {
+    val containerColor = if (emphasized) {
+        MiuixTheme.colorScheme.primary
+    } else {
+        MiuixTheme.colorScheme.secondaryVariant
+    }
+    val preferredContentColor = if (emphasized) {
+        MiuixTheme.colorScheme.onPrimary
+    } else {
+        MiuixTheme.colorScheme.onSecondaryVariant
+    }
     Text(
         text = text,
         style = MiuixTheme.textStyles.footnote2,
-        color = if (emphasized) {
-            MiuixTheme.colorScheme.onPrimaryContainer
-        } else {
-            MiuixTheme.colorScheme.onSecondaryContainer
-        },
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        color = readableTextColor(containerColor, preferredContentColor),
         modifier = Modifier
-            .background(
-                if (emphasized) {
-                    MiuixTheme.colorScheme.primaryContainer
-                } else {
-                    MiuixTheme.colorScheme.secondaryContainer
-                },
-                GkShapes.compact,
-            )
+            .background(containerColor, GkShapes.compact)
             .padding(horizontal = 6.dp, vertical = 2.dp),
     )
+}
+
+/** 单一当前服务商：独立触控区，使用 selected 而非多选的 checked 语义。 */
+@Composable
+internal fun AiProviderSelection(
+    selected: Boolean,
+    enabled: Boolean,
+    label: String,
+    onClick: () -> Unit,
+) {
+    val selection = if (enabled) {
+        Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+    } else {
+        // Keep the disabled indicator separate from the still-clickable details row.
+        Modifier.semantics(mergeDescendants = true) {
+            role = Role.RadioButton
+            this.selected = selected
+            disabled()
+        }
+    }
+    Box(
+        modifier = Modifier.size(48.dp).then(selection).semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
+        AiRadioIndicator(selected = selected, enabled = enabled)
+    }
+}
+
+/** Decorative marker. Its enclosing row or control supplies selection and accessibility. */
+@Composable
+internal fun AiRadioIndicator(selected: Boolean, enabled: Boolean = true) {
+    val colors = MiuixTheme.colorScheme
+    val color = when {
+        !enabled -> colors.disabledOnSurface
+        selected -> colors.primary
+        else -> colors.onSurface
+    }
+    Canvas(modifier = Modifier.size(24.dp)) {
+        val strokeWidth = 2.dp.toPx()
+        drawCircle(
+            color = color,
+            radius = (size.minDimension - strokeWidth) / 2,
+            style = Stroke(width = strokeWidth),
+        )
+        if (selected) {
+            drawCircle(color = color, radius = size.minDimension / 4)
+        }
+    }
 }
 
 @Composable

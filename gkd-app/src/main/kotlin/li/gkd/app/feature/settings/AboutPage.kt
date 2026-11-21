@@ -42,7 +42,7 @@ import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkPageScaffold
 import li.gkd.app.ui.component.GkRotatingLoadingIcon
 import li.gkd.app.ui.component.GkSettingItem
-import li.gkd.app.ui.component.GkTextMenu
+import li.gkd.app.ui.component.TextMenu
 import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfIconButton
 import li.gkd.app.ui.component.PreferenceGroup
@@ -207,11 +207,11 @@ fun AboutPage() {
             if (mainVm.updateStatus != null) {
                 item(key = "updates") {
                     PreferenceGroup(title = "更新") {
-                        GkTextMenu(
+                        TextMenu(
                             title = "更新渠道",
                             option = UpdateChannelOption.objects.findOption(store.updateChannel),
                         ) {
-                            if (mainVm.updateStatus.checkUpdatingFlow.value) return@GkTextMenu
+                            if (mainVm.updateStatus.checkUpdatingFlow.value) return@TextMenu
                             val selected = it
                             if (it.value == UpdateChannelOption.Beta.value) {
                                 mainVm.viewModelScope.launch {

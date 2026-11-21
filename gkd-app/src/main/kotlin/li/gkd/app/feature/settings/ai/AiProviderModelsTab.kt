@@ -1,6 +1,7 @@
 package li.gkd.app.feature.settings.ai
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -41,7 +44,6 @@ import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.ui.component.GkSizedIconButton
 import li.gkd.app.ui.component.GkTextSwitch
 import li.gkd.app.ui.component.PreferenceGroup
-import li.gkd.app.ui.component.defaultIconTint
 import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.util.TimeUtils.throttle
 import li.gkd.app.util.ToastUtils.toast
@@ -333,7 +335,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
 }
 
 @Composable
-private fun ModelRow(
+internal fun ModelRow(
     provider: AiConfig,
     model: AiModel,
     selectionMode: Boolean,
@@ -353,9 +355,14 @@ private fun ModelRow(
         },
         role = if (selectionMode) Role.Checkbox else Role.RadioButton,
         onClick = if (selectionMode) onToggleChecked else onSetCurrent,
+        onClickLabel = if (selectionMode) null else "设为当前模型",
         endActions = {
             if (selectionMode) {
-                GkCheckbox(checked = checked, key = model.modelId)
+                GkCheckbox(
+                    checked = checked,
+                    key = model.modelId,
+                    modifier = Modifier.clearAndSetSemantics {},
+                )
             } else {
                 GkSizedIconButton(
                     size = 48.dp,
@@ -365,15 +372,9 @@ private fun ModelRow(
                     imageVector = GkIcons.Edit,
                     contentDescription = "编辑",
                 )
-                GkSizedIconButton(
-                    size = 48.dp,
-                    iconSize = 24.dp,
-                    onClickLabel = if (isCurrent) "当前模型" else "设为当前模型",
-                    onClick = throttle(fn = onSetCurrent),
-                    imageVector = GkIcons.Check,
-                    contentDescription = "设为当前",
-                    tint = if (isCurrent) colorScheme.primary else defaultIconTint(),
-                )
+                Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+                    AiRadioIndicator(selected = isCurrent)
+                }
             }
         },
         bottomAction = {

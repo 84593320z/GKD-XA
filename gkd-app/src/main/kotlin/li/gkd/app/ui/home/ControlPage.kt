@@ -26,7 +26,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import li.gkd.app.META
 import li.gkd.app.MainActivity
 import li.gkd.app.MainViewModel
 import li.gkd.app.R
@@ -195,9 +194,9 @@ fun useControlPage(): ScaffoldExt {
             PreferenceGroup(title = "服务", showTop = true) {
                 if (store.useA11y || actualA11yScopeAppList.contains(topAppIdFlow.collectAsStateWithLifecycle().value)) {
                     TextSwitch(
-                        title = "服务状态",
+                        title = "无障碍服务",
                         subtitle = if (a11yRunning) {
-                            "无障碍正在运行"
+                            null
                         } else if (mainVm.a11yServiceEnabledFlow.collectAsStateWithLifecycle().value) {
                             "无障碍发生故障"
                         } else if (writeSecureSettings) {
@@ -222,9 +221,9 @@ fun useControlPage(): ScaffoldExt {
                     val uiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()
                     val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
                     TextSwitch(
-                        title = "服务状态",
+                        title = "自动化服务",
                         subtitle = if (uiAutomation != null) {
-                            "自动化正在运行"
+                            null
                         } else if (privilegeContext == null) {
                             "自动化未授权"
                         } else {
@@ -259,8 +258,6 @@ fun useControlPage(): ScaffoldExt {
                 )
             }
 
-            ServerStatusSection()
-
             PreferenceGroup(title = "快捷入口") {
                 SettingItem(
                     title = "触发记录",
@@ -291,6 +288,8 @@ fun useControlPage(): ScaffoldExt {
                     },
                 )
             }
+
+            ServerStatusSection()
 
             Spacer(modifier = Modifier.height(EmptyHeight))
         }
@@ -353,8 +352,6 @@ private fun StatusOverviewSection() {
                 ) {
                     Text(if (useA11y) "无障碍服务" else "自动化服务", style = MiuixTheme.textStyles.body2)
                     Text(statusTitle, style = MiuixTheme.textStyles.title2)
-                    Text("版本 ${META.versionName}", style = MiuixTheme.textStyles.footnote1,
-                        color = colorScheme.onSurfaceSecondary)
                 }
                 PerfIcon(imageVector = PerfIcon.KeyboardArrowRight, tint = colorScheme.onSurfaceSecondary)
             }
@@ -384,7 +381,6 @@ private fun ServerStatusSection() {
     val actionCount by actionCountFlow.collectAsStateWithLifecycle()
     val latestRecordDesc by SubscriptionState.latestRecordDescFlow.collectAsStateWithLifecycle()
     val latestRecord by SubscriptionState.latestRecordFlow.collectAsStateWithLifecycle()
-    val usedSubsItemCount = SubscriptionState.subsItemsFlow.collectAsStateWithLifecycle().value.size
     val subsStatus = ruleSummary.statusText(actionCount)
 
     PreferenceGroup(title = "数据概览") {
@@ -394,13 +390,6 @@ private fun ServerStatusSection() {
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            AnimatedVisibility(usedSubsItemCount > 0) {
-                Text(
-                    text = "已开启 $usedSubsItemCount 条订阅",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-            }
             AnimatedVisibility(subsStatus.isNotEmpty()) {
                 Text(
                     text = subsStatus,

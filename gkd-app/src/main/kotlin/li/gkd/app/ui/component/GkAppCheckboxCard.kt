@@ -72,12 +72,11 @@ fun GkAppCheckboxCard(
                     text = appInfo.id,
                     style = MiuixTheme.textStyles.body2,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    softWrap = false,
                 )
             }
-            Box(Modifier.width(68.dp).heightIn(min = GkUi.MinTouchTarget), contentAlignment = Alignment.Center) {
+            Box(Modifier.width(56.dp).heightIn(min = GkUi.MinTouchTarget), contentAlignment = Alignment.Center) {
                 GkCheckbox(key = appInfo.id, checked = checked)
             }
         }

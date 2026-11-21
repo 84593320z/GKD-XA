@@ -212,7 +212,7 @@ private fun EventLogEntry(eventLog: A11yEventLog, onClick: () -> Unit) {
                 text = if (eventLog.isStateChanged) UiStrings.event_window_state_changed
                     else UiStrings.event_window_content_changed,
                 modifier = Modifier.weight(1f),
-                style = MiuixTheme.textStyles.footnote2,
+                style = MiuixTheme.textStyles.footnote1,
                 color = color,
             )
             GkLogTimeText(eventLog.ctime)

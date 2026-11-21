@@ -190,7 +190,14 @@ object AiProviders {
     }
 
     fun setActive(id: String) {
-        updateSettings { it.copy(aiActiveProviderId = id) }
+        updateSettings { store ->
+            // A restore or edit can disable/remove a provider before its rendered row updates.
+            if (store.aiProviders.any { it.id == id && it.enabled }) {
+                store.copy(aiActiveProviderId = id)
+            } else {
+                store
+            }
+        }
     }
 
     fun mutate(id: String, transform: (AiConfig) -> AiConfig) {

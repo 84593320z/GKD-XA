@@ -6,7 +6,6 @@ import li.gkd.app.MainViewModel
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -270,7 +269,7 @@ private fun AppItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .clearAndSetSemantics {
                 contentDescription = if (editWhiteListMode) {
                     appInfo.name

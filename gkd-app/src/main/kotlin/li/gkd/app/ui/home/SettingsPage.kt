@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -849,22 +850,28 @@ private fun RequiredTextItem(
                     this
                 }
             }
-            .padding(horizontal = 4.dp),
+            .fillMaxWidth()
+            .heightIn(min = if (onClick != null) 48.dp else 0.dp)
+            .padding(horizontal = 4.dp, vertical = if (onClick != null) 4.dp else 0.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        val lineHeightDp = LocalDensity.current.let { MiuixTheme.textStyles.main.lineHeightDp(it) }
-        Spacer(
-            modifier = Modifier
-                .padding(vertical = (lineHeightDp - 4.dp) / 2)
-                .clip(CircleShape)
-                .background(MiuixTheme.colorScheme.onSurfaceVariantSummary)
-                .size(4.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = text)
+        Row(modifier = Modifier.weight(1f)) {
+            val lineHeightDp = LocalDensity.current.let { MiuixTheme.textStyles.main.lineHeightDp(it) }
+            Spacer(
+                modifier = Modifier
+                    .padding(vertical = (lineHeightDp - 4.dp) / 2)
+                    .clip(CircleShape)
+                    .background(MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                    .size(4.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = text, modifier = Modifier.weight(1f))
+        }
         if (imageVector != null) {
+            // Measure the trailing slot before the weighted text; long guidance must not hide it.
             PerfIcon(
                 imageVector = imageVector,
-                modifier = Modifier.iconTextSize(),
+                modifier = Modifier.padding(start = 8.dp).iconTextSize(),
             )
         }
     }

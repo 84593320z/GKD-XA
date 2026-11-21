@@ -3,6 +3,7 @@ package li.gkd.app.feature.subscription
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,6 +33,7 @@ import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.GkMultiSelectionActions
 import li.gkd.app.ui.component.GkMultiSelectionTopAppBar
 import li.gkd.app.ui.component.GkPageScaffold
+import li.gkd.app.ui.component.GkPreferenceArrow
 import li.gkd.app.ui.component.GkRuleListItem
 import li.gkd.app.ui.component.GkRuleStats
 import li.gkd.app.ui.component.GkRuleStatsData
@@ -184,16 +186,19 @@ private fun CategoryItemCard(
 ) {
     GkRuleListItem(onClick = onOpen, selectedMode = selectedMode, selected = selected,
         selectionEnabled = selectionEnabled, onLongClick = onLongClick, onSelect = onSelect, trailing = {
-        GkTooltipIconButtonBox(contentDescription = summary.setting.label) {
-            Box(Modifier.size(GkUi.MinTouchTarget), contentAlignment = Alignment.Center) {
-                GkIcon(
-                    imageVector = summary.setting.icon,
-                    modifier = Modifier.size(GkUi.IconSize),
-                    contentDescription = summary.setting.label,
-                    tint = if (summary.setting == CategorySetting.FollowSubscription)
-                        MiuixTheme.colorScheme.onSurfaceVariantSummary else MiuixTheme.colorScheme.primary,
-                )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            GkTooltipIconButtonBox(contentDescription = summary.setting.label) {
+                Box(Modifier.size(GkUi.MinTouchTarget), contentAlignment = Alignment.Center) {
+                    GkIcon(
+                        imageVector = summary.setting.icon,
+                        modifier = Modifier.size(GkUi.IconSize),
+                        contentDescription = summary.setting.label,
+                        tint = if (summary.setting == CategorySetting.FollowSubscription)
+                            MiuixTheme.colorScheme.onSurfaceVariantSummary else MiuixTheme.colorScheme.primary,
+                    )
+                }
             }
+            GkPreferenceArrow()
         }
     }) {
         Text(summary.category.name, style = MiuixTheme.textStyles.body1,

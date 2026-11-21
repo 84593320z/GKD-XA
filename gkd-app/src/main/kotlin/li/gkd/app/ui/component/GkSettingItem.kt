@@ -11,7 +11,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import li.gkd.app.text.UiStrings
 import li.gkd.app.util.TimeUtils.throttle
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,10 +30,18 @@ fun GkSettingItem(
     subtitleOverflow: TextOverflow = TextOverflow.Clip,
 ) {
     val trailing = imageVector.takeUnless { it == GkIcons.KeyboardArrowRight && onClick == null }
-    BasicComponent(
+    GkPreferenceRow(
         onClick = onClick?.let { throttle(fn = it) },
         onClickLabel = onClickLabel ?: UiStrings.page_enter_description(title),
-        endActions = trailing?.let { { GkIcon(it, contentDescription = null) } },
+        endActions = trailing?.let { icon ->
+            {
+                if (icon == GkIcons.KeyboardArrowRight) {
+                    GkPreferenceArrow()
+                } else {
+                    GkIcon(icon, contentDescription = null)
+                }
+            }
+        },
     ) {
         Text(title, style = MiuixTheme.textStyles.headline1.copy(fontWeight = FontWeight.Medium))
         GkPreferenceSummary(subtitle, suffix, suffixUnderline, onSuffixClick,

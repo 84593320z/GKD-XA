@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import priv.kit.ui.PrivilegeUiPermissionRestrictionStatus
 import priv.kit.ui.PrivilegeUiExternalStartSnapshot
 import priv.kit.ui.PrivilegeUiRuntimeStartPhase
@@ -404,7 +405,7 @@ internal fun PrivilegeUiScreenScope.ServiceStatusPanel() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = background,
-        contentColor = foreground,
+        contentColor = PrivilegeMiuixTheme.textColorForContrast(background, foreground),
         shape = PrivilegeMiuixTheme.shapes.medium,
     ) {
         Row(
@@ -431,7 +432,11 @@ internal fun PrivilegeUiScreenScope.ServiceStatusPanel() {
                 )
                 Text(
                     text = detail,
-                    style = PrivilegeMiuixTheme.typography.bodyMedium,
+                    style = if (action == PrivilegeUiServiceStatusAction.STOP) {
+                        PrivilegeMiuixTheme.typography.bodyMedium.copy(fontSize = 16.sp)
+                    } else {
+                        PrivilegeMiuixTheme.typography.bodyMedium
+                    },
                     // Do not truncate startup/authorization error details at larger font sizes.
                 )
             }
@@ -449,7 +454,10 @@ internal fun PrivilegeUiScreenScope.ServiceStatusPanel() {
                         ),
                     colors = PrivilegeIconButtonDefaults.filledTonalIconButtonColors(
                         containerColor = actionContainer,
-                        contentColor = actionForeground,
+                        contentColor = PrivilegeMiuixTheme.textColorForContrast(
+                            actionContainer,
+                            actionForeground,
+                        ),
                     ),
                     onClick = {
                         if (!actions.canInteract()) return@PrivilegeStatusIconButton

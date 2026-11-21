@@ -409,10 +409,10 @@ fun IosLiquidGlassNavigationBar(
                         .dropShadow(
                             shape = pillShape,
                             shadow = Shadow(
-                                radius = 10.dp,
+                                radius = 8.dp,
                                 color = Color.Black,
                                 // Lighter in light theme to avoid a visible gray fringe.
-                                alpha = if (isDark) 0.2f else 0.1f,
+                                alpha = if (isDark) 0.14f else 0.07f,
                             ),
                         )
                         .then(
@@ -421,7 +421,7 @@ fun IosLiquidGlassNavigationBar(
                                     backdrop = backdrop,
                                     shape = { pillShape },
                                     effects = {
-                                        // 24dp lens refraction + 16dp press-scale reach, raised before blur() reads it.
+                                        // Reserve lens refraction and press-scale reach before blur() reads it.
                                         padding = maxOf(padding, 40.dp.toPx())
                                         vibrancy()
                                         blur(
@@ -429,11 +429,11 @@ fun IosLiquidGlassNavigationBar(
                                             4.dp.toPx(),
                                         )
                                         lens(
-                                            refractionHeight = 24.dp.toPx(),
-                                            refractionAmount = 24.dp.toPx(),
+                                            refractionHeight = 18.dp.toPx(),
+                                            refractionAmount = 18.dp.toPx(),
                                         )
                                     },
-                                    highlight = { baseHighlight.value.copy(alpha = 0.75f) },
+                                    highlight = { baseHighlight.value.copy(alpha = 0.55f) },
                                     layerBlock = {
                                         val width = size.width.coerceAtLeast(1f)
                                         val s = lerp(1f, 1f + 16.dp.toPx() / width, dampedDrag.pressProgress)
@@ -480,8 +480,8 @@ fun IosLiquidGlassNavigationBar(
                                     vibrancy()
                                     blur(4.dp.toPx(), 4.dp.toPx())
                                     lens(
-                                        refractionHeight = 24.dp.toPx(),
-                                        refractionAmount = 24.dp.toPx(),
+                                        refractionHeight = 18.dp.toPx(),
+                                        refractionAmount = 18.dp.toPx(),
                                     )
                                 },
                                 onDrawSurface = { drawRect(containerColor) },
@@ -512,13 +512,13 @@ fun IosLiquidGlassNavigationBar(
                                 effects = {
                                     val progress = dampedDrag.pressProgress
                                     lens(
-                                        refractionHeight = 10.dp.toPx() * progress,
-                                        refractionAmount = 14.dp.toPx() * progress,
+                                        refractionHeight = 8.dp.toPx() * progress,
+                                        refractionAmount = 10.dp.toPx() * progress,
                                         depthEffect = true,
-                                        chromaticAberration = 0.5f,
+                                        chromaticAberration = 0.35f,
                                     )
                                 },
-                                highlight = { pillHighlight.value.copy(alpha = dampedDrag.pressProgress) },
+                                highlight = { pillHighlight.value.copy(alpha = 0.75f * dampedDrag.pressProgress) },
                                 layerBlock = {
                                     scaleX = dampedDrag.scaleX
                                     scaleY = dampedDrag.scaleY
@@ -537,8 +537,8 @@ fun IosLiquidGlassNavigationBar(
                             )
                             .innerShadow(shape = pillShape) {
                                 InnerShadow(
-                                    radius = 8.dp * dampedDrag.pressProgress,
-                                    color = Color.Black.copy(alpha = 0.15f),
+                                    radius = 6.dp * dampedDrag.pressProgress,
+                                    color = Color.Black.copy(alpha = 0.1f),
                                     alpha = dampedDrag.pressProgress,
                                 )
                             }
