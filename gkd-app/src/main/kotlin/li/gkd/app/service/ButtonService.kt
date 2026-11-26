@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
@@ -24,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import li.gkd.app.R
 import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.snapshot.SnapshotCapture
@@ -84,7 +86,7 @@ class ButtonService : OverlayWindowService(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     GkIcon(
                         imageVector = GkIcons.CenterFocusWeak,
-                        contentDescription = UiStrings.snapshot_button,
+                        contentDescription = stringResource(R.string.snapshot_button),
                         modifier = Modifier.size(24.dp),
                         tint = colors.primary,
                     )
