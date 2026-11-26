@@ -3,7 +3,7 @@
   "versionName": "1.5.7",
   "changelog": "v1.5.7\n\n- 悬浮按钮和菜单采用白色卡片背景，菜单文字为黑色、图标为蓝色\n- 保留拖动、单击展开、长按关闭及原有快照操作",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.7/GKD-XA-v1.5.7.apk",
-  "fileSize": 0,
+  "fileSize": 5840962,
   "versionLogs": [
     {
       "name": "1.5.7",
@@ -161,5 +161,5 @@
       "desc": "- 全量 MIUIX 界面（顶栏模糊、悬浮底栏、液态玻璃 FAB）\n- 预测式返回开关；动态取色默认关闭\n- 订阅添加/修改/刷新时显示加载进度\n- 触发提示支持流体云 / 灵动岛实时通知，并可自定义存在时间"
     }
   ],
-  "sha256": null
+  "sha256": "834ddb09e68162385a9546b46730ef7b39e1019a03fea59d1e70cd4a254e8f24"
 }
