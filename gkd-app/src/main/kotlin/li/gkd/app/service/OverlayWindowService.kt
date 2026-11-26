@@ -178,6 +178,9 @@ abstract class OverlayWindowService(
 
     open fun isViewClickEnabled(): Boolean = true
 
+    /** Allow Compose controls in an overlay to receive physical touch input. */
+    open fun shouldDispatchTouchToCompose(): Boolean = false
+
     open fun onLongClickView() {}
 
     val view by lazy {
@@ -350,6 +353,7 @@ abstract class OverlayWindowService(
         val touchSlop = ViewConfiguration.get(this).scaledTouchSlop
         @SuppressLint("ClickableViewAccessibility")
         view.setOnTouchListener { _, event ->
+            if (shouldDispatchTouchToCompose()) return@setOnTouchListener false
             if (fixMoveFlag > 0) return@setOnTouchListener true
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {

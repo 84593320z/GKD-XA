@@ -1,10 +1,15 @@
 {
-  "versionCode": 156,
-  "versionName": "1.5.5",
-  "changelog": "v1.5.5\n\n- 快照菜单拆分为“仅快照”和“快照并生成规则”；仅快照不请求 AI，自动捕获继续遵从全局 AI 开关\n- 移除加强模式及自动执行界面动作路径\n- 拒绝 AI 服务的公网 HTTP，保护 API Key 和节点数据\n- 修正帮助说明：模型请求传送节点 JSON，而非屏幕截图\n- 分享或保存完整备份前警告其中可能含服务商凭据",
-  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.5/GKD-XA-v1.5.5.apk",
-  "fileSize": 5838690,
+  "versionCode": 157,
+  "versionName": "1.5.6",
+  "changelog": "v1.5.6\n\n- 悬浮快照按钮和展开菜单统一为 Miuix 卡片、主题配色与图标样式\n- 保留拖动、单击展开和长按关闭的悬浮交互\n- 菜单继续提供“仅快照”“快照并生成规则”和“取消”选项",
+  "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.6/GKD-XA-v1.5.6.apk",
+  "fileSize": 0,
   "versionLogs": [
+    {
+      "name": "1.5.6",
+      "code": 157,
+      "desc": "- 悬浮快照按钮和展开菜单统一为 Miuix 卡片、主题配色与图标样式\n- 保留拖动、单击展开和长按关闭的悬浮交互\n- 菜单继续提供“仅快照”“快照并生成规则”和“取消”选项"
+    },
     {
       "name": "1.5.5",
       "code": 156,
@@ -151,5 +156,5 @@
       "desc": "- 全量 MIUIX 界面（顶栏模糊、悬浮底栏、液态玻璃 FAB）\n- 预测式返回开关；动态取色默认关闭\n- 订阅添加/修改/刷新时显示加载进度\n- 触发提示支持流体云 / 灵动岛实时通知，并可自定义存在时间"
     }
   ],
-  "sha256": "b991e0d3810731623027227b2ea90b4fdea3b8fe7364b1854b29175c004b82d4"
+  "sha256": null
 }

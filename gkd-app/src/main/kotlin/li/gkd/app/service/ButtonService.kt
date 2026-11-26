@@ -1,33 +1,45 @@
 package li.gkd.app.service
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import li.gkd.app.text.UiStrings
 import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.snapshot.SnapshotCapture
 import li.gkd.app.snapshot.SnapshotCaptureMode
-import li.gkd.app.ui.share.launchUi
-import li.gkd.app.ui.style.GkShapes
-import li.gkd.app.util.AiRuleGenerator
-import li.gkd.app.util.IntentUtils
+import li.gkd.app.text.UiStrings
 import li.gkd.app.ui.component.GkIcon
 import li.gkd.app.ui.component.GkIcons
+import li.gkd.app.ui.share.launchUi
+import li.gkd.app.util.AiRuleGenerator
+import li.gkd.app.util.IntentUtils
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 class ButtonService : OverlayWindowService(
     positionKey = "button"
@@ -36,40 +48,71 @@ class ButtonService : OverlayWindowService(
 
     override fun onClickView() {
         if (isOverlayContentHidden) return
-        // 展开态下动作由菜单项自己处理；这里不能再动，否则点「算了」会连带执行一次快照。
+        // 展开态下动作由菜单项自己处理；这里不能再动，否则点「取消」会连带执行一次快照。
         if (menuOpenFlow.value) return
         menuOpenFlow.value = true
     }
 
     override fun onLongClickView() = stopSelf()
 
+    override fun shouldDispatchTouchToCompose(): Boolean = menuOpenFlow.value
+
     @Composable
     override fun ComposeContent() {
         val menuOpen by menuOpenFlow.collectAsStateWithLifecycle()
+        val colors = MiuixTheme.colorScheme
         if (!menuOpen) {
-            val alpha = 0.75f
-            GkIcon(
-                imageVector = GkIcons.CenterFocusWeak,
-                modifier = Modifier
-                    .clip(GkShapes.control)
-                    .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = alpha))
-                    .size(40.dp),
-                tint = MiuixTheme.colorScheme.primary.copy(alpha = alpha),
-            )
+            // 只渲染 Miuix 外观并暴露无障碍动作；物理触摸留给 overlay host 处理拖动、点击和长按。
+            Card(
+                modifier = Modifier.size(48.dp).semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    onClick {
+                        if (isOverlayContentHidden) false else {
+                            onClickView()
+                            true
+                        }
+                    }
+                    onLongClick {
+                        if (isOverlayContentHidden) false else {
+                            onLongClickView()
+                            true
+                        }
+                    }
+                },
+                colors = CardDefaults.defaultColors(color = colors.primaryContainer),
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    GkIcon(
+                        imageVector = GkIcons.CenterFocusWeak,
+                        contentDescription = UiStrings.snapshot_button,
+                        modifier = Modifier.size(24.dp),
+                        tint = colors.primary,
+                    )
+                }
+            }
             return
         }
-        // 窗口是 WRAP_CONTENT，内容撑开它自己就变大；基类带 FLAG_NOT_FOCUSABLE，
-        // 收不到「点外部」事件，所以收起只能靠显式的「算了」项。
-        Column(
-            modifier = Modifier
-                .clip(GkShapes.control)
-                .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.94f))
-                .padding(6.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+        // 非聚焦悬浮窗收不到外部点击，始终保留一个明确的收起入口。
+        Card(
+            modifier = Modifier.width(224.dp),
+            colors = CardDefaults.defaultColors(color = colors.surfaceContainerHigh),
         ) {
-            MenuItem(UiStrings.button_menu_snapshot) { runCapture(SnapshotCaptureMode.SNAPSHOT_ONLY) }
-            MenuItem(UiStrings.button_menu_snapshot_generate) { runCapture(SnapshotCaptureMode.SNAPSHOT_AND_GENERATE) }
-            MenuItem(UiStrings.button_menu_cancel) { menuOpenFlow.value = false }
+            SmallTitle(
+                text = UiStrings.snapshot_title,
+                modifier = Modifier.semantics { heading() },
+                insideMargin = PaddingValues(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 4.dp),
+            )
+            MenuItem(UiStrings.button_menu_snapshot, GkIcons.CenterFocusWeak, colors.onSurface) {
+                runCapture(SnapshotCaptureMode.SNAPSHOT_ONLY)
+            }
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            MenuItem(UiStrings.button_menu_snapshot_generate, GkIcons.Edit, colors.primary) {
+                runCapture(SnapshotCaptureMode.SNAPSHOT_AND_GENERATE)
+            }
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            MenuItem(UiStrings.action_cancel, GkIcons.Close, colors.onSurfaceSecondary) {
+                menuOpenFlow.value = false
+            }
         }
     }
 
@@ -85,15 +128,19 @@ class ButtonService : OverlayWindowService(
     }
 
     @Composable
-    private fun MenuItem(label: String, onClick: () -> Unit) {
-        Text(
-            text = label,
-            color = MiuixTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .clip(GkShapes.control)
-                .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = 0.9f))
-                .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+    private fun MenuItem(
+        label: String,
+        icon: ImageVector,
+        iconTint: Color,
+        onClick: () -> Unit,
+    ) {
+        BasicComponent(
+            title = label,
+            modifier = Modifier.heightIn(min = 48.dp),
+            startAction = {
+                GkIcon(imageVector = icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = iconTint)
+            },
+            onClick = onClick,
         )
     }
 
