@@ -108,7 +108,7 @@ fun AiProviderModelsTab(provider: AiConfig) {
                         startAction = { AiRowIcon(imageVector = GkIcons.ArrowDownward) },
                         onClick = throttle {
                             val error = AiRuleGenerator.validateAiConfig(provider, requireModel = false)
-                            if (error != null && error != AiRuleGenerator.PUBLIC_HTTP_HINT) {
+                            if (error != null) {
                                 toast(error)
                                 return@throttle
                             }

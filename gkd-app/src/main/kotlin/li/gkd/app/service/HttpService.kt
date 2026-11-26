@@ -52,6 +52,8 @@ import li.gkd.db.LOCAL_HTTP_SUBS_ID
 import li.gkd.app.util.LogUtils
 import li.gkd.app.app
 import li.gkd.app.snapshot.SnapshotCapture
+import li.gkd.app.snapshot.SnapshotCaptureMode
+import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.util.NetworkUtils
@@ -218,7 +220,13 @@ private fun createServer(port: Int, host: String, session: DebugHttpSession) = e
                 call.respondFile(fp)
             }
             post("/captureSnapshot") {
-                call.respond(SnapshotCapture.capture())
+                val snapshot = SnapshotCapture.capture()
+                SnapshotCaptureMode.AUTOMATIC.run(
+                    capture = { snapshot.id },
+                    aiEnabled = storeFlow.value.aiEnable,
+                    generate = { id, bypass -> AiRuleGenerator.generateRule(id, allowWhenAiDisabled = bypass) },
+                )
+                call.respond(snapshot)
             }
             post("/getSnapshots") {
                 val list = SnapshotRepository.snapshots().first().mapNotNull {

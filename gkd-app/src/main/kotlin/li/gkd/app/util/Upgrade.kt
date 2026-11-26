@@ -270,8 +270,15 @@ class UpdateStatus(val scope: CoroutineScope) {
                     GkActionButton(onClick = throttle {
                         backupScope.launch {
                             try {
+                                val activity = context as? MainActivity ?: return@launch
+                                if (!activity.mainVm.dialogRequests.confirm(
+                                        title = "确认分享完整备份",
+                                        text = "完整备份包含 AI 服务商凭据和 API Key；仅分享给你信任的接收方。",
+                                        confirmText = "继续分享",
+                                    )
+                                ) return@launch
                                 val file = BackupManager.exportData()
-                                (context as? MainActivity)?.shareFile(file, "分享备份文件")
+                                activity.shareFile(file, "分享备份文件")
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {

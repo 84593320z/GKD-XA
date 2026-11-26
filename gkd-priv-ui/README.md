@@ -92,7 +92,7 @@ this is not a multiplatform-compatible replacement for third-party callers.
 - `UPSTREAM.sha256` records unmodified upstream hashes. `MODIFIED_FILES.txt`
   records the 22 modified presentation/resource-adapter files (including two
   test adapters), each of which carries a modification notice. All other
-  imported files are byte-identical.
+  imported text files are byte-identical after CRLF is normalized to LF.
 - Native API review used Miuix tag `v0.9.4`, commit
   `39c40f99844227b853f0049a0933b1f3ae6c00ba`. Miuix is an external Apache-2.0
   dependency, not copied into this module.

@@ -319,12 +319,14 @@ fun useSettingsPage(): ScaffoldExt {
             textList = listOf(
                 "分享到其他应用" to {
                     actionScope.launchUi {
+                        if (!mainVm.dialogRequests.confirm(title = "确认分享完整备份", text = "完整备份包含 AI 服务商凭据和 API Key；分享或保存前请确认文件去向安全。", confirmText = "继续分享")) return@launchUi
                         val file = vm.exportBackup()
                         context.shareFile(file, "分享备份文件")
                     }
                 },
                 "保存到下载" to {
                     actionScope.launchUi {
+                        if (!mainVm.dialogRequests.confirm(title = "确认保存完整备份", text = "完整备份包含 AI 服务商凭据和 API Key；分享或保存前请确认文件去向安全。", confirmText = "继续保存")) return@launchUi
                         FolderUtils.withTemporaryZip(
                             create = vm::exportBackup,
                             delete = FolderUtils::deleteSharedFile,

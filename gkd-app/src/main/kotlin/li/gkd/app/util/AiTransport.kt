@@ -80,6 +80,7 @@ internal class AiTransport(
     }
 
     suspend fun post(config: AiConfig, body: String): AiReply = withTimeout(limits.deadlineMillis) {
+        require(!AiApiUrls.isPublicHttpUrl(config.apiUrl)) { AiApiUrls.PUBLIC_HTTP_HINT }
         client.preparePost(AiApiUrls.buildApiEndpoint(config)) {
             applyAiHeaders(config)
             contentType(ContentType.Application.Json)
@@ -101,6 +102,7 @@ internal class AiTransport(
     }
 
     suspend fun models(config: AiConfig): String = withTimeout(limits.deadlineMillis) {
+        require(!AiApiUrls.isPublicHttpUrl(config.apiUrl)) { AiApiUrls.PUBLIC_HTTP_HINT }
         client.prepareGet(AiApiUrls.resolveModelsEndpoint(config.apiUrl, config.protocol)) {
             applyAiHeaders(config)
         }.execute { response ->

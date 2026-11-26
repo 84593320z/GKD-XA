@@ -246,7 +246,7 @@ fun AiProvidersPage() {
                 AiSection(title = "关于") {
                     BasicComponent(
                         title = "使用说明",
-                        summary = "快照生成规则的流程与加强模式",
+                        summary = "快照与规则生成说明",
                         startAction = { AiRowIcon(imageVector = GkIcons.HelpOutline) },
                         onClick = throttle { mainVm.navigatePage(AiHelpPageRoute) },
                     )

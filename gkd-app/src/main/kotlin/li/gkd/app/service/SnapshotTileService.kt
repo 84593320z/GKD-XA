@@ -10,6 +10,8 @@ import li.gkd.app.appScope
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.util.LogUtils
 import li.gkd.app.snapshot.SnapshotCapture
+import li.gkd.app.snapshot.SnapshotCaptureMode
+import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.util.ToastUtils.toast
 
 class SnapshotTileService : BaseTileService() {
@@ -53,7 +55,11 @@ private fun execSnapshot() {
             } else if (latestAppId != oldAppId) {
                 ok = true
                 LogUtils.d("SnapshotTileService::eventExecutor.execute")
-                SnapshotCapture.capture(forcedCropStatusBar = true)
+                SnapshotCaptureMode.AUTOMATIC.run(
+                    capture = { SnapshotCapture.capture(forcedCropStatusBar = true).id },
+                    aiEnabled = li.gkd.app.store.AppStore.storeFlow.value.aiEnable,
+                    generate = { id, bypass -> AiRuleGenerator.generateRule(id, allowWhenAiDisabled = bypass) },
+                )
                 break
             } else {
                 A11yRuntime.performActionBack()

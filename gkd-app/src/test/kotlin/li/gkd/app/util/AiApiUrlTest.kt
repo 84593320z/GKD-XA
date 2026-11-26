@@ -5,6 +5,8 @@ import li.gkd.app.data.settings.AiEndpointMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -303,4 +305,29 @@ class AiApiUrlTest {
             ),
         )
     }
+
+    @Test
+    fun plainHttpIsAllowedOnlyForLiteralLoopbackOrPrivateAddresses() {
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://api.example.com/v1"))
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://user@api.example.com/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://api.example.com@127.0.0.1/v1"))
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://127.0.0.1@api.example.com/v1"))
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://[invalid-ip]/v1"))
+        assertEquals(AiApiUrls.PUBLIC_HTTP_HINT, AiApiUrls.validateAiConfig(config("http://api.example.com/v1")))
+        assertFalse(AiApiUrls.isPublicHttpUrl("https://api.example.com/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://127.0.0.1:11434/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://10.2.3.4/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://172.16.0.1/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://172.31.255.255/v1"))
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://172.32.0.1/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://192.168.1.20/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://169.254.1.2/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://[::1]:8080/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://[fd12::1]:8080/v1"))
+        assertFalse(AiApiUrls.isPublicHttpUrl("http://[fe80::1]:8080/v1"))
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://service.lan/v1"))
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://service.local/v1"))
+        assertTrue(AiApiUrls.isPublicHttpUrl("http://999.999.0.1/v1"))
+    }
+
 }

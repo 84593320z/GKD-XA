@@ -305,7 +305,7 @@ fun SnapshotNodesPage(route: SnapshotNodesRoute) {
                                 onClick = {
                                     val ids = selectedIds
                                     scope.launch {
-                                        if (AiRuleGenerator.generateRule(route.snapshotId, ids, includeAllNodes)) {
+                                        if (AiRuleGenerator.generateRule(route.snapshotId, ids, includeAllNodes, allowWhenAiDisabled = true)) {
                                             mainVm.popPage()
                                         }
                                     }

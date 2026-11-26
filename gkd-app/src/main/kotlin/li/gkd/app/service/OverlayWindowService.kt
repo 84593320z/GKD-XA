@@ -203,7 +203,7 @@ abstract class OverlayWindowService(
 
     protected suspend fun <T> withAllOverlaysHidden(block: suspend () -> T): T {
         shareContext.overlayContentHidden = true
-        // 只跳过绘制是不够的：窗口还在、上一帧像素也可能还在，加强模式导出的快照里就拍到过
+        // 只跳过绘制是不够的：窗口还在、上一帧像素也可能还在，导出的快照里就拍到过
         // 整个悬浮菜单。用窗口 alpha=0 + 不可触摸把它真正从屏幕与点击链路里摘掉。
         setWindowHidden(true)
         return try {

@@ -16,6 +16,18 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 class AiTransportTest {
+    @Test fun publicHttpRequestsAreRejectedBeforeNetworkAccess() = runBlocking {
+        HttpClient(OkHttp).use { client ->
+            val config = AiConfig(apiUrl = "http://api.example.com/v1", apiKey = "secret", model = "test")
+            val postError = runCatching { AiTransport(client).post(config, "{}") }.exceptionOrNull()
+            assertTrue(postError is IllegalArgumentException)
+            assertEquals(AiApiUrls.PUBLIC_HTTP_HINT, postError?.message)
+            val modelsError = runCatching { AiTransport(client).models(config) }.exceptionOrNull()
+            assertTrue(modelsError is IllegalArgumentException)
+            assertEquals(AiApiUrls.PUBLIC_HTTP_HINT, modelsError?.message)
+        }
+    }
+
     @Test fun doneCompletesBeforeServerClosesAndCancelsUnreadBody() = runBlocking {
         StreamingServer("""data: {"choices":[{"delta":{"content":"streamed"}}]}""" + "\n\ndata: [DONE]\n\n").use { server ->
             HttpClient(OkHttp).use { client ->

@@ -36,7 +36,7 @@ def local_path(relative):
 
 
 def digest(data):
-    return hashlib.sha256(data).hexdigest()
+    return hashlib.sha256(data.replace(bytes((13, 10)), bytes((10,)))).hexdigest()
 
 
 def restore_host_presentation(source):

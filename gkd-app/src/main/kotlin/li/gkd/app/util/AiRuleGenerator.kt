@@ -1,14 +1,9 @@
 package li.gkd.app.util
 
-import android.view.accessibility.AccessibilityNodeInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
@@ -21,22 +16,14 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import li.gkd.app.a11y.A11yContext
-import li.gkd.app.a11y.A11yRuntime
-import li.gkd.app.a11y.currentTopActivity
-import li.gkd.app.a11y.ruleNow
 import li.gkd.app.app
 import li.gkd.app.appScope
-import li.gkd.app.data.NodeInfo
 import li.gkd.app.data.RawSubscription
-import li.gkd.app.data.info2nodeList
-import li.gkd.app.data.appinfo.AppInfoRepository
 import li.gkd.app.data.settings.AiConfig
 import li.gkd.app.data.settings.AiEndpointMode
 import li.gkd.app.data.settings.AiModel
 import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.data.subscription.SubscriptionRepository
-import li.gkd.app.snapshot.SnapshotCapture
 import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.db.LOCAL_SUBS_ID
 
@@ -92,8 +79,7 @@ data class ResponsesRequest(
 object AiRuleGenerator {
     private data class AiGenerateTask(
         val config: AiConfig,
-        val snapshot: AiSnapshotInput? = null,
-        val requestedContext: AiScreenContext? = null,
+        val snapshot: AiSnapshotInput
     )
 
     private val scheduler = AiTaskScheduler<AiGenerateTask>(
@@ -104,7 +90,7 @@ object AiRuleGenerator {
         },
     ) { task ->
         withContext(Dispatchers.Default) {
-            if (task.snapshot == null) processEnhanced(task) else processRule(task)
+            processRule(task)
         }
     }
     val isGenerating = scheduler.isGenerating
@@ -278,15 +264,15 @@ object AiRuleGenerator {
         Result.failure(e)
     }
 
-    private fun generationConfig(): AiConfig? {
+    private fun generationConfig(allowWhenAiDisabled: Boolean): AiConfig? {
         val settings = storeFlow.value
-        if (!settings.aiEnable) {
+        if (!settings.aiEnable && !allowWhenAiDisabled) {
             ToastUtils.toast("请先启用 AI 规则")
             return null
         }
         val config = settings.activeAiProvider()
         if (config == null || !config.usable || !config.enabled ||
-            validateAiConfig(config)?.let { it != PUBLIC_HTTP_HINT } == true) {
+            validateAiConfig(config) != null) {
             ToastUtils.toast("请先在 AI 设置中选择并配置服务商")
             return null
         }
@@ -298,9 +284,10 @@ object AiRuleGenerator {
         snapshotId: Long,
         selectedNodeIds: Set<Int> = emptySet(),
         includeAllNodes: Boolean = false,
+        allowWhenAiDisabled: Boolean = false,
     ): Boolean {
         currentCoroutineContext().ensureActive()
-        val config = generationConfig() ?: return false
+        val config = generationConfig(allowWhenAiDisabled) ?: return false
         val selection = selectedNodeIds.toSet()
         val snapshot = admitAiInput(onFailure = { error ->
             LogUtils.d("AI input preparation failed (" + error.javaClass.simpleName + ")")
@@ -314,25 +301,10 @@ object AiRuleGenerator {
         return enqueue(AiGenerateTask(config, snapshot = snapshot))
     }
 
-    suspend fun enhancedGenerate() {
-        currentCoroutineContext().ensureActive()
-        val config = generationConfig() ?: return
-        val root = A11yRuntime.getRoot() ?: return ToastUtils.toast("无法获取当前界面节点")
-        val context = withContext(Dispatchers.IO) { AiScreenContext.capture(root) }
-        val accepted = scheduler.enqueueAndAwait(AiGenerateTask(config, requestedContext = context)) {
-            ToastUtils.toast("AI 任务已加入队列")
-        }
-        if (!accepted) ToastUtils.toast("AI 任务队列已满，请稍后再试")
-    }
-
     private fun enqueue(task: AiGenerateTask): Boolean {
         val accepted = scheduler.enqueue(task)
         ToastUtils.toast(if (accepted) "AI 任务已加入队列" else "AI 任务队列已满，请稍后再试")
         return accepted
-    }
-
-    private suspend fun snapshotText(id: Long): String = withContext(Dispatchers.IO) {
-        AiSnapshotInput.readText(SnapshotRepository.snapshotFile(id))
     }
 
     private suspend fun processRule(task: AiGenerateTask) {
@@ -349,93 +321,6 @@ object AiRuleGenerator {
             }
         }
         ToastUtils.toast("AI 生成规则未通过应用范围或规则校验")
-    }
-
-    private suspend fun processEnhanced(task: AiGenerateTask) {
-        val initial = task.requestedContext ?: return
-        val beforeCapture = A11yRuntime.getRoot()
-        if (beforeCapture == null || !initial.matches(beforeCapture)) {
-            ToastUtils.toast("界面已变化，已取消增强任务")
-            return
-        }
-        val snapshot = SnapshotCapture.capture(triggerAiRule = false)
-        if (snapshot.appId != initial.appId || snapshot.activityId != initial.activityId) return
-        val candidate = AiRuleCandidate(snapshot.appId)
-        var status = "规则未通过自动验证，已保存供手动调整"
-        try {
-            val snapshotJson = snapshotText(snapshot.id)
-            val prompt = loadPrompt()
-            var content = prompt + "\n" + snapshotJson
-            for (attempt in 0 until 2) {
-                val response = withStableContext(initial) { callAiApi(task.config, content) }
-                val generated = candidate.accept(response)
-                if (generated == null) {
-                    status = "重试规则无效，已保存最近一次有效规则供手动调整"
-                    break
-                }
-                when (verifyEnhanced(initial, generated)) {
-                    AiEnhancedVerification.Result.Verified -> {
-                        status = "目标已不再命中，规则已保存"
-                        break
-                    }
-                    AiEnhancedVerification.Result.ContextChanged -> {
-                        status = "界面已变化，已停止自动验证并保存规则供手动调整"
-                        break
-                    }
-                    AiEnhancedVerification.Result.Unmatched -> {
-                        if (attempt == 0) content = prompt + "\n" + snapshotJson +
-                            "\n上次规则未通过完整条件匹配或执行后目标仍在，请修正规则：\n" + response
-                    }
-                }
-            }
-        } catch (e: AiContextChanged) {
-            status = "界面已变化，已停止自动验证并保存规则供手动调整"
-        } catch (e: CancellationException) {
-            currentCoroutineContext().ensureActive()
-            status = "增强请求已超时，已保存最近一次有效规则供手动调整"
-        } catch (_: Exception) {
-            status = "增强验证失败，已保存最近一次有效规则供手动调整"
-        }
-        val generated = candidate.latest
-        if (generated == null) {
-            ToastUtils.toast("增强任务已结束，没有通过校验的规则")
-        } else {
-            insertRuleToSubscription(generated)
-            ToastUtils.toast(status)
-        }
-    }
-
-    private suspend fun verifyEnhanced(initial: AiScreenContext, generated: RawSubscription): AiEnhancedVerification.Result {
-        val resolvedAt = ruleNow()
-        val rules = AiEnhancedRules.resolve(generated, AppInfoRepository.appInfoMapFlow.value[initial.appId], resolvedAt)
-        return withTimeout(30_000) {
-            AiEnhancedVerification(
-                getRoot = { A11yRuntime.getRoot() },
-                matchesContext = initial::matches,
-                sameWindow = initial::sameWindow,
-                refresh = { it.refresh() },
-                eligible = { AiEnhancedRules.eligible(it, initial.appId, initial.activityId) },
-                query = { rule, root ->
-                    A11yContext(getRoot = { A11yRuntime.getRoot() }, interruptable = false).queryRule(rule, root)
-                },
-                perform = { rule, target -> rule.performAction(target).result },
-            ).run(rules, resolvedAt)
-        }
-    }
-
-    private suspend fun <T> withStableContext(context: AiScreenContext, block: suspend () -> T): T = coroutineScope {
-        val request = async { block() }
-        val watcher = launch {
-            while (request.isActive) {
-                delay(1000)
-                val root = A11yRuntime.getRoot()
-                if (root == null || !context.matches(root)) {
-                    request.cancel(AiContextChanged())
-                    return@launch
-                }
-            }
-        }
-        try { request.await() } finally { watcher.cancel() }
     }
 
     private suspend fun callAiApi(config: AiConfig, userContent: String): String = withTimeout(180_000) {
@@ -477,6 +362,12 @@ object AiRuleGenerator {
         error("AI request exceeded retry limit")
     }
 
+    private val JsonElement?.jsonArrayOrNull: JsonArray? get() = this as? JsonArray
+    private fun JsonElement?.objectOrNull(): JsonObject? = this as? JsonObject
+    private fun JsonElement?.intOrNullValue(): Int? = (this as? JsonPrimitive)?.intOrNull
+    private fun JsonElement?.boolOrNullValue(): Boolean? = (this as? JsonPrimitive)?.booleanOrNull
+    private fun JsonObject.intOf(key: String): Int? = this[key].intOrNullValue()
+
     private suspend fun insertRuleToSubscription(generated: RawSubscription): Int {
         var inserted = 0
         val updated = SubscriptionRepository.update(LOCAL_SUBS_ID) { current ->
@@ -490,29 +381,3 @@ object AiRuleGenerator {
         return inserted
     }
 }
-
-private class AiContextChanged : CancellationException("AI screen context changed")
-
-private data class AiScreenContext(
-    val appId: String,
-    val activityId: String?,
-    val windowId: Int,
-    val top: li.gkd.app.a11y.TopActivity,
-    val nodes: List<NodeInfo>,
-) {
-    fun sameWindow(root: AccessibilityNodeInfo): Boolean = root.packageName?.toString() == appId &&
-        root.windowId == windowId && currentTopActivity == top
-    fun matches(root: AccessibilityNodeInfo): Boolean = sameWindow(root) && info2nodeList(root) == nodes
-    companion object {
-        fun capture(root: AccessibilityNodeInfo): AiScreenContext {
-            val top = currentTopActivity
-            return AiScreenContext(root.packageName.toString(), top.activityId, root.windowId, top, info2nodeList(root))
-        }
-    }
-}
-
-private val JsonElement?.jsonArrayOrNull: JsonArray? get() = this as? JsonArray
-private fun JsonElement?.objectOrNull(): JsonObject? = this as? JsonObject
-private fun JsonElement?.intOrNullValue(): Int? = (this as? JsonPrimitive)?.intOrNull
-private fun JsonElement?.boolOrNullValue(): Boolean? = (this as? JsonPrimitive)?.booleanOrNull
-private fun JsonObject.intOf(key: String): Int? = this[key].intOrNullValue()

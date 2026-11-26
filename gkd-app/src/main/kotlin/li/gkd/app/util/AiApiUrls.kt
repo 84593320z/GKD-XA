@@ -2,6 +2,9 @@ package li.gkd.app.util
 
 import li.gkd.app.data.settings.AiConfig
 import li.gkd.app.data.settings.AiEndpointMode
+import java.net.Inet6Address
+import java.net.InetAddress
+import java.net.URI
 
 /**
  * AI 服务地址处理与配置预检：纯函数集合，不依赖 Android/应用状态，可直接跑 JVM 单元测试
@@ -79,12 +82,17 @@ fun apiHostOf(url: String): String {
 /** 本机 / 局域网的地址默认用 http，其余默认 https */
 private fun isLocalApiHost(host: String): Boolean {
     val name = host.trim('[', ']').lowercase()
-    if (name == "localhost" || name == "::1" || name == "0.0.0.0") return true
-    if (name.endsWith(".local") || name.endsWith(".lan")) return true
+    if (name == "localhost" || name == "0.0.0.0") return true
+    if (':' in name) {
+        val address = runCatching { InetAddress.getByName(name) }.getOrNull() ?: return false
+        val uniqueLocal = address is Inet6Address && (address.address[0].toInt() and 0xfe) == 0xfc
+        return address.isAnyLocalAddress || address.isLoopbackAddress || address.isLinkLocalAddress ||
+            address.isSiteLocalAddress || uniqueLocal
+    }
     val octets = name.split('.')
     if (octets.size != 4) return false
-    val parts = octets.map { it.toIntOrNull() ?: return false }
-    return parts[0] == 10 || parts[0] == 127 ||
+    val parts = octets.map { it.toIntOrNull()?.takeIf { value -> value in 0..255 } ?: return false }
+    return parts[0] == 10 || parts[0] == 127 || (parts[0] == 169 && parts[1] == 254) ||
         (parts[0] == 192 && parts[1] == 168) ||
         (parts[0] == 172 && parts[1] in 16..31)
 }
@@ -233,8 +241,16 @@ private fun anthropicProtocolHint(url: String, protocol: String): String? {
     fun buildApiEndpoint(config: AiConfig): String =
         resolveEndpoint(config.apiUrl, config.protocol, config.endpointMode)
 
-    /** 公网明文 http 的提示文案；[validateAiConfig] 会返回它，保存/测试时不当作硬错误拦截。 */
-    const val PUBLIC_HTTP_HINT = "API 地址建议使用 https（公网明文 http 可能被服务方拒绝）"
+    /** Plaintext requests are allowed only to literal loopback/private hosts. */
+    const val PUBLIC_HTTP_HINT = "公网 AI 地址必须使用 HTTPS；HTTP 仅允许本机或私有地址"
+
+    fun isPublicHttpUrl(apiUrl: String): Boolean {
+        val normalized = fixApiUrl(apiUrl, "openai")
+        if (!normalized.startsWith("http://")) return false
+        val uri = runCatching { URI(normalized) }.getOrNull() ?: return true
+        val host = uri.host ?: return true
+        return !isLocalApiHost(host)
+    }
 
     /**
      * 常见配置错误的本地预检，返回错误提示；null 表示通过。
@@ -252,7 +268,7 @@ private fun anthropicProtocolHint(url: String, protocol: String): String? {
         return when {
             raw.isEmpty() -> "请填写 API 地址"
             url.isEmpty() || !url.startsWith("http") -> "API 地址无效，请检查域名和端口"
-            url.startsWith("http://") && !isLocalApiHost(apiHostOf(url)) -> PUBLIC_HTTP_HINT
+            isPublicHttpUrl(url) -> PUBLIC_HTTP_HINT
             // Azure 的路径是 /openai/deployments/<部署名>/chat/completions?api-version=...
             azure && (!endpointPath.contains("/openai/deployments/") ||
                 !endpointPath.endsWith("/chat/completions")) ->

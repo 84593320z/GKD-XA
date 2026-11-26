@@ -21,6 +21,7 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.permission.PermissionStates
 import li.gkd.app.snapshot.SnapshotCapture
+import li.gkd.app.snapshot.SnapshotCaptureMode
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.AiRuleGenerator
@@ -66,15 +67,21 @@ class ButtonService : OverlayWindowService(
                 .padding(6.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            MenuItem(UiStrings.button_menu_snapshot) { runMenuItem { withAllOverlaysHidden { SnapshotCapture.capture() } } }
-            MenuItem(UiStrings.button_menu_enhanced) { runMenuItem { withAllOverlaysHidden { AiRuleGenerator.enhancedGenerate() } } }
+            MenuItem(UiStrings.button_menu_snapshot) { runCapture(SnapshotCaptureMode.SNAPSHOT_ONLY) }
+            MenuItem(UiStrings.button_menu_snapshot_generate) { runCapture(SnapshotCaptureMode.SNAPSHOT_AND_GENERATE) }
             MenuItem(UiStrings.button_menu_cancel) { menuOpenFlow.value = false }
         }
     }
 
-    private fun runMenuItem(block: suspend () -> Unit) {
+    private fun runCapture(mode: SnapshotCaptureMode) {
         menuOpenFlow.value = false
-        lifecycleScope.launchUi { block() }
+        lifecycleScope.launchUi {
+            mode.run(
+                capture = { withAllOverlaysHidden { SnapshotCapture.capture().id } },
+                aiEnabled = li.gkd.app.store.AppStore.storeFlow.value.aiEnable,
+                generate = { id, bypass -> AiRuleGenerator.generateRule(id, allowWhenAiDisabled = bypass) },
+            )
+        }
     }
 
     @Composable

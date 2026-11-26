@@ -18,7 +18,6 @@ import kotlinx.coroutines.withContext
 import li.gkd.app.text.UiStrings
 import li.gkd.app.a11y.A11yRuntime
 import li.gkd.app.a11y.currentTopActivity
-import li.gkd.app.appScope
 import li.gkd.app.data.ComplexSnapshot
 import li.gkd.app.data.RpcError
 import li.gkd.app.data.info2nodeList
@@ -27,7 +26,6 @@ import li.gkd.app.priv.privilegeContextFlow
 import li.gkd.app.service.ScreenshotService
 import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.store.AppStore.storeFlow
-import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.AutomatorModeOption
 import li.gkd.app.util.BarUtils
@@ -36,7 +34,6 @@ import li.gkd.app.util.LogUtils
 import li.gkd.app.util.ScreenUtils
 import li.gkd.app.util.SystemDownloads
 import li.gkd.app.util.getShowActivityId
-import li.gkd.app.util.launchLogged
 import li.gkd.app.util.px
 import li.gkd.app.util.ToastUtils.toast
 import kotlin.math.min
@@ -236,14 +233,9 @@ object SnapshotCapture {
         return ScreenResult(processedBitmap, status)
     }
 
-    /**
-     * [triggerAiRule]：本次截图后是否顺带触发一次普通 AI 生成（沿用「快照即生成规则」的老行为）。
-     * 加强模式自己会调模型并执行验证，必须传 false —— 否则同一次操作会并发跑两次生成、
-     * 插入两条规则、烧两份 token（此前就是如此）。
-     */
+    /** Captures and saves locally. Rule generation is an independent, explicit action. */
     suspend fun capture(
         forcedCropStatusBar: Boolean = false,
-        triggerAiRule: Boolean = true,
         // 保留状态栏不裁剪（对齐 plus 6417d3d）：后续要在截图上按节点坐标圈选组件时，
         // 裁过的截图会与节点坐标系错位，需要整屏原图。
         keepStatusBar: Boolean = false,
@@ -327,11 +319,6 @@ object SnapshotCapture {
                 UiStrings.snapshot_saved_warning(statusDetail)
             }
             toast(toastText, forced = true)
-            if (triggerAiRule && storeFlow.value.aiEnable) {
-                appScope.launchLogged {
-                    AiRuleGenerator.generateRule(snapshot.id)
-                }
-            }
             return snapshot
         } finally {
             captureMutex.unlock()

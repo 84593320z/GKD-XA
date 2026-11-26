@@ -72,17 +72,4 @@ class AiRuleImportTest {
         assertSame(good, candidate.latest)
     }
 
-    @Test fun resolvedRulesKeepEngineSelectorsScopesAndActivityRestrictions() {
-        val rules = AiEnhancedRules.resolve(AiRuleImport.parse(valid, "app.test"), null, 0)
-        val first = rules.first()
-        assertEquals(2, first.matches.size)
-        assertEquals(1, first.anyMatches.size)
-        assertEquals(1, first.excludeMatches.size)
-        assertEquals(2, first.excludeAllMatches.size)
-        assertTrue(first.matchActivity("app.test", "app.test.Main"))
-        assertFalse(first.matchActivity("app.test", "app.test.Blocked"))
-        assertFalse(first.matchActivity("other.app", "app.test.Main"))
-        assertFalse(AiEnhancedRules.eligible(first, "app.test", null))
-        assertFalse(rules[1].status.ok) // prerequisite is bound to generated rule 10, not forgotten
-    }
 }

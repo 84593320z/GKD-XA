@@ -147,7 +147,7 @@ private fun AdvancedContent() {
                 )
                 TextSwitch(
                     title = "启用 AI 规则",
-                    subtitle = "保存快照后按当前服务商自动生成规则",
+                    subtitle = "此开关控制自动捕获；手动选择“快照并生成规则”仍会生成",
                     checked = store.aiEnable,
                     onCheckedChange = { enabled ->
                         if (enabled && store.activeAiProvider()?.usable != true) {

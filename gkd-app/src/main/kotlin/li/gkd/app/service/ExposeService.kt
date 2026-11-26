@@ -15,6 +15,8 @@ import li.gkd.app.notif.NotificationCatalog
 import li.gkd.app.platform.lifecycle.RuntimeStateSynchronizer
 import li.gkd.app.util.LogUtils
 import li.gkd.app.snapshot.SnapshotCapture
+import li.gkd.app.snapshot.SnapshotCaptureMode
+import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.util.componentName
 import li.gkd.app.util.runMainPost
@@ -52,7 +54,11 @@ class ExposeService : Service() {
         LogUtils.d("ExposeService::handleIntent", expose, data)
         when (expose) {
             -1 -> StatusService.autoStart()
-            0 -> SnapshotCapture.capture()
+            0 -> SnapshotCaptureMode.AUTOMATIC.run(
+                capture = { SnapshotCapture.capture().id },
+                aiEnabled = li.gkd.app.store.AppStore.storeFlow.value.aiEnable,
+                generate = { id, bypass -> AiRuleGenerator.generateRule(id, allowWhenAiDisabled = bypass) },
+            )
             1 -> {
                 toast(UiStrings.execution_success, forced = true)
                 RuntimeStateSynchronizer.requestSync()

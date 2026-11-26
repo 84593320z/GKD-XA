@@ -16,6 +16,8 @@ import li.gkd.app.store.AppStore.storeFlow
 import li.gkd.app.util.LogUtils
 import li.gkd.app.util.ScreenUtils
 import li.gkd.app.snapshot.SnapshotCapture
+import li.gkd.app.snapshot.SnapshotCaptureMode
+import li.gkd.app.util.AiRuleGenerator
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.util.UpdateTimeOption
 import li.gkd.app.util.launchLogged
@@ -89,7 +91,11 @@ private fun watchCaptureScreenshot() {
         if (it == null) return
     }
     appScope.launchLogged {
-        SnapshotCapture.capture()
+        SnapshotCaptureMode.AUTOMATIC.run(
+            capture = { SnapshotCapture.capture().id },
+            aiEnabled = storeFlow.value.aiEnable,
+            generate = { id, bypass -> AiRuleGenerator.generateRule(id, allowWhenAiDisabled = bypass) },
+        )
     }
 }
 
@@ -122,7 +128,11 @@ private fun createVolumeReceiver() = object : BroadcastReceiver() {
             if (t - lastVolumeTriggerTime > 3000 && !ScreenUtils.isScreenLock()) {
                 lastVolumeTriggerTime = t
                 appScope.launchLogged {
-                    SnapshotCapture.capture()
+                    SnapshotCaptureMode.AUTOMATIC.run(
+                        capture = { SnapshotCapture.capture().id },
+                        aiEnabled = storeFlow.value.aiEnable,
+                        generate = { id, bypass -> AiRuleGenerator.generateRule(id, allowWhenAiDisabled = bypass) },
+                    )
                 }
             }
         }
