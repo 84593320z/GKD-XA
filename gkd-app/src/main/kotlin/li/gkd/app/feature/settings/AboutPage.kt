@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -65,7 +65,7 @@ data object AboutRoute : NavKey
 @Composable
 fun AboutPage() {
     val mainVm = MainViewModel.requireCurrent()
-    val store by storeFlow.collectAsState()
+    val store by storeFlow.collectAsStateWithLifecycle()
     val primaryColor = MiuixTheme.colorScheme.primary
     var showInfoDlg by rememberSaveable { mutableStateOf(false) }
     var showShareAppDlg by rememberSaveable { mutableStateOf(false) }
@@ -235,7 +235,7 @@ fun AboutPage() {
                             endActions = {
                                 GkRotatingLoadingIcon(
                                     loading = mainVm.updateStatus.checkUpdatingFlow
-                                        .collectAsState().value,
+                                        .collectAsStateWithLifecycle().value,
                                 )
                             },
                         )

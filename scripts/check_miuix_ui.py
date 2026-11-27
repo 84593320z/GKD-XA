@@ -21,6 +21,9 @@ def audit():
         imports = re.findall(r"^import (androidx\.compose\.material\.[^\n]+)", text, re.M)
         if any(not name.startswith("androidx.compose.material.icons.") for name in imports):
             errors.append(f"Material renderer reintroduced: {path.relative_to(ROOT)}")
+        rel = path.relative_to(ROOT).as_posix()
+        if ("/ui/" in rel or "/feature/" in rel) and re.search(r"\.collectAsState\s*\(", text):
+            errors.append(f"Use collectAsStateWithLifecycle instead of collectAsState: {rel}")
     build = (ROOT / "gkd-app/build.gradle.kts").read_text()
     if 'implementation(project(":gkd-priv-ui"))' not in build:
         errors.append("The application must use the reviewed local authorization renderer")

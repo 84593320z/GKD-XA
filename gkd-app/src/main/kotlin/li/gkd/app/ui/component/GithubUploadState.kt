@@ -314,6 +314,7 @@ class GithubUploadState(
             null -> Unit
             is GithubUploadStatus.Loading -> {
                 GkAlertDialog(
+                    properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
                     title = { Text(UiStrings.upload_file_progress) },
                     text = {
                         if (visibleStatus.batch) {

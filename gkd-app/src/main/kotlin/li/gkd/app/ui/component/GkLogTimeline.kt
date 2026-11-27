@@ -123,7 +123,7 @@ fun <T : Any> GkLogTimeline(
                     }
                 }
                 append is LoadState.Error -> GkLogLoadError(append.error, onRetry = items::retry)
-                items.itemCount == 0 -> GkEmptyState(text = UiStrings.data_empty)
+                items.itemCount == 0 -> GkEmptyState(text = UiStrings.data_empty, icon = PerfIcon.History)
                 append is LoadState.Loading -> {
                     Box(Modifier.fillMaxWidth().padding(GkUi.ContentPadding), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(modifier = Modifier.size(GkUi.IconSize))

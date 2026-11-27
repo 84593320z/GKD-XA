@@ -2,13 +2,16 @@ package li.gkd.app.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import li.gkd.app.ui.component.rememberGkVisibilityProgress
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -108,20 +111,41 @@ private fun LiquidGlassFab(
     modifier: Modifier = Modifier,
     onClickLabel: String? = null,
 ) {
-    val store by storeFlow.collectAsState()
     val backdrop = LocalLayerBackdrop.current
     val isDark = LocalDarkTheme.current
     val shaderOk = isRuntimeShaderSupported()
-    val liquidBackdrop = if (store.enableLiquidGlass && store.enableMiuixBlur && shaderOk) backdrop else null
+    val liquidEnabled = if (backdrop != null && shaderOk) {
+        val store by storeFlow.collectAsStateWithLifecycle()
+        store.enableLiquidGlass && store.enableMiuixBlur
+    } else {
+        false
+    }
+    val liquidBackdrop = if (liquidEnabled) backdrop else null
     val liquidOk = liquidBackdrop != null
     val shape = remember { CircleShape }
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
-    val containerColor = if (liquidOk) surfaceContainer.copy(alpha = 0.4f) else surfaceContainer
-    val iconTint = MiuixTheme.colorScheme.onSurface
     val interaction = remember { MutableInteractionSource() }
+    val isPressed by interaction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 600f),
+        label = "FabPressScale",
+    )
+    val containerColor = if (liquidOk) {
+        surfaceContainer.copy(alpha = if (isPressed) 0.56f else 0.4f)
+    } else if (isPressed) {
+        MiuixTheme.colorScheme.secondaryContainer
+    } else {
+        surfaceContainer
+    }
+    val iconTint = MiuixTheme.colorScheme.onSurface
 
     Box(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .size(56.dp)
             .dropShadow(
                 shape = shape,

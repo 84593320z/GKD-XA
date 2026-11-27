@@ -2,16 +2,22 @@ package li.gkd.app.ui.home
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,6 +70,7 @@ import li.gkd.app.ui.icon.GkPrivilegeConnectionIcon
 import li.gkd.app.ui.share.statusText
 import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.ui.style.EmptyHeight
+import li.gkd.app.ui.style.GkUi
 import li.gkd.app.ui.style.StatusColors
 import li.gkd.app.util.HOME_PAGE_URL
 import li.gkd.app.util.TimeUtils.throttle
@@ -141,6 +150,12 @@ fun useControlPage(): ScaffoldExt {
         val manageRunning by StatusService.isRunning.collectAsStateWithLifecycle()
         val writeSecureSettings by PermissionStates.writeSecureSettings.stateFlow.collectAsStateWithLifecycle()
         val appOpsRestricted by PermissionStates.appOpsRestrictedFlow.collectAsStateWithLifecycle()
+        val topAppId by topAppIdFlow.collectAsStateWithLifecycle()
+        val a11yServiceEnabled by mainVm.a11yServiceEnabledFlow.collectAsStateWithLifecycle()
+        val a11yPartDisabled by a11yPartDisabledFlow.collectAsStateWithLifecycle()
+        val uiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()
+        val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
+        val activityServiceRunning by ActivityService.isRunning.collectAsStateWithLifecycle()
 
         Column(
             modifier = Modifier
@@ -192,15 +207,15 @@ fun useControlPage(): ScaffoldExt {
             StatusOverviewSection()
 
             PreferenceGroup(title = "服务", showTop = true) {
-                if (store.useA11y || actualA11yScopeAppList.contains(topAppIdFlow.collectAsStateWithLifecycle().value)) {
+                if (store.useA11y || actualA11yScopeAppList.contains(topAppId)) {
                     TextSwitch(
                         title = "无障碍服务",
                         subtitle = if (a11yRunning) {
                             null
-                        } else if (mainVm.a11yServiceEnabledFlow.collectAsStateWithLifecycle().value) {
+                        } else if (a11yServiceEnabled) {
                             "无障碍发生故障"
                         } else if (writeSecureSettings) {
-                            if (store.enableAutomator && a11yPartDisabledFlow.collectAsStateWithLifecycle().value) {
+                            if (store.enableAutomator && a11yPartDisabled) {
                                 "无障碍局部关闭"
                             } else {
                                 "无障碍已关闭"
@@ -218,8 +233,6 @@ fun useControlPage(): ScaffoldExt {
                         },
                     )
                 } else {
-                    val uiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()
-                    val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
                     TextSwitch(
                         title = "自动化服务",
                         subtitle = if (uiAutomation != null) {
@@ -227,7 +240,7 @@ fun useControlPage(): ScaffoldExt {
                         } else if (privilegeContext == null) {
                             "自动化未授权"
                         } else {
-                            if (store.enableAutomator && a11yPartDisabledFlow.collectAsStateWithLifecycle().value) {
+                            if (store.enableAutomator && a11yPartDisabled) {
                                 "自动化局部关闭"
                             } else {
                                 "自动化已关闭"
@@ -268,7 +281,7 @@ fun useControlPage(): ScaffoldExt {
                     },
                 )
 
-                if (ActivityService.isRunning.collectAsStateWithLifecycle().value) {
+                if (activityServiceRunning) {
                     SettingItem(
                         title = "界面日志",
                         subtitle = "记录打开的应用及界面",
@@ -303,6 +316,8 @@ private fun StatusOverviewSection() {
     val a11yRunning by A11yService.isRunning.collectAsStateWithLifecycle()
     val writeSecureSettings by PermissionStates.writeSecureSettings.stateFlow.collectAsStateWithLifecycle()
     val appOpsRestricted by PermissionStates.appOpsRestrictedFlow.collectAsStateWithLifecycle()
+    val topAppId by topAppIdFlow.collectAsStateWithLifecycle()
+    val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
     val colorScheme = MiuixTheme.colorScheme
     val subsCount = SubscriptionState.subsItemsFlow.collectAsStateWithLifecycle().value.size
     // 口径必须与「应用」Tab 一致：AppListPage 用 visibleAppInfosFlow 建列表。
@@ -310,17 +325,18 @@ private fun StatusOverviewSection() {
     // size 等于订阅数量，所以「应用」卡片显示的一直是订阅数。
     val appCount = AppInfoRepository.visibleAppInfosFlow.collectAsStateWithLifecycle().value.size
 
-    val useA11y = store.useA11y || actualA11yScopeAppList.contains(topAppIdFlow.collectAsStateWithLifecycle().value)
+    val useA11y = store.useA11y || actualA11yScopeAppList.contains(topAppId)
     val uiAutomation by uiAutomationFlow.collectAsStateWithLifecycle()
     val serviceRunning = if (useA11y) a11yRunning else uiAutomation != null
     val statusColors = StatusColors.serviceStatus(running = serviceRunning)
+    val animatedContainerColor by animateColorAsState(targetValue = statusColors.container, animationSpec = tween(250), label = "StatusCardContainer")
+    val animatedIconColor by animateColorAsState(targetValue = statusColors.icon, animationSpec = tween(250), label = "StatusCardIcon")
 
     val statusTitle = if (serviceRunning) {
         "运行中"
     } else if (useA11y) {
         if (writeSecureSettings) "未运行" else "未授权"
     } else {
-        val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
         if (privilegeContext != null) "未运行" else "未授权"
     }
 
@@ -331,24 +347,36 @@ private fun StatusOverviewSection() {
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.defaultColors(color = statusColors.container, contentColor = colorScheme.onSurface),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    onClick(label = "前往工作模式与权限页面", action = null)
+                },
+            colors = CardDefaults.defaultColors(color = animatedContainerColor, contentColor = colorScheme.onSurface),
             onClick = throttle { mainVm.navigatePage(PrivilegeServiceRoute) },
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Icon(
-                    modifier = Modifier.size(32.dp),
-                    imageVector = if (serviceRunning) PerfIcon.Check else PerfIcon.WarningAmber,
-                    tint = statusColors.icon,
-                    contentDescription = null,
-                )
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(animatedIconColor.copy(alpha = 0.14f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(26.dp),
+                        imageVector = if (serviceRunning) PerfIcon.Check else PerfIcon.WarningAmber,
+                        tint = animatedIconColor,
+                        contentDescription = null,
+                    )
+                }
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(if (useA11y) "无障碍服务" else "自动化服务", style = MiuixTheme.textStyles.body2)
                     Text(statusTitle, style = MiuixTheme.textStyles.title2)
@@ -358,19 +386,74 @@ private fun StatusOverviewSection() {
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            DashboardMetric("订阅", subsCount, modifier = Modifier.weight(1f),
-                onClick = throttle { mainVm.handleClickTab(BottomNavItem.SubsManage) })
-            DashboardMetric("应用", appCount, modifier = Modifier.weight(1f),
-                onClick = throttle { mainVm.handleClickTab(BottomNavItem.AppList) })
+            DashboardMetric(
+                label = "订阅",
+                count = subsCount,
+                icon = PerfIcon.Layers,
+                modifier = Modifier.weight(1f),
+                onClick = throttle { mainVm.handleClickTab(BottomNavItem.SubsManage) },
+            )
+            DashboardMetric(
+                label = "应用",
+                count = appCount,
+                icon = PerfIcon.Apps,
+                modifier = Modifier.weight(1f),
+                onClick = throttle { mainVm.handleClickTab(BottomNavItem.AppList) },
+            )
         }
     }
 }
 
 @Composable
-private fun DashboardMetric(label: String, count: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Card(modifier = modifier, insideMargin = PaddingValues(16.dp), onClick = onClick) {
-        Text(text = count.toString(), style = MiuixTheme.textStyles.title2)
-        Text(text = label, style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+private fun DashboardMetric(
+    label: String,
+    count: Int,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = modifier.semantics(mergeDescendants = true) {
+            role = Role.Button
+            onClick(label = "切换到${label}页面", action = null)
+        },
+        insideMargin = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+        onClick = onClick,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(text = count.toString(), style = MiuixTheme.textStyles.title2)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    PerfIcon(
+                        imageVector = icon,
+                        modifier = Modifier.size(14.dp),
+                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        contentDescription = null,
+                    )
+                    Text(
+                        text = label,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
+            }
+            PerfIcon(
+                imageVector = PerfIcon.KeyboardArrowRight,
+                modifier = Modifier.size(18.dp),
+                tint = MiuixTheme.colorScheme.onSurfaceSecondary,
+                contentDescription = null,
+            )
+        }
     }
 }
 
@@ -400,7 +483,10 @@ private fun ServerStatusSection() {
             if (latestRecordDesc != null) {
                 Row(
                     modifier = Modifier
-                        .squircleClip(cornerRadius = 8.dp)
+                        .fillMaxWidth()
+                        .heightIn(min = GkUi.MinTouchTarget)
+                        .squircleClip(cornerRadius = 10.dp)
+                        .background(MiuixTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f))
                         .clickable(onClickLabel = "前往应用的规则汇总页面", onClick = throttle {
                             latestRecord?.let {
                                 mainVm.navigatePage(
@@ -411,8 +497,7 @@ private fun ServerStatusSection() {
                                 )
                             }
                         })
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     GroupNameText(

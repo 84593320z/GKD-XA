@@ -21,7 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -110,7 +110,7 @@ private const val ZIP_MIME_TYPE = "application/zip"
 fun useSettingsPage(): ScaffoldExt {
     val mainVm = MainViewModel.requireCurrent()
     val context = LocalActivity.current as MainActivity
-    val store by storeFlow.collectAsState()
+    val store by storeFlow.collectAsStateWithLifecycle()
     val vm = viewModel<SettingsVm>()
     val scope = vm.scope
     val actionScope = vm.scope
@@ -531,7 +531,7 @@ fun useSettingsPage(): ScaffoldExt {
                         TextSwitch(
                             title = "轨迹提示",
                             subtitle = "显示触发位置信息",
-                            checked = TrackService.isRunning.collectAsState().value,
+                            checked = TrackService.isRunning.collectAsStateWithLifecycle().value,
                             onCheckedChange = vm.scope.launchUiAction<Boolean> { enabled ->
                                 if (enabled) {
                                     if (!mainVm.dialogRequests.confirm(
@@ -586,8 +586,8 @@ fun useSettingsPage(): ScaffoldExt {
             val lazyOn by remember {
                 storeFlow.map { it.enableBlockA11yAppList }.debounce(300)
                     .stateIn(scope, SharingStarted.Eagerly, storeFlow.value.enableBlockA11yAppList)
-            }.collectAsState()
-            val privilegeOk = privilegeContextFlow.collectAsState().value != null
+            }.collectAsStateWithLifecycle()
+            val privilegeOk = privilegeContextFlow.collectAsStateWithLifecycle().value != null
             PreferenceGroup(title = "无障碍") {
                 TextSwitch(
                     title = "局部关闭",
@@ -692,8 +692,8 @@ private fun notificationTextSubtitle(
     customText: String,
 ): String {
     // 必须在条件分支前无条件收集，避免 useCustomText 切换时改变 composable 调用点数量（违反 Compose 钩子规则）
-    val ruleSummary by SubscriptionState.ruleSummaryFlow.collectAsState()
-    val actionCount by actionCountFlow.collectAsState()
+    val ruleSummary by SubscriptionState.ruleSummaryFlow.collectAsStateWithLifecycle()
+    val actionCount by actionCountFlow.collectAsStateWithLifecycle()
     if (!useCustomText) return ruleSummary.statusText(actionCount)
     val title = customTitle.replaceNotificationTemplate(ruleSummary, actionCount)
     val text = customText.replaceNotificationTemplate(ruleSummary, actionCount)
@@ -706,9 +706,9 @@ private fun notificationTextSubtitle(
 @Composable
 private fun BlockA11yDialog(onDismissRequest: () -> Unit) = GkFullscreenDialog(onDismissRequest) {
     val mainVm = MainViewModel.requireCurrent()
-    val statusRunning by StatusService.isRunning.collectAsState()
-    val privilegeContext by privilegeContextFlow.collectAsState()
-    val ignoreBatteryOptimizations by PermissionStates.ignoreBatteryOptimizations.stateFlow.collectAsState()
+    val statusRunning by StatusService.isRunning.collectAsStateWithLifecycle()
+    val privilegeContext by privilegeContextFlow.collectAsStateWithLifecycle()
+    val ignoreBatteryOptimizations by PermissionStates.ignoreBatteryOptimizations.stateFlow.collectAsStateWithLifecycle()
     val context = LocalActivity.current as MainActivity
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -72,6 +73,7 @@ fun GkTermsAcceptDialog() {
     val step by mainVm.termsStepFlow.collectAsStateWithLifecycle()
 
     GkAlertDialog(
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         onDismissRequest = {},
         title = {
             Text(text = stepDataList[step].first)

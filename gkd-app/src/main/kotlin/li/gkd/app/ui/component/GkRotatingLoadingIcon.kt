@@ -18,6 +18,7 @@ fun GkRotatingLoadingIcon(
     modifier: Modifier = Modifier,
     loading: Boolean,
     imageVector: ImageVector = GkIcons.Autorenew,
+    contentDescription: String? = getIconDefaultDesc(imageVector),
 ) {
     val rotation = remember { Animatable(0f) }
     LaunchedEffect(loading) {
@@ -48,7 +49,8 @@ fun GkRotatingLoadingIcon(
     }
     GkIcon(
         imageVector = imageVector,
-        modifier = modifier.graphicsLayer(rotationZ = rotation.value)
+        modifier = modifier.graphicsLayer(rotationZ = rotation.value),
+        contentDescription = contentDescription,
     )
 }
 

@@ -229,7 +229,7 @@ fun SubsGlobalGroupExcludePage(route: SubsGlobalGroupExcludeRoute) {
         ) { padding ->
             LazyColumn(Modifier.scaffoldPadding(padding), state = scroll.listState) {
                 items(visibleIds, key = { it }) { appId ->
-                    val control = controls.getValue(appId)
+                    val control = controls[appId] ?: return@items
                     GkRuleListItem(
                         onClick = { mainVm.showRuleGroup(subs.id, appId, group) },
                         selectedMode = selection.active, selected = appId in selected,

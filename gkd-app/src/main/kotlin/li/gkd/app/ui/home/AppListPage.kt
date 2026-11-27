@@ -245,7 +245,10 @@ fun useAppListPage(): ScaffoldExt {
                 }
                 item(ListPlaceholder.KEY, ListPlaceholder.TYPE) {
                     if (appInfos.isEmpty() && searchStr.isNotEmpty()) {
-                        GkEmptyState(text = if (state.showAllApps) UiStrings.search_no_results else UiStrings.search_no_results_filter_hint)
+                        GkEmptyState(
+                            text = if (state.showAllApps) UiStrings.search_no_results else UiStrings.search_no_results_filter_hint,
+                            icon = GkIcons.Search,
+                        )
                         // 底部空间已由 contentPadding.bottom（HomePage 的 listBottomSpace）统一提供，
                         // 这里只补一点紧凑间距，避免小屏上「空状态」离底栏太远
                         GkPageBottomSpace(height = GkPageBottomSpaceDefaults.CompactHeight)

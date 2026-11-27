@@ -3,6 +3,8 @@ package li.gkd.app.ui.home
 import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkIconButtonDefaults
 import li.gkd.app.ui.component.GkPullToRefresh
+import li.gkd.app.ui.component.GkRotatingLoadingIcon
+import li.gkd.app.ui.component.GkTooltipIconButtonBox
 import li.gkd.app.ui.component.gkPageBottomSpace
 import li.gkd.app.MainViewModel
 import androidx.activity.compose.BackHandler
@@ -40,12 +42,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import li.gkd.app.text.UiStrings
@@ -189,6 +197,7 @@ private fun useLoadedSubsManagePage(
                     )
                 }
             },
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
             onDismissRequest = {},
             confirmButton = {
                 GkActionButton(
@@ -261,19 +270,34 @@ private fun useLoadedSubsManagePage(
                             )
                         }
                     } else {
-                        PerfIconButton(
-                            imageVector = PerfIcon.Autorenew,
+                        GkTooltipIconButtonBox(
                             contentDescription = if (refreshing) "正在刷新订阅" else "刷新订阅",
-                            onClickLabel = "刷新订阅",
-                            enabled = !refreshing,
-                            onClick = throttle {
-                                if (refreshing) {
-                                    toast(UiStrings.subscription_refresh_wait)
-                                } else {
-                                    vm.refresh()
-                                }
-                            },
-                        )
+                        ) {
+                            val refreshDesc = if (refreshing) "正在刷新订阅" else "刷新订阅"
+                            top.yukonga.miuix.kmp.basic.IconButton(
+                                minWidth = 48.dp,
+                                minHeight = 48.dp,
+                                enabled = !refreshing,
+                                modifier = Modifier.semantics(mergeDescendants = true) {
+                                    role = Role.Button
+                                    if (refreshing) disabled()
+                                    onClick(label = "刷新订阅", action = null)
+                                },
+                                onClick = throttle {
+                                    if (refreshing) {
+                                        toast(UiStrings.subscription_refresh_wait)
+                                    } else {
+                                        vm.refresh()
+                                    }
+                                },
+                            ) {
+                                GkRotatingLoadingIcon(
+                                    loading = refreshing,
+                                    imageVector = PerfIcon.Autorenew,
+                                    contentDescription = refreshDesc,
+                                )
+                            }
+                        }
                         PerfIconButton(
                             imageVector = if (store.enableMatch) PerfIcon.ToggleOn else PerfIcon.ToggleOff,
                             tint = if (!store.enableMatch) MiuixTheme.colorScheme.primary else LocalContentColor.current,

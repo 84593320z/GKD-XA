@@ -45,7 +45,10 @@ import li.gkd.app.data.settings.AiConfig
 import li.gkd.app.data.settings.AiModel
 import li.gkd.app.feature.settings.ai.AiProviderSelection
 import li.gkd.app.feature.settings.ai.ModelRow
+import li.gkd.app.ui.component.GkAnimatedFloatingActionButton
+import li.gkd.app.ui.component.GkEmptyState
 import li.gkd.app.ui.component.GkTextSwitch
+import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.TextMenu
 import li.gkd.app.util.SnapshotDisplayModeOption
 import org.junit.Assert.assertEquals
@@ -340,5 +343,51 @@ class MiuixPolishRenderTest {
                 selected = selected, enabled = enabled, label = "Select $name", onClick = onActivate,
             )
         }
+    }
+
+    @Test
+    fun animatedFabExposesButtonSemanticsMinTouchTargetAndClickAction() {
+        var clicks = 0
+        compose.setMiuixContent {
+            GkAnimatedFloatingActionButton(
+                visible = true,
+                onClick = { clicks++ },
+                imageVector = PerfIcon.Add,
+                contentDescription = "Add item",
+            )
+        }
+        val fab = compose.onNodeWithContentDescription("Add item")
+            .assertIsDisplayed()
+            .assert(hasRole(Role.Button))
+            .assertHasClickAction()
+            .assertWidthIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(48.dp)
+        fab.performClick()
+        compose.waitForIdle()
+        assertEquals(1, clicks)
+    }
+
+    @Test
+    fun emptyStateRendersIconBadgeTitleDescriptionAndAction() {
+        var actionClicks = 0
+        compose.setMiuixContent {
+            GkEmptyState(
+                text = "No rules",
+                description = "Add or import a subscription",
+                icon = PerfIcon.History,
+                action = {
+                    top.yukonga.miuix.kmp.basic.Button(
+                        onClick = { actionClicks++ },
+                    ) {
+                        Text(text = "Import")
+                    }
+                },
+            )
+        }
+        compose.onNodeWithText("No rules").assertIsDisplayed()
+        compose.onNodeWithText("Add or import a subscription").assertIsDisplayed()
+        compose.onNodeWithText("Import").assertIsDisplayed().performClick()
+        compose.waitForIdle()
+        assertEquals(1, actionClicks)
     }
 }
