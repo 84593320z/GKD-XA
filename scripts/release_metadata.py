@@ -10,6 +10,9 @@ import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
+RELEASE_PACKAGE = "li.songe.gkdx"
+MIN_APK_SIZE = 1_000_000
+MAX_APK_SIZE = 256 * 1024 * 1024
 # Verified from the published v1.5.1 APK (SHA-256 2c23ecd1...328708).
 RELEASE_SIGNER_SHA256 = "9361daaec8ad21965fb3b658dcfc57ebaebfc0a06df157df6d60e0438e072ea9"
 
@@ -74,7 +77,7 @@ def package(args):
     apk = args.apk.resolve()
     badging = subprocess.check_output([sdk_tool("aapt2", args.aapt2), "dump", "badging", str(apk)], text=True, encoding="utf-8")
     match = re.search(r"package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'", badging)
-    if not match or match.groups() != ("li.songe.gkdx", str(code), name):
+    if not match or match.groups() != (RELEASE_PACKAGE, str(code), name):
         raise ValueError("Built APK package/version differs from the tagged release")
     certificates = subprocess.check_output(
         [sdk_tool("apksigner"), "verify", "--print-certs", str(apk)], text=True, encoding="utf-8")
@@ -84,7 +87,7 @@ def package(args):
     with apk.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     size = apk.stat().st_size
-    if size <= 1_000_000 or size > 256 * 1024 * 1024:
+    if not MIN_APK_SIZE < size <= MAX_APK_SIZE:
         raise ValueError("Unexpected APK size")
     out = args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -95,7 +98,7 @@ def package(args):
         data.update(fileSize=size, sha256=digest)
         save(out / f"{channel}.json", data)
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-    save(out / "release-manifest.json", {"tag": args.tag, "commit": commit, "package": "li.songe.gkdx", "versionCode": code, "versionName": name, "fileSize": size, "sha256": digest, "signerSha256": RELEASE_SIGNER_SHA256, "asset": asset_name})
+    save(out / "release-manifest.json", {"tag": args.tag, "commit": commit, "package": RELEASE_PACKAGE, "versionCode": code, "versionName": name, "fileSize": size, "sha256": digest, "signerSha256": RELEASE_SIGNER_SHA256, "asset": asset_name})
     (out / "SHA256SUMS").write_text(f"{digest}  {asset_name}\n", encoding="ascii")
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     sections = re.split(r"(?=^## )", text, flags=re.M)
@@ -103,20 +106,50 @@ def package(args):
     (out / "RELEASE_NOTES.md").write_text(notes.strip() + "\n", encoding="utf-8")
     print(f"Verified {asset_name}: versionCode={code}, bytes={size}, sha256={digest}")
 
+def validate_published_manifest(manifest, published_release, tag, commit, source_identity):
+    code, name = source_identity
+    asset_name = f"GKD-XA-{tag}.apk"
+    expected = {
+        "tag": "v" + name, "commit": commit, "package": RELEASE_PACKAGE,
+        "versionCode": code, "versionName": name, "asset": asset_name,
+        "signerSha256": RELEASE_SIGNER_SHA256,
+    }
+    if tag != expected["tag"] or any(manifest.get(key) != value for key, value in expected.items()):
+        raise ValueError("Published manifest does not match the tagged source")
+    size, digest = manifest.get("fileSize"), manifest.get("sha256")
+    if type(size) is not int or not MIN_APK_SIZE < size <= MAX_APK_SIZE:
+        raise ValueError("Invalid APK size in the published manifest")
+    if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+        raise ValueError("Invalid APK SHA-256 in the published manifest")
+    if published_release.get("draft") is not False or published_release.get("tag_name") != tag:
+        raise ValueError("Release is not published for the requested tag")
+    apk_assets = [asset for asset in published_release["assets"] if asset["name"] == asset_name]
+    if len(apk_assets) != 1 or (apk_assets[0]["size"], apk_assets[0].get("digest")) != (size, f"sha256:{digest}"):
+        raise ValueError("Published APK does not match the release manifest")
+
+
 def backfill(args):
     manifest = load(args.manifest)
-    matched = 0
+    published_release = load(args.published_release)
+    validate_published_manifest(manifest, published_release, args.tag, args.commit, identity(ROOT))
+    expected_url = f'https://github.com/84593320z/GKD-XA/releases/download/{manifest["tag"]}/{manifest["asset"]}'
+    expected_identity_and_url = (manifest["versionCode"], manifest["versionName"], expected_url)
+    changed = 0
     for channel in ("stable", "beta"):
         path = args.root / f"version/{channel}.json"
         data = load(path)
-        expected_url = f'https://github.com/84593320z/GKD-XA/releases/download/{manifest["tag"]}/{manifest["asset"]}'
-        if (data["versionCode"], data["versionName"], data["downloadUrl"]) != (manifest["versionCode"], manifest["versionName"], expected_url):
-            print(f"Skip {channel}: main has advanced to another version")
+        identity_and_url = (data["versionCode"], data["versionName"], data["downloadUrl"])
+        if identity_and_url != expected_identity_and_url:
+            print(f"Skip {channel}: main metadata does not match this release")
+            continue
+        if (data["fileSize"], data.get("sha256")) == (manifest["fileSize"], manifest["sha256"]):
+            print(f"Skip {channel}: already backfilled")
             continue
         data.update(fileSize=manifest["fileSize"], sha256=manifest["sha256"])
         save(path, data)
-        matched += 1
-    print(f"Backfilled {matched} matching channels")
+        changed += 1
+    print(f"Backfilled {changed} matching channels")
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -131,6 +164,9 @@ def main():
     fill = commands.add_parser("backfill")
     fill.add_argument("--root", type=Path, required=True)
     fill.add_argument("--manifest", type=Path, required=True)
+    fill.add_argument("--published-release", type=Path, required=True)
+    fill.add_argument("--tag", required=True)
+    fill.add_argument("--commit", required=True)
     args = parser.parse_args()
     if args.command == "validate":
         print("Release metadata valid:", validate(ROOT, args.tag))

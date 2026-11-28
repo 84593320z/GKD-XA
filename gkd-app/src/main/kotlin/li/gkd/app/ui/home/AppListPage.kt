@@ -63,8 +63,14 @@ import li.gkd.app.ui.component.MenuItemRadioButton
 import li.gkd.app.ui.component.perfDefaultIconTint
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
+import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.rememberListScrollState
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Text
 
 @Composable
 fun useAppListPage(): ScaffoldExt {
@@ -220,6 +226,39 @@ fun useAppListPage(): ScaffoldExt {
                 if (!state.canQueryPackages) {
                     item(key = 1, contentType = 1) {
                         GkQueryPkgAuthCard()
+                    }
+                }
+                if (editWhiteListMode) {
+                    item(key = "whitelist-banner", contentType = "whitelist-banner") {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            colors = CardDefaults.defaultColors(
+                                color = MiuixTheme.colorScheme.surfaceContainerHigh,
+                            ),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Text(
+                                    text = "点击应用切换白名单；右下角可按包名批量编辑",
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                GkActionButton(
+                                    emphasized = true,
+                                    onClick = throttle(vm::toggleEditWhiteListMode),
+                                ) {
+                                    Text(text = UiStrings.edit_exit)
+                                }
+                            }
+                        }
                     }
                 }
                 items(appInfos, { it.id }) { appInfo ->

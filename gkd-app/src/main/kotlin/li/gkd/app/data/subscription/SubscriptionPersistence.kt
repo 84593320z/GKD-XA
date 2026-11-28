@@ -1,97 +1,118 @@
 package li.gkd.app.data.subscription
 
+import android.system.Os
+import android.system.OsConstants
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import li.gkd.app.data.RawSubscription
+import li.gkd.app.text.UiStrings
+import li.gkd.app.util.FolderUtils
 import li.gkd.app.util.LogUtils
 import li.gkd.db.Db
 import li.gkd.db.SubsItem
 
 object SubscriptionPersistence {
-    enum class DeleteStage {
-        File,
-        Database,
+    enum class DeleteStage { File, Database }
+
+    class DeleteException(val stage: DeleteStage, cause: Throwable) : Exception(cause.message, cause)
+
+    data class DeleteResult(val ids: Set<Long>, val count: Int)
+
+    internal data class UrlEdit(val expected: SubsItem, val value: String)
+
+    private fun journal() = SubscriptionFileMutationJournal(FolderUtils.subsFolder) { directory ->
+        val descriptor = Os.open(directory.absolutePath, OsConstants.O_RDONLY, 0)
+        try {
+            Os.fsync(descriptor)
+        } finally {
+            Os.close(descriptor)
+        }
     }
 
-    class DeleteException(
-        val stage: DeleteStage,
-        cause: Throwable,
-    ) : Exception(cause.message, cause)
+    private suspend fun committedMtimes(): Map<Long, Long> =
+        Db.subsItemDao.queryAll().associate { it.id to it.mtime }
 
-    data class DeleteResult(
-        val ids: Set<Long>,
-        val count: Int,
-    )
+    /** Run before publishing the repository or starting rule evaluation. */
+    internal suspend fun recoverInterruptedMutation() = journal().recover(::committedMtimes)
 
-    suspend fun save(
+    /** Caller holds the subscription writer lock; this owns the outermost Room transaction. */
+    internal suspend fun <T> withBodyTransaction(
+        block: suspend (SubscriptionFileMutationJournal) -> T,
+    ): T = withContext(NonCancellable + Dispatchers.IO) {
+        val journal = journal()
+        journal.recover(::committedMtimes)
+        val result = try {
+            Db.withTransaction { block(journal) }
+        } catch (error: Throwable) {
+            // Read the durable row state only after the outermost transaction has ended.
+            runCatching { journal.recover(::committedMtimes) }.exceptionOrNull()?.let(error::addSuppressed)
+            throw error
+        }
+        runCatching { journal.finish() }.exceptionOrNull()?.let {
+            LogUtils.d("下次启动或写入时清理订阅事务日志", it.toString())
+        }
+        result
+    }
+
+    internal suspend fun save(
         subscription: RawSubscription,
-        newItem: SubsItem? = null,
-        insertItem: Boolean = false,
-    ) {
-        val previousBytes = SubscriptionFileStore.readBytes(subscription.id)
-        SubscriptionFileStore.write(subscription)
-        try {
-            Db.withTransaction {
-                if (newItem != null) {
-                    if (insertItem) {
-                        Db.subsItemDao.upsert(newItem)
-                    } else {
-                        Db.subsItemDao.update(newItem)
-                    }
-                }
-                Db.subsItemDao.updateMtime(subscription.id, System.currentTimeMillis())
-                cleanupConfigs(subscription)
+        initialItem: SubsItem? = null,
+        mustBeNew: Boolean = false,
+        urlEdit: UrlEdit? = null,
+    ) = withBodyTransaction { journal ->
+        val id = subscription.id
+        val dao = Db.subsItemDao
+        val previous = dao.queryAll().firstOrNull { it.id == id }
+        val mtime = nextSubscriptionMtime(previous?.mtime)
+        check(!mustBeNew || previous == null) { UiStrings.subscription_content_conflict }
+        when {
+            urlEdit != null -> {
+                val expected = urlEdit.expected
+                require(expected.id == id)
+                val affected = dao.updateUrlIfUnchanged(
+                    id = id,
+                    expectedCtime = expected.ctime,
+                    expectedMtime = expected.mtime,
+                    expectedUpdateUrl = expected.updateUrl,
+                    updateUrl = urlEdit.value,
+                    mtime = mtime,
+                )
+                check(affected == 1) { UiStrings.subscription_content_conflict }
             }
-        } catch (e: Throwable) {
-            restoreFile(subscription.id, previousBytes, e)
-            throw e
+            previous == null -> {
+                check(initialItem != null && initialItem.id == id) { UiStrings.subscription_missing }
+                dao.upsert(initialItem.copy(mtime = mtime))
+            }
+            else -> check(dao.updateMtime(id, mtime) == 1) { UiStrings.subscription_content_conflict }
         }
+        cleanupConfigs(subscription)
+        journal.stageAndInstall(listOf(SubscriptionBodyChange(id, previous?.mtime, mtime, subscription)))
     }
 
-    suspend fun delete(requestedIds: LongArray): DeleteResult {
-        val existingIds = try {
-            Db.subsItemDao.queryAll().mapTo(mutableSetOf()) { it.id }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw DeleteException(DeleteStage.Database, e)
-        }
-        val targetIds = requestedIds.filterTo(mutableSetOf()) { it in existingIds }
-        if (targetIds.isEmpty()) return DeleteResult(emptySet(), 0)
-
-        val previousFiles = try {
-            targetIds.associateWith(SubscriptionFileStore::readBytes)
-        } catch (e: Exception) {
-            throw DeleteException(DeleteStage.File, e)
-        }
-        try {
-            targetIds.forEach(SubscriptionFileStore::delete)
-        } catch (e: Exception) {
-            restoreFiles(previousFiles, e)
-            throw DeleteException(DeleteStage.File, e)
-        }
-
-        val deleteSize = try {
-            Db.withTransaction {
-                val ids = targetIds.toLongArray()
-                val size = Db.subsItemDao.deleteById(*ids)
-                if (size > 0) {
-                    Db.actionLogDao.deleteBySubsId(*ids)
-                }
-                size
-            }
-        } catch (e: CancellationException) {
-            restoreFiles(previousFiles, e)
-            throw e
-        } catch (e: Exception) {
-            restoreFiles(previousFiles, e)
-            throw DeleteException(DeleteStage.Database, e)
-        }
-        if (deleteSize == 0) {
-            restoreFiles(previousFiles)?.let { error ->
+    suspend fun delete(requestedIds: LongArray): DeleteResult = try {
+        withBodyTransaction { journal ->
+            val requested = requestedIds.toSet()
+            val targets = Db.subsItemDao.queryAll().filter { it.id in requested }
+            if (targets.isEmpty()) return@withBodyTransaction DeleteResult(emptySet(), 0)
+            val ids = targets.map { it.id }.toLongArray()
+            val count = Db.subsItemDao.deleteById(*ids)
+            check(count == targets.size) { UiStrings.subscription_content_conflict }
+            Db.actionLogDao.deleteBySubsId(*ids)
+            try {
+                journal.stageAndInstall(targets.map { SubscriptionBodyChange(it.id, it.mtime, null, null) })
+            } catch (error: Exception) {
                 throw DeleteException(DeleteStage.File, error)
             }
+            DeleteResult(ids.toSet(), count)
         }
-        return DeleteResult(targetIds, deleteSize)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: DeleteException) {
+        throw error
+    } catch (error: Exception) {
+        throw DeleteException(DeleteStage.Database, error)
     }
 
     private suspend fun cleanupConfigs(subscription: RawSubscription): Int {
@@ -117,30 +138,12 @@ object SubscriptionPersistence {
         )
         return size
     }
-
-    private fun restoreFile(id: Long, bytes: ByteArray?, cause: Throwable) {
-        runCatching { SubscriptionFileStore.restore(id, bytes) }
-            .exceptionOrNull()
-            ?.let(cause::addSuppressed)
-    }
-
-    private fun restoreFiles(
-        files: Map<Long, ByteArray?>,
-        cause: Throwable? = null,
-    ): Throwable? {
-        var failure = cause
-        files.forEach { (id, bytes) ->
-            runCatching { SubscriptionFileStore.restore(id, bytes) }
-                .exceptionOrNull()
-                ?.let { restoreError ->
-                    val currentFailure = failure
-                    if (currentFailure == null) {
-                        failure = restoreError
-                    } else {
-                        currentFailure.addSuppressed(restoreError)
-                    }
-                }
-        }
-        return failure
-    }
 }
+
+/** Distinguish before and after even for writes in the same millisecond. */
+internal fun nextSubscriptionMtime(previous: Long?, now: Long = System.currentTimeMillis()): Long =
+    when (previous) {
+        null -> now
+        Long.MAX_VALUE -> if (now == previous) previous - 1 else now
+        else -> maxOf(now, previous + 1)
+    }

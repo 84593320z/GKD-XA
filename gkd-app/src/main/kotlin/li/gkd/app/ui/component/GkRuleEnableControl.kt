@@ -93,8 +93,6 @@ fun GkRuleEnableControl(
         Modifier
             .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(
-                interactionSource = null,
-                indication = null,
                 role = Role.Button,
                 onClickLabel = UiStrings.rule_unavailable_reason_view,
                 onClick = showReasonAction,

@@ -184,15 +184,37 @@ fun AiProvidersPage() {
                                                 label = "设为当前服务商：${provider.name.ifBlank { "未命名" }}",
                                                 onClick = activate,
                                             )
-                                            GkSizedIconButton(
-                                                size = 48.dp,
-                                                iconSize = 24.dp,
-                                                onClickLabel = "移除服务商",
-                                                onClick = throttle(fn = { confirmDelete(provider) }),
-                                                imageVector = GkIcons.Delete,
-                                                contentDescription = "移除",
-                                                tint = MiuixTheme.colorScheme.error,
-                                            )
+                                            var menuExpanded by remember { mutableStateOf(false) }
+                                            li.gkd.app.ui.component.PerfDropdownMenu(
+                                                expanded = menuExpanded,
+                                                onDismissRequest = { menuExpanded = false },
+                                                anchor = {
+                                                    GkSizedIconButton(
+                                                        size = 48.dp,
+                                                        iconSize = 24.dp,
+                                                        onClickLabel = "更多操作",
+                                                        onClick = { menuExpanded = true },
+                                                        imageVector = GkIcons.MoreVert,
+                                                        contentDescription = "更多操作",
+                                                    )
+                                                },
+                                            ) {
+                                                li.gkd.app.ui.component.PerfDropdownMenuItem(
+                                                    text = "编辑配置",
+                                                    onClick = throttle {
+                                                        menuExpanded = false
+                                                        mainVm.navigatePage(AiProviderDetailRoute(id = provider.id))
+                                                    },
+                                                )
+                                                li.gkd.app.ui.component.PerfDropdownMenuItem(
+                                                    text = "移除服务商",
+                                                    titleColor = MiuixTheme.colorScheme.error,
+                                                    onClick = throttle {
+                                                        menuExpanded = false
+                                                        confirmDelete(provider)
+                                                    },
+                                                )
+                                            }
                                         }
                                         FlowRow(
                                             horizontalArrangement = Arrangement.spacedBy(6.dp),

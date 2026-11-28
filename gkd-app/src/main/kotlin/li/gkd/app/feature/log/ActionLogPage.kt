@@ -42,6 +42,7 @@ import li.gkd.app.ui.component.GkActionButton
 import li.gkd.app.ui.component.GkAppIcon
 import li.gkd.app.ui.component.GkAppNameText
 import li.gkd.app.ui.component.GkCheckbox
+import li.gkd.app.ui.component.GkAlertDialog
 import li.gkd.app.ui.component.GkDialog
 import li.gkd.app.ui.component.GkFilterIconButton
 import li.gkd.app.ui.component.GkGroupNameText
@@ -218,71 +219,53 @@ private fun ActionLogAppFilterDialog(
     onConfirm: (List<String>) -> Unit,
 ) {
     var selected by remember { mutableStateOf(selectedAppIds.toSet()) }
-    GkDialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        ) {
-            Column {
-                Text(
-                    text = UiStrings.action_log_app_filter,
-                    style = MiuixTheme.textStyles.subtitle,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .heightIn(max = 360.dp)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    if (appIds.isEmpty()) {
-                        Text(
-                            text = UiStrings.action_log_app_filter_empty,
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+    GkAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = UiStrings.action_log_app_filter) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (appIds.isEmpty()) {
+                    Text(
+                        text = UiStrings.action_log_app_filter_empty,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        GkActionButton(onClick = throttle { selected = appIds.toSet() }) {
+                            Text(text = UiStrings.selection_all)
+                        }
+                        GkActionButton(onClick = throttle { selected = emptySet() }) {
+                            Text(text = UiStrings.reset_filter)
+                        }
+                    }
+                    appIds.forEach { appId ->
+                        ActionLogAppFilterItem(
+                            appId = appId,
+                            checked = appId in selected,
+                            onClick = {
+                                selected =
+                                    if (appId in selected) selected - appId else selected + appId
+                            },
                         )
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            GkActionButton(onClick = throttle { selected = appIds.toSet() }) {
-                                Text(text = UiStrings.selection_all)
-                            }
-                            GkActionButton(onClick = throttle { selected = emptySet() }) {
-                                Text(text = UiStrings.reset_filter)
-                            }
-                        }
-                        appIds.forEach { appId ->
-                            ActionLogAppFilterItem(
-                                appId = appId,
-                                checked = appId in selected,
-                                onClick = {
-                                    selected =
-                                        if (appId in selected) selected - appId else selected + appId
-                                },
-                            )
-                        }
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    GkActionButton(onClick = throttle(onDismiss)) {
-                        Text(text = UiStrings.action_cancel)
-                    }
-                    GkActionButton(emphasized = true, onClick = throttle { onConfirm(appIds.filter { it in selected }) }) {
-                        Text(text = UiStrings.action_confirm)
                     }
                 }
             }
-        }
-    }
+        },
+        dismissButton = {
+            GkActionButton(onClick = throttle(onDismiss)) {
+                Text(text = UiStrings.action_cancel)
+            }
+        },
+        confirmButton = {
+            GkActionButton(emphasized = true, onClick = throttle { onConfirm(appIds.filter { it in selected }) }) {
+                Text(text = UiStrings.action_confirm)
+            }
+        },
+    )
 }
 
 @Composable

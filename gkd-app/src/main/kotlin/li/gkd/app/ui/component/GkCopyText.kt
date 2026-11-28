@@ -125,14 +125,14 @@ fun GkCopyTextCard(
     contentColor: Color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
     textStyle: TextStyle = MiuixTheme.textStyles.body1,
 ) {
-    val shape = GkShapes.compact
+    val shape = GkShapes.control
     GkCopyableText(
         text = remember(text) { AnnotatedString(text) },
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(containerColor),
-        contentPadding = PaddingValues(8.dp),
+        contentPadding = PaddingValues(start = 12.dp, top = 12.dp, end = 48.dp, bottom = 12.dp),
         textStyle = textStyle,
         contentColor = contentColor,
     )

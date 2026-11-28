@@ -41,6 +41,15 @@ data class Snapshot(
         @Query("SELECT * FROM snapshot ORDER BY id DESC")
         fun query(): Flow<List<Snapshot>>
 
+        @Query("SELECT id FROM snapshot ORDER BY id DESC LIMIT min(max(:limit, 0), 100)")
+        suspend fun queryRecentIds(limit: Int): List<Long>
+
+        @Query("SELECT id FROM snapshot")
+        suspend fun queryIds(): List<Long>
+
+        @Query("DELETE FROM snapshot WHERE id = :id")
+        suspend fun deleteById(id: Long): Int
+
         @Query("UPDATE snapshot SET github_asset_id=null WHERE id = :id")
         suspend fun deleteGithubAssetId(id: Long)
 

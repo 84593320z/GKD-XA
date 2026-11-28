@@ -161,7 +161,6 @@ fun useControlPage(): ScaffoldExt {
             modifier = Modifier
                 .verticalScroll(scrollState)
                 .padding(contentPadding),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             if (appOpsRestricted) {
                 Card(

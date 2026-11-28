@@ -70,6 +70,7 @@ fun PrivilegeServicePage() {
                         )
                     },
                     titleText = UiStrings.privilege_service,
+                    small = true,
                     actions = {
                         GkIconButton(
                             imageVector = GkIcons.Info,

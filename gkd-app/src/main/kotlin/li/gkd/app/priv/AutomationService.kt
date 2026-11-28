@@ -18,6 +18,7 @@ import li.gkd.app.text.UiStrings
 import li.gkd.app.a11y.A11yCommonImpl
 import li.gkd.app.a11y.A11yRuleEngine
 import li.gkd.app.a11y.A11yRuntime
+import li.gkd.app.service.currentAppUseA11y
 import li.gkd.app.store.AppStore.updateEnableAutomator
 import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.AutomatorModeOption
@@ -65,7 +66,11 @@ class AutomationService private constructor(
             return field
         }
 
+    @Volatile
     private var connected = false
+
+    internal val isAvailable get() = connected && !shutdown.value &&
+        privilegeContextFlow.value === privilegeContext && privilegeContext.serverLifecycleBinder.isBinderAlive
 
     // https://github.com/android-cs/16/blob/main/cmds/uiautomator/library/testrunner-src/com/android/uiautomator/core/UiAutomationShellWrapper.java#L25
     private fun connect() {
@@ -73,9 +78,9 @@ class AutomationService private constructor(
         uiAutomation.toHidden.connect(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
         uiAutomation.setOnAccessibilityEventListener(listener)
         connected = true
-        toast(UiStrings.automation_started)
-        updateEnableAutomator(true)
-        A11yRuntime.onA11yConnected(this)
+        // An absent root is normal with the screen off. Probe the registered accessibility client instead.
+        checkNotNull(uiAutomation.serviceInfo) { "UiAutomation service is not registered" }
+        check(privilegeContext.serverLifecycleBinder.pingBinder()) { "Privilege service is not alive" }
     }
 
     private fun disconnect() {
@@ -93,7 +98,7 @@ class AutomationService private constructor(
         } finally {
             uiAutomation.quitRemoteCallbackThread()
             connected = false
-            if (wasConnected) {
+            if (announced) {
                 if (tempShutdownFlag) {
                     toast(UiStrings.automation_partially_disabled)
                 } else {
@@ -105,16 +110,21 @@ class AutomationService private constructor(
     }
 
     private var tempShutdownFlag = false
+    private var announced = false
     private val shutdown = atomic(false)
     override fun shutdown(temp: Boolean) {
-        if (!shutdown.compareAndSet(expect = false, update = true)) return
-        if (temp) {
-            tempShutdownFlag = true
+        synchronized(this) {
+            if (!shutdown.compareAndSet(expect = false, update = true)) return
+            tempShutdownFlag = temp
         }
         try {
-            disconnect()
+            A11yRuntime.onA11yDisconnected(this, allowRollback = temp)
         } finally {
-            uiAutomationFlow.compareAndSet(this, null)
+            try {
+                disconnect()
+            } finally {
+                uiAutomationFlow.compareAndSet(this, null)
+            }
         }
     }
 
@@ -144,10 +154,11 @@ class AutomationService private constructor(
             }
             synchronized(connectLock) {
                 uiAutomationOccupiedFlow.value = false
-                if (uiAutomationFlow.value?.connected == true) {
+                if (currentAppUseA11y) return@synchronized
+                uiAutomationFlow.value?.let { existing ->
+                    if (existing.isAvailable) A11yRuntime.onA11yConnected(existing)
                     return@synchronized
                 }
-                uiAutomationFlow.value?.shutdown()
                 val privilegeContext = privilegeContextFlow.value ?: return@synchronized
                 try {
                     if (isOtherUiAutomationRunning()) {
@@ -162,16 +173,20 @@ class AutomationService private constructor(
                 val instance = AutomationService(privilegeContext)
                 try {
                     instance.connect()
-                    if (!uiAutomationFlow.compareAndSet(expect = null, update = instance)) {
-                        instance.shutdown(true)
-                        return@synchronized
+                    val promoted = synchronized(instance) {
+                        if (!instance.isAvailable || currentAppUseA11y || CrashRecovery.isRecoveryBlocked ||
+                            !uiAutomationFlow.compareAndSet(expect = null, update = instance) ||
+                            !A11yRuntime.onA11yConnected(instance)
+                        ) {
+                            false
+                        } else {
+                            updateEnableAutomator(true)
+                            instance.announced = true
+                            toast(UiStrings.automation_started)
+                            true
+                        }
                     }
-                    if (
-                        privilegeContextFlow.value !== privilegeContext ||
-                        !privilegeContext.serverLifecycleBinder.pingBinder()
-                    ) {
-                        instance.shutdown(true)
-                    }
+                    if (!promoted) instance.shutdown(true)
                 } catch (e: Exception) {
                     instance.shutdown(true)
                     toast(UiStrings.automation_start_failed(e.message))

@@ -28,6 +28,7 @@ import top.yukonga.miuix.kmp.icon.extended.ExpandMore
 import top.yukonga.miuix.kmp.icon.extended.Forward
 import top.yukonga.miuix.kmp.icon.extended.GridView
 import top.yukonga.miuix.kmp.icon.extended.Help
+import top.yukonga.miuix.kmp.icon.extended.Hide
 import top.yukonga.miuix.kmp.icon.extended.Home
 import top.yukonga.miuix.kmp.icon.extended.Image
 import top.yukonga.miuix.kmp.icon.extended.Info
@@ -49,6 +50,7 @@ import top.yukonga.miuix.kmp.icon.extended.Report
 import top.yukonga.miuix.kmp.icon.extended.Scan
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Share
+import top.yukonga.miuix.kmp.icon.extended.Show
 import top.yukonga.miuix.kmp.icon.extended.Sort
 import top.yukonga.miuix.kmp.icon.extended.Timer
 import top.yukonga.miuix.kmp.icon.extended.Translate
@@ -222,6 +224,8 @@ object GkIcons {
     val Apps get() = MiuixIcons.Regular.GridView
     val Info get() = MiuixIcons.Regular.Info
     val Flowchart get() = li.gkd.app.ui.icon.Flowchart
+    val Visibility get() = MiuixIcons.Regular.Show
+    val VisibilityOff get() = MiuixIcons.Regular.Hide
     val ToggleOff get() = Icons.Outlined.ToggleOff
     val ToggleOn get() = Icons.Outlined.ToggleOn
     val HelpOutline get() = MiuixIcons.Regular.Help

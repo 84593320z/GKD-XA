@@ -73,7 +73,7 @@ object SubscriptionRepository {
                     id = LOCAL_SUBS_ID,
                     order = items.minByOrNull { it.order }?.order ?: 0,
                 )
-                if (SubscriptionFileStore.readBytes(LOCAL_SUBS_ID) != null) {
+                if (SubscriptionFileStore.hasBody(LOCAL_SUBS_ID)) {
                     Db.subsItemDao.upsert(item)
                     refreshRawSubscriptions(listOf(item))
                 } else {
@@ -83,8 +83,8 @@ object SubscriptionRepository {
                             name = UiStrings.subscription_local,
                             version = 0,
                         ),
-                        newItem = item,
-                        insertItem = true,
+                        initialItem = item,
+                        mustBeNew = true,
                     )
                 }
             } catch (e: CancellationException) {
@@ -119,7 +119,7 @@ object SubscriptionRepository {
 
     /**
      * Keeps backup file changes and compensation exclusive with subscription updates.
-     * The block owns the database transaction and uses SubscriptionPersistence directly.
+     * The block owns the combined database and file transaction via SubscriptionPersistence.
      */
     suspend fun <T> withBackupTransaction(
         subscriptions: List<RawSubscription>,
@@ -162,13 +162,8 @@ object SubscriptionRepository {
             UiStrings.subscription_item_id_mismatch(subscription.id, defaultItem.id)
         }
         updateMutex.withStateLock {
-            val currentItem = Db.subsItemDao.queryAll().find { it.id == subscription.id }
             try {
-                saveLocked(
-                    subscription = subscription,
-                    newItem = currentItem ?: defaultItem,
-                    insertItem = currentItem == null,
-                )
+                saveLocked(subscription, initialItem = defaultItem)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -350,20 +345,20 @@ object SubscriptionRepository {
                 )
                 return@tryWithStateLock
             }
-            val newItem = oldItem?.copy(updateUrl = url) ?: SubsItem(
-                id = subscription.id,
-                updateUrl = url,
-                order = if (items.isEmpty()) 1 else items.maxOf { it.order } + 1,
-            )
             try {
                 onStage(SubscriptionAddStage.Saving)
                 // 进入落盘阶段后不再响应取消，避免只写了一半
                 withContext(NonCancellable) {
-                    saveLocked(
-                        subscription = subscription,
-                        newItem = newItem,
-                        insertItem = oldItem == null,
-                    )
+                    if (oldItem == null) {
+                        val newItem = SubsItem(
+                            id = subscription.id,
+                            updateUrl = url,
+                            order = if (items.isEmpty()) 1 else items.maxOf { it.order } + 1,
+                        )
+                        saveLocked(subscription, newItem, mustBeNew = true)
+                    } else {
+                        saveLocked(subscription, urlEdit = SubscriptionPersistence.UrlEdit(oldItem, url))
+                    }
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -453,8 +448,9 @@ object SubscriptionRepository {
 
     private suspend fun saveLocked(
         subscription: RawSubscription,
-        newItem: SubsItem? = null,
-        insertItem: Boolean = false,
+        initialItem: SubsItem? = null,
+        mustBeNew: Boolean = false,
+        urlEdit: SubscriptionPersistence.UrlEdit? = null,
     ) {
         val id = subscription.id
         val snapshot = snapshotFlow.value.value
@@ -463,7 +459,7 @@ object SubscriptionRepository {
                 previous = SubscriptionSnapshot(),
             )
         val nextSubscription = prepareSubscription(subscription, snapshot)
-        SubscriptionPersistence.save(nextSubscription, newItem, insertItem)
+        SubscriptionPersistence.save(nextSubscription, initialItem, mustBeNew, urlEdit)
         snapshotFlow.value = Loadable.Ready(snapshot.copy(
             subscriptions = snapshot.subscriptions.toMutableMap().apply {
                 set(id, nextSubscription)

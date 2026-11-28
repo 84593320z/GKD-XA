@@ -27,7 +27,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,13 +85,14 @@ class EventService : OverlayWindowService(positionKey = "event") {
                     .clip(GkShapes.control)
                     .background(MiuixTheme.colorScheme.primaryContainer.copy(alpha = alpha))
                     .semantics {
+                        role = Role.Button
                         onClick(label = UiStrings.event_log_window_restore) {
                             minimized = false
                             true
                         }
                     }
-                    .size(40.dp)
-                    .padding(8.dp),
+                    .size(48.dp)
+                    .padding(12.dp),
                 tint = MiuixTheme.colorScheme.primary.copy(alpha = alpha),
             )
         } else {

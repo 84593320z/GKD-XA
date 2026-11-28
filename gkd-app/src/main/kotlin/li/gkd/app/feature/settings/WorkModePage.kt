@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import top.yukonga.miuix.kmp.basic.Card
@@ -94,16 +95,19 @@ fun WorkModePage() {
             Card(
                 modifier = Modifier
                     .padding(horizontal = cardHorizontalPadding)
-                    .fillMaxWidth()
-                    .semantics {
-                        role = Role.RadioButton
-                        selected = automatorMode == AutomatorModeOption.A11yMode
-                    },
-                onClick = throttle { mainVm.updateAutomatorMode(AutomatorModeOption.A11yMode) },
+                    .fillMaxWidth(),
                 colors = surfaceCardColors,
             ) {
                 Row(
-                    modifier = Modifier.padding(GkUi.ContentPadding),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .selectable(
+                            selected = automatorMode == AutomatorModeOption.A11yMode,
+                            role = Role.RadioButton,
+                            onClick = throttle { mainVm.updateAutomatorMode(AutomatorModeOption.A11yMode) },
+                        )
+                        .padding(GkUi.ContentPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
@@ -248,30 +252,33 @@ fun WorkModePage() {
             Card(
                 modifier = Modifier
                     .padding(horizontal = cardHorizontalPadding)
-                    .fillMaxWidth()
-                    .semantics {
-                        role = Role.RadioButton
-                        selected = automatorMode == AutomatorModeOption.AutomationMode
-                    },
-                onClick = vm.scope.launchUiAction {
-                    if (privilegeContext == null) {
-                        if (mainVm.dialogRequests.confirm(
-                                title = UiStrings.privilege_service_required,
-                                text = UiStrings.automation_privilege_required_description,
-                                confirmText = UiStrings.settings_go_to,
-                                dismissOnRequest = true,
-                            )
-                        ) {
-                            mainVm.navigatePage(PrivilegeServiceRoute)
-                        }
-                    } else {
-                        mainVm.updateAutomatorMode(AutomatorModeOption.AutomationMode)
-                    }
-                },
+                    .fillMaxWidth(),
                 colors = surfaceCardColors,
             ) {
                 Row(
-                    modifier = Modifier.padding(GkUi.ContentPadding),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .selectable(
+                            selected = automatorMode == AutomatorModeOption.AutomationMode,
+                            role = Role.RadioButton,
+                            onClick = vm.scope.launchUiAction {
+                                if (privilegeContext == null) {
+                                    if (mainVm.dialogRequests.confirm(
+                                            title = UiStrings.privilege_service_required,
+                                            text = UiStrings.automation_privilege_required_description,
+                                            confirmText = UiStrings.settings_go_to,
+                                            dismissOnRequest = true,
+                                        )
+                                    ) {
+                                        mainVm.navigatePage(PrivilegeServiceRoute)
+                                    }
+                                } else {
+                                    mainVm.updateAutomatorMode(AutomatorModeOption.AutomationMode)
+                                }
+                            },
+                        )
+                        .padding(GkUi.ContentPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(

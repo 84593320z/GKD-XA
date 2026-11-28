@@ -256,9 +256,9 @@ class UpdateStatus(val scope: CoroutineScope) {
                         modifier = Modifier.fillMaxWidth(),
                     )
                 },
-                onDismissRequest = { },
+                onDismissRequest = { newVersionFlow.value = null },
                 confirmButton = {
-                    GkActionButton(onClick = {
+                    GkActionButton(emphasized = true, onClick = {
                         newVersionFlow.value = null
                         startDownload(newVersionVal)
                     }) {
@@ -311,6 +311,10 @@ class UpdateStatus(val scope: CoroutineScope) {
             when (downloadStatusVal) {
                 is LoadStatus.Loading -> {
                     GkAlertDialog(
+                        properties = androidx.compose.ui.window.DialogProperties(
+                            dismissOnBackPress = false,
+                            dismissOnClickOutside = false,
+                        ),
                         title = { Text(text = UiStrings.image_downloading) },
                         text = {
                             LinearProgressIndicator(
@@ -356,7 +360,7 @@ class UpdateStatus(val scope: CoroutineScope) {
                         text = {
                             Text(text = UiStrings.update_ready_to_install)
                         },
-                        onDismissRequest = {},
+                        onDismissRequest = { downloadStatusFlow.value = null },
                         dismissButton = {
                             GkActionButton(onClick = {
                                 downloadStatusFlow.value = null

@@ -4,7 +4,9 @@ import android.util.Log
 import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import kotlinx.atomicfu.AtomicRef
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
@@ -109,8 +111,15 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
     private var latestStateEvent: A11yEvent? = null
     private var lastContentEventTime = 0L
     private var lastEventTime = 0L
-    private val eventDeque = OwnedEventQueue(256, A11yEvent::sameAs, A11yEvent::close)
-    private val queryEvents = OwnedEventQueue(256, A11yEvent::sameAs, A11yEvent::close)
+    private class QueuedEvent(val event: A11yEvent, val generation: MatchGeneration?) {
+        fun sameAs(other: QueuedEvent): Boolean =
+            (generation?.sameAs(other.generation) ?: (other.generation == null)) && event.sameAs(other.event)
+
+        fun close() = event.close()
+    }
+
+    private val eventDeque = OwnedEventQueue(256, QueuedEvent::sameAs, QueuedEvent::close)
+    private val queryEvents = OwnedEventQueue(256, QueuedEvent::sameAs, QueuedEvent::close)
     private val eventWakeup = Channel<Unit>(Channel.CONFLATED)
 
     init {
@@ -140,6 +149,7 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
         if (!event.isUseful()) return
         // 拒绝副屏无障碍事件
         if (AndroidTarget.TIRAMISU && event.displayId != Display.DEFAULT_DISPLAY) return
+        val generation = captureMatchGeneration()
         onA11yFeatEvent(event)
         if (event.eventType == CONTENT_CHANGED) {
             if (!isInteractive) return // 屏幕关闭后仍然有无障碍事件 type:2048, time:8094, app:com.miui.aod, cls:android.widget.TextView
@@ -181,15 +191,16 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
         if (event.eventType == STATE_CHANGED) {
             latestStateEvent = a11yEvent
         }
-        eventDeque.add(a11yEvent)
+        eventDeque.add(QueuedEvent(a11yEvent, generation))
         eventWakeup.trySend(Unit)
     }
 
-    private suspend fun consumeEvent(consumedEvents: List<A11yEvent>) {
+    private suspend fun consumeEvent(consumedEvents: List<QueuedEvent>) {
         var transferred = false
         try {
             if (!effective) return
-            val latestEvent = consumedEvents.last()
+            val latest = consumedEvents.last()
+            val latestEvent = latest.event
             val evAppId = latestEvent.appId
             val evActivityId = latestEvent.name
             val oldAppId = currentTopActivity.appId
@@ -212,13 +223,17 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
                 }
             }
             val activityRule = activityRuleFlow.value
-            if (evAppId != rightAppId || activityRule.skipConsumeEvent || !storeFlow.value.enableMatch) return
-            consumedEvents.forEach(queryEvents::add)
-            transferred = true
+            val generation = latest.generation ?: return
+            if (evAppId != rightAppId || activityRule.skipConsumeEvent) return
+            synchronized(queryEvents) {
+                if (!canMatch(generation)) return
+                consumedEvents.forEach(queryEvents::add)
+                transferred = true
+            }
             a11yContext.interruptKey++
-            startQueryJob(byEvent = true)
+            startQueryJob(byEvent = true, generation = generation)
         } finally {
-            if (!transferred) consumedEvents.forEach(A11yEvent::close)
+            if (!transferred) consumedEvents.forEach(QueuedEvent::close)
         }
     }
 
@@ -250,24 +265,47 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
         ), expectedActivity)
     }
 
-    private val queryWakeup = QueryWakeup<QueryRequest<ResolvedRule>> { a, b -> a.merge(b) }
+    private fun captureMatchGeneration(): MatchGeneration? {
+        if (!appRuntimeReady.isCompleted || CrashRecovery.isRecoveryBlocked) return null
+        val settings = storeFlow.value
+        val serviceGeneration = A11yRuntime.generation(service) ?: return null
+        return if (settings.enableMatch) MatchGeneration(settings, serviceGeneration) else null
+    }
+
+    private fun canMatch(generation: MatchGeneration): Boolean {
+        if (!appRuntimeReady.isCompleted || CrashRecovery.isRecoveryBlocked) return false
+        val settings = storeFlow.value
+        return generation.canSubmit(settings, settings.enableMatch, A11yRuntime.generation(service))
+    }
+
+    private class ScheduledQuery(val generation: MatchGeneration, val request: QueryRequest<ResolvedRule>)
+
+    private val queryWakeup = QueryWakeup<ScheduledQuery> { a, b ->
+        if (a.generation.sameAs(b.generation)) ScheduledQuery(b.generation, a.request.merge(b.request))
+        else if (canMatch(b.generation)) b else a
+    }
 
     private fun startQueryJob(
         byEvent: Boolean = false,
         byForced: Boolean = false,
         byDelayRule: ResolvedRule? = null,
+        generation: MatchGeneration? = captureMatchGeneration(),
     ) {
-        if (!effective || !storeFlow.value.enableMatch) return
+        if (generation == null || !canMatch(generation)) return
         if (activityRuleFlow.value.currentRules.isEmpty()) return
-        if (!byEvent && service.justStarted && !hasOthersService) return checkFutureStartJob()
+        if (!byEvent && service.justStarted && !hasOthersService) return checkFutureStartJob(generation)
         val request = QueryRequest(byEvent, byForced, byDelayRule == null, setOfNotNull(byDelayRule))
-        if (!queryWakeup.request(request)) return
+        if (!queryWakeup.request(ScheduledQuery(generation, request))) return
         scope.launchLogged(queryDispatcher) {
+            var lastGeneration: MatchGeneration? = null
             while (true) {
                 val next = queryWakeup.takeOrFinish() ?: break
+                if (!canMatch(next.generation)) continue
+                lastGeneration = next.generation
                 try {
-                    if (effective) queryAction(next.byEvent, next.byForced,
-                        if (next.normal) null else next.delayRules)
+                    val request = next.request
+                    queryAction(next.generation, request.byEvent, request.byForced,
+                        if (request.normal) null else request.delayRules)
                 } catch (e: CancellationException) {
                     // Selector interruption is recoverable; service cancellation is not.
                     currentCoroutineContext().ensureActive()
@@ -275,34 +313,54 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
                     Log.e("A11yRuleEngine", "queryAction failed", e)
                 }
             }
-            checkFutureStartJob()
+            lastGeneration?.let(::checkFutureStartJob)
         }
     }
 
     private var futureStartJob: Job? = null
+    private var futureStartGeneration: MatchGeneration? = null
+
     @Synchronized
-    private fun checkFutureStartJob() {
-        if (!effective || futureStartJob?.isActive == true) return
+    private fun checkFutureStartJob(generation: MatchGeneration) {
+        if (!canMatch(generation)) return
+        if (futureStartJob?.isActive == true && generation.sameAs(futureStartGeneration)) return
         val t = ruleNow()
-        if (t - lastTriggerTime < 3000L || t - appChangeTime < 3000L) {
-            futureStartJob = scope.launch(actionDispatcher) {
-                delay(300.milliseconds)
-                synchronized(this@A11yRuleEngine) { futureStartJob = null }
-                startQueryJob()
+        val byForced = if (t - lastTriggerTime < 3000L || t - appChangeTime < 3000L) false
+            else if (activityRuleFlow.value.hasFeatureAction) true else return
+        futureStartJob?.cancel()
+        futureStartGeneration = generation
+        futureStartJob = scope.launch(actionDispatcher) {
+            delay(300.milliseconds)
+            val job = currentCoroutineContext()[Job]
+            synchronized(this@A11yRuleEngine) {
+                if (futureStartJob !== job) return@launch
+                futureStartJob = null
+                futureStartGeneration = null
             }
-        } else if (activityRuleFlow.value.hasFeatureAction) {
-            futureStartJob = scope.launch(actionDispatcher) {
-                delay(300.milliseconds)
-                synchronized(this@A11yRuleEngine) { futureStartJob = null }
-                startQueryJob(byForced = true)
-            }
+            startQueryJob(byForced = byForced, generation = generation)
         }
     }
 
-    private suspend fun fixAppId(rightAppId: String) {
+    private fun scheduleRuleDelay(
+        slot: AtomicRef<Job?>, delayMillis: Long, generation: MatchGeneration, rule: ResolvedRule,
+    ) {
+        val job = scope.launch(actionDispatcher, start = CoroutineStart.LAZY) {
+            delay(delayMillis.milliseconds)
+            val self = currentCoroutineContext()[Job]
+            if (slot.compareAndSet(self, null)) startQueryJob(byDelayRule = rule, generation = generation)
+        }
+        if (slot.compareAndSet(null, job)) {
+            job.invokeOnCompletion { slot.compareAndSet(job, null) }
+            job.start()
+        } else {
+            job.cancel()
+        }
+    }
+
+    private suspend fun fixAppId(rightAppId: String, generation: MatchGeneration) {
         if (currentTopActivity.appId == rightAppId) return
         val topCpn = getTimeoutTopCpn()
-        if (!effective) return
+        if (!canMatch(generation)) return
         A11yState.withTopActivityLock {
             if (topCpn?.packageName == rightAppId) {
                 updateTopActivity(topCpn.packageName, topCpn.className)
@@ -312,28 +370,30 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
         }
         scope.launch(actionDispatcher) {
             delay(300.milliseconds)
-            startQueryJob()
+            startQueryJob(generation = generation)
         }
     }
 
     private suspend fun queryAction(
+        generation: MatchGeneration,
         byEvent: Boolean = false,
         byForced: Boolean = false,
         delayRules: Set<ResolvedRule>? = null,
     ) {
         val tempStateEvent = latestStateEvent
-        val drainedEvents = if (delayRules != null) emptyList() else queryEvents.drain()
+        val drainedEvents = if (delayRules != null) emptyList() else synchronized(queryEvents) {
+            if (!canMatch(generation)) return
+            queryEvents.drain()
+        }
         try {
-            val newEvents = if (drainedEvents.isNotEmpty() &&
-                drainedEvents.all { it.sameAs(drainedEvents.first()) }) drainedEvents.takeLast(2) else emptyList()
+            val currentEvents = drainedEvents.filter { generation.sameAs(it.generation) }
+            val newEvents = if (currentEvents.isNotEmpty() && currentEvents.all { it.sameAs(currentEvents.first()) }) {
+                currentEvents.takeLast(2).map { it.event }
+            } else emptyList()
             val activityRule = A11yState.currentRule
             activityRule.currentRules.forEach { rule ->
                 if (rule.status == RuleStatus.Status3 && rule.matchDelayJob.value == null) {
-                    rule.matchDelayJob.value = scope.launch(actionDispatcher) {
-                        delay(rule.matchDelay.milliseconds)
-                        rule.matchDelayJob.value = null
-                        startQueryJob(byDelayRule = rule)
-                    }
+                    scheduleRuleDelay(rule.matchDelayJob, rule.matchDelay, generation, rule)
                 }
             }
             if (activityRule.skipMatch) {
@@ -361,7 +421,7 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
                 }
             }
             for (rule in activityRule.priorityRules) { // 规则数量有可能过多导致耗时过长
-                if (!effective) return
+                if (!canMatch(generation)) return
                 if (checkOutDate(activityRule, tempStateEvent)) break
                 if (delayRules != null && rule !in delayRules) continue
                 if (rule.status != RuleStatus.StatusOk) continue
@@ -385,29 +445,27 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
                 val rightAppId = nodeVal.packageName?.toString() ?: break
                 val matchApp = rule.matchActivity(rightAppId)
                 if (currentTopActivity.appId != rightAppId || (!matchApp && rule is AppRule)) {
-                    scope.launch(eventDispatcher) { fixAppId(rightAppId) }
+                    scope.launch(eventDispatcher) { fixAppId(rightAppId, generation) }
                     return
                 }
                 if (!matchApp) continue
                 val target = a11yContext.queryRule(rule, nodeVal) ?: continue
-                if (rule.checkDelay() && rule.actionDelayJob.value == null) {
-                    rule.actionDelayJob.value = scope.launch(actionDispatcher) {
-                        delay(rule.actionDelay.milliseconds)
-                        rule.actionDelayJob.value = null
-                        startQueryJob(byDelayRule = rule)
-                    }
+                if (!canMatch(generation)) return
+                if (rule.checkDelay()) {
+                    scheduleRuleDelay(rule.actionDelayJob, rule.actionDelay, generation, rule)
                     continue
                 }
                 val topActivity = activityRule.topActivity
                 val actionResult = performRuleAction(
                     rule = rule,
                     isCurrent = { !checkOutDate(activityRule, tempStateEvent) },
+                    canSubmit = { canMatch(generation) },
                 ) { rule.performAction(target) } ?: break
                 if (actionResult.result) {
                     rule.recordAction()
                     scope.launch(actionDispatcher) {
                         delay(300.milliseconds)
-                        startQueryJob()
+                        startQueryJob(generation = generation)
                     }
                     if (actionResult.action != ActionPerformer.None.action) {
                         showActionToast(rule)
@@ -416,7 +474,7 @@ class A11yRuleEngine(private val service: A11yCommonImpl) {
                 }
             }
         } finally {
-            drainedEvents.forEach(A11yEvent::close)
+            drainedEvents.forEach(QueuedEvent::close)
         }
     }
 

@@ -84,18 +84,21 @@ class TextDialogState {
                         )
                     }
                 },
-                confirmButton = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
+                dismissButton = if (currentRequest.openable) {
+                    {
                         GkActionButton(onClick = throttle(::dismiss)) {
                             Text(text = UiStrings.action_close)
                         }
-                        if (currentRequest.openable) {
-                            GkActionButton(onClick = throttle { open(currentRequest) }) {
-                                Text(text = UiStrings.action_open)
-                            }
+                    }
+                } else null,
+                confirmButton = {
+                    if (currentRequest.openable) {
+                        GkActionButton(emphasized = true, onClick = throttle { open(currentRequest) }) {
+                            Text(text = UiStrings.action_open)
+                        }
+                    } else {
+                        GkActionButton(onClick = throttle(::dismiss)) {
+                            Text(text = UiStrings.action_close)
                         }
                     }
                 },

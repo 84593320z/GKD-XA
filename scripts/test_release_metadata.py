@@ -1,7 +1,6 @@
-"""Exercise the real release packager with controlled Android tool output."""
+"""Exercise release packaging and recovery without signing keys or network access."""
 import argparse
 import hashlib
-import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -84,15 +83,82 @@ class ReleaseMetadataTest(unittest.TestCase):
             self.pack()
         self.assertFalse(self.args.output_dir.exists())
 
-    def test_backfill_does_not_overwrite_advanced_channel(self):
+    def published_backfill_args(self):
         self.pack()
-        channel = self.root / "version/beta.json"
-        advanced = release.load(channel)
-        advanced.update(versionCode=154, versionName="1.5.3", downloadUrl="https://example.test/new.apk")
-        release.save(channel, advanced)
-        release.backfill(argparse.Namespace(root=self.root, manifest=self.args.output_dir / "release-manifest.json"))
-        self.assertEqual(release.load(channel), advanced)
-        self.assertEqual(release.load(self.root / "version/stable.json")["fileSize"], self.apk.stat().st_size)
+        manifest_path = self.args.output_dir / "release-manifest.json"
+        manifest = release.load(manifest_path)
+        published_path = self.root / "published-release.json"
+        release.save(published_path, {
+            "draft": False,
+            "tag_name": self.args.tag,
+            "assets": [{"name": manifest["asset"], "size": manifest["fileSize"],
+                        "digest": f'sha256:{manifest["sha256"]}'}],
+        })
+        return argparse.Namespace(root=self.root, manifest=manifest_path, published_release=published_path,
+                                  tag=self.args.tag, commit="a" * 40)
+
+    def backfill(self, args):
+        with patch.object(release, "ROOT", self.root):
+            release.backfill(args)
+
+    def test_backfill_is_idempotent_without_rewriting_files(self):
+        args = self.published_backfill_args()
+        manifest = release.load(args.manifest)
+        channels = [self.root / f"version/{name}.json" for name in ("stable", "beta")]
+        expected = [dict(release.load(path), fileSize=manifest["fileSize"], sha256=manifest["sha256"])
+                    for path in channels]
+        self.backfill(args)
+        self.assertEqual([release.load(path) for path in channels], expected)
+        before = [path.read_bytes() for path in channels]
+        with patch.object(release, "save") as save:
+            self.backfill(args)
+        save.assert_not_called()
+        self.assertEqual([path.read_bytes() for path in channels], before)
+
+    def test_backfill_skips_nonmatching_channel_without_rewriting_it(self):
+        args = self.published_backfill_args()
+        beta = self.root / "version/beta.json"
+        stable = self.root / "version/stable.json"
+        original = release.load(beta)
+        for changes in (
+            dict(versionCode=154, versionName="1.5.3", downloadUrl="https://example.test/new.apk"),
+            dict(versionCode=154),
+            dict(versionName="1.5.3"),
+            dict(downloadUrl="https://example.test/other-artifact.apk"),
+        ):
+            with self.subTest(changes=changes):
+                release.save(beta, dict(original, **changes))
+                # Preserve intentionally nonstandard formatting as well as the data.
+                with beta.open("ab") as stream:
+                    stream.write(b"\n")
+                before = beta.read_bytes()
+                self.backfill(args)
+                self.assertEqual(beta.read_bytes(), before)
+                self.assertEqual(release.load(stable)["sha256"], release.load(args.manifest)["sha256"])
+
+    def test_backfill_refuses_a_draft_or_mismatched_published_apk(self):
+        args = self.published_backfill_args()
+        valid = release.load(args.published_release)
+        asset = valid["assets"][0]
+        for state in (dict(valid, draft=True), dict(valid, tag_name="v1.5.1"),
+                      dict(valid, assets=[dict(asset, digest="sha256:" + "b" * 64)]),
+                      dict(valid, assets=[dict(asset, size=asset["size"] + 1)]),
+                      dict(valid, assets=[])):
+            with self.subTest(state=state):
+                release.save(args.published_release, state)
+                with patch.object(release, "save") as save, self.assertRaises(ValueError):
+                    self.backfill(args)
+                save.assert_not_called()
+
+    def test_backfill_refuses_a_manifest_from_another_tag_commit_or_signer(self):
+        args = self.published_backfill_args()
+        valid = release.load(args.manifest)
+        for changes in (dict(tag="v1.5.1"), dict(commit="b" * 40), dict(signerSha256="0" * 64)):
+            with self.subTest(changes=changes):
+                release.save(args.manifest, dict(valid, **changes))
+                with patch.object(release, "save") as save, self.assertRaises(ValueError):
+                    self.backfill(args)
+                save.assert_not_called()
 
 
 if __name__ == "__main__":

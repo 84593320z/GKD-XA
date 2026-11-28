@@ -53,7 +53,7 @@ internal fun GkPreferenceRow(
 
 /** Decorative navigation hint matching Miuix 0.9.4 ArrowPreference, not an action. */
 @Composable
-internal fun GkPreferenceArrow() {
+fun GkPreferenceArrow() {
     val layoutDirection = LocalLayoutDirection.current
     Image(
         imageVector = MiuixIcons.Basic.ArrowRight,

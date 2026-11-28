@@ -255,7 +255,7 @@ private fun AiProviderConfigTab(
                             iconSize = 24.dp,
                             onClickLabel = if (apiKeyVisible) "隐藏 API Key" else "显示 API Key",
                             onClick = { apiKeyVisible = !apiKeyVisible },
-                            imageVector = if (apiKeyVisible) GkIcons.ToggleOff else GkIcons.ToggleOn,
+                            imageVector = if (apiKeyVisible) GkIcons.VisibilityOff else GkIcons.Visibility,
                             contentDescription = "显示/隐藏 API Key",
                         )
                     }
@@ -373,7 +373,6 @@ private fun AiProviderConfigTab(
                     AiRowDivider(hasLeading = false)
                     BasicComponent(
                         title = "添加请求头",
-                        startAction = { AiRowIcon(imageVector = GkIcons.Add) },
                         endActions = { GkIcon(imageVector = GkIcons.Add) },
                         onClick = throttle { update { it.copy(headers = it.headers + AiHeaderDraft()) } },
                     )
@@ -583,7 +582,7 @@ private fun HeaderRow(
                 iconSize = 24.dp,
                 onClickLabel = "显示或隐藏取值",
                 onClick = { visible = !visible },
-                imageVector = if (visible) GkIcons.ToggleOff else GkIcons.ToggleOn,
+                imageVector = if (visible) GkIcons.VisibilityOff else GkIcons.Visibility,
                 contentDescription = "显示/隐藏取值",
             )
             GkSizedIconButton(

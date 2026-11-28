@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.squircle.addSquircleRect
 
 /** Use the same continuous-corner path as native Miuix cards, including platform Dialog hosts. */
@@ -26,4 +27,5 @@ internal object GkShapes {
     val panel: Shape = MiuixShape(14.dp)
     val card: Shape = MiuixShape(GkUi.CardRadius)
     val dialog: Shape = MiuixShape(GkUi.DialogRadius)
+    val floatingBar: Shape = MiuixShape(FloatingToolbarDefaults.CornerRadius)
 }

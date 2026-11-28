@@ -1,29 +1,32 @@
 package li.gkd.app.data.backup
 
 import android.net.Uri
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import li.gkd.app.text.UiStrings
-import li.gkd.app.store.AppStore
 import li.gkd.app.data.RawSubscription
-import li.gkd.app.data.subscription.SubscriptionRepository
+import li.gkd.app.data.subscription.SubscriptionBodyChange
 import li.gkd.app.data.subscription.SubscriptionFileStore
 import li.gkd.app.data.subscription.SubscriptionPersistence
-import li.gkd.app.util.FolderUtils
+import li.gkd.app.data.subscription.SubscriptionRepository
+import li.gkd.app.data.subscription.nextSubscriptionMtime
+import li.gkd.app.store.AppStore
+import li.gkd.app.text.UiStrings
 import li.gkd.app.util.ExportFileNames
+import li.gkd.app.util.FolderUtils
 import li.gkd.app.util.LogUtils
 import li.gkd.app.util.ZipUtils
 import li.gkd.app.util.json
+import li.gkd.db.Db
+import li.gkd.db.LOCAL_SUBS_ID
+import li.gkd.db.SubscriptionConfigSnapshot
 import java.io.File
 import java.io.IOException
-import li.gkd.db.Db
-import li.gkd.db.SubscriptionConfigSnapshot
 
 private data class PreparedBackup(
     val dbData: SubscriptionConfigSnapshot?,
@@ -185,24 +188,48 @@ object BackupManager {
     }
 
     private suspend fun applyPreparedBackup(prepared: PreparedBackup): BackupCommitResult<Int> =
-        SubscriptionRepository.withBackupTransaction(prepared.subscriptions) { subscriptions ->
-            val previousFiles = subscriptions.associate { subscription ->
-                subscription.id to SubscriptionFileStore.readBytes(subscription.id)
-            }
+        SubscriptionRepository.withBackupTransaction(prepared.subscriptions) { archivedSubscriptions ->
             AppStore.withBackupRestore(prepared.storeEntries) {
-                try {
-                    Db.withTransaction {
-                        val skipped = prepared.dbData?.let { Db.subscriptionConfigStore.merge(it) } ?: 0
-                        subscriptions.forEach { SubscriptionPersistence.save(it) }
-                        skipped
+                val skipped = SubscriptionPersistence.withBodyTransaction { journal ->
+                    val current = Db.subscriptionConfigStore.capture()
+                    val plan = planSubscriptionRestore(
+                        database = completeSubscriptionMetadata(prepared.dbData, archivedSubscriptions),
+                        subscriptions = archivedSubscriptions,
+                        existing = current,
+                        hasExistingBody = journal::hasExistingBody,
+                        readLocalPlaceholder = {
+                            if (journal.hasLegacySidecar(LOCAL_SUBS_ID)) null
+                            else SubscriptionFileStore.readSmallBody(LOCAL_SUBS_ID, maxBytes = 4096)
+                        },
+                    )
+                    if (plan.conflictingIds.isNotEmpty()) {
+                        LogUtils.d("保留现有同 ID 订阅及配置", "count=" + plan.conflictingIds.size)
                     }
-                } catch (error: Throwable) {
-                    previousFiles.forEach { (id, bytes) ->
-                        runCatching { SubscriptionFileStore.restore(id, bytes) }
-                            .exceptionOrNull()?.let(error::addSuppressed)
+                    val currentItems = current.subsItems.associateBy { it.id }
+                    val importItems = plan.database.subsItems.map { archived ->
+                        val previous = currentItems[archived.id] ?: return@map archived
+                        // Only the automatically-created pristine local placeholder may be replaced.
+                        archived.copy(
+                            ctime = previous.ctime,
+                            order = previous.order,
+                            mtime = nextSubscriptionMtime(previous.mtime),
+                        ).also { Db.subsItemDao.upsert(it) }
                     }
-                    throw error
+                    val itemsById = importItems.associateBy { it.id }
+                    val skippedConfigs = Db.subscriptionConfigStore.merge(plan.database.copy(
+                        subsItems = importItems.filterNot { it.id in currentItems },
+                    ))
+                    journal.stageAndInstall(plan.subscriptions.map { body ->
+                        SubscriptionBodyChange(
+                            id = body.id,
+                            previousMtime = currentItems[body.id]?.mtime,
+                            nextMtime = itemsById.getValue(body.id).mtime,
+                            body = body,
+                        )
+                    })
+                    plan.skippedOrphanConfigs + skippedConfigs
                 }
+                skipped
             }
         }
 

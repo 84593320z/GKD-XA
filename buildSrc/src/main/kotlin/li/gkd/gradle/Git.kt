@@ -131,51 +131,70 @@ private fun readGitInfo(repositoryDirectory: String): GitInfo {
     )
 }
 
-private fun readRepositoryStateId(
+internal fun readGitStatus(repositoryDirectory: String): ByteArray = runGitCommandBytes(
+    repositoryDirectory,
+    listOf("status", "--porcelain=v1", "-z", "--untracked-files=all"),
+)
+
+internal data class GitStatusEntry(val status: String, val path: String)
+
+internal fun gitStatusEntries(status: ByteArray): List<GitStatusEntry> = buildList {
+    val records = status.toString(Charsets.UTF_8).splitToSequence('\u0000').iterator()
+    while (records.hasNext()) {
+        val record = records.next()
+        if (record.length < 4) continue
+        val statusCode = record.substring(0, 2)
+        add(GitStatusEntry(statusCode, record.substring(3)))
+        // Rename/copy records include a second (source) path without a status prefix.
+        if ((statusCode.contains('R') || statusCode.contains('C')) && records.hasNext()) {
+            records.next()
+        }
+    }
+}
+
+internal fun sha256OfFile(file: File): ByteArray? {
+    if (!file.isFile) return null
+    val digest = MessageDigest.getInstance("SHA-256")
+    file.inputStream().use { input ->
+        val buffer = ByteArray(64 * 1024)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            digest.update(buffer, 0, read)
+        }
+    }
+    return digest.digest()
+}
+
+internal fun ByteArray.toHexDigest(): String = joinToString(separator = "") { byte ->
+    "%02x".format(byte.toInt() and 0xff)
+}
+
+internal fun readRepositoryStateId(
     repositoryDirectory: String,
     commitId: String,
 ): String {
-    val status = runGitCommandBytes(
-        repositoryDirectory,
-        listOf("status", "--porcelain=v1", "-z", "--untracked-files=all"),
-    )
+    val status = readGitStatus(repositoryDirectory)
     if (status.isEmpty()) return commitId
-
-    val changedPaths = sequenceOf(
-        runGitCommandBytes(
-            repositoryDirectory,
-            listOf("diff", "--name-only", "-z", "HEAD"),
-        ),
-        runGitCommandBytes(
-            repositoryDirectory,
-            listOf("ls-files", "--others", "--exclude-standard", "-z"),
-        ),
-    )
-        .flatMap { output ->
-            output.toString(Charsets.UTF_8)
-                .splitToSequence('\u0000')
-                .filter(String::isNotEmpty)
-        }
-        .distinct()
-        .sorted()
-        .toList()
 
     val digest = MessageDigest.getInstance("SHA-256")
     digest.update(commitId.toByteArray(Charsets.UTF_8))
     digest.update(0)
     digest.update(status)
-    changedPaths.forEach { path ->
-        val file = File(repositoryDirectory, path)
+    // Include staged blob IDs as the index can differ from the working copy.
+    digest.update(
+        runGitCommandBytes(
+            repositoryDirectory,
+            listOf("diff", "--cached", "--raw", "--no-abbrev", "-z", commitId),
+        ),
+    )
+    for ((_, path) in gitStatusEntries(status).sortedBy { it.path }) {
         digest.update(0)
         digest.update(path.toByteArray(Charsets.UTF_8))
-        if (file.isFile) {
-            digest.update(0)
-            digest.update(file.length().toString().toByteArray(Charsets.UTF_8))
-            digest.update(0)
-            digest.update(file.lastModified().toString().toByteArray(Charsets.UTF_8))
-        }
+        digest.update(0)
+        // Size and mtime can both stay the same while the bytes change.
+        val contentDigest = sha256OfFile(File(repositoryDirectory, path))
+        if (contentDigest != null) digest.update(contentDigest)
     }
-    return digest.digest().joinToString(separator = "") { byte ->
-        "%02x".format(byte.toInt() and 0xff)
-    }
+    return digest.digest().toHexDigest()
 }

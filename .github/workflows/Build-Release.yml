@@ -34,6 +34,7 @@ jobs:
           python3 scripts/check_miuix_ui.py
           python3 gkd-priv-ui/tools/verify_fork.py
           chmod +x ./gradlew
+          ./gradlew -p buildSrc -I "$GITHUB_WORKSPACE/buildSrc/src/test/regression.init.gradle" buildSnapshotRegression --no-configuration-cache --stacktrace
           ./gradlew gkd-priv-ui:testDebugUnitTest gkd-app:testGkdDebugUnitTest gkd-selector:jvmTest gkd-db:jvmTest --stacktrace
       - name: Build with the repository release key
         env:
@@ -82,42 +83,130 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release
-          path: release
-      - name: Publish all verified assets atomically from a draft
+      - name: Check whether the tag is already published
+        id: release-state
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          # A failed API request must not be treated as a missing release.
+          state=$(gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" |
+            jq -er --arg tag "$TAG" '[.[][] | select(.tag_name == $tag)] |
+              if length == 0 then "missing"
+              elif length != 1 then error("Multiple releases for tag")
+              elif .[0].draft == true then "draft"
+              elif .[0].draft == false then "published"
+              else error("Unknown release state") end')
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: steps.release-state.outputs.state == 'missing' || steps.release-state.outputs.state == 'draft'
+        with:
+          name: release
+          path: release
+      - name: Publish a draft with verified release assets
+        if: steps.release-state.outputs.state == 'missing' || steps.release-state.outputs.state == 'draft'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          RELEASE_STATE: ${{ steps.release-state.outputs.state }}
+        run: |
+          set -euo pipefail
           (cd release && sha256sum --check SHA256SUMS)
-          if gh release view "$TAG" --json isDraft > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
-            python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1]))["isDraft"] else "Release already published; assets will not be overwritten")' "$RUNNER_TEMP/release-state.json"
-          else
+          if [[ "$RELEASE_STATE" == missing ]]; then
             gh release create "$TAG" --verify-tag --draft --title "GKD-XA $TAG" --notes-file release/RELEASE_NOTES.md
           fi
-          gh release upload "$TAG" "release/GKD-XA-$TAG.apk" release/SHA256SUMS release/release-manifest.json release/stable.json release/beta.json --clobber
+          draft_id() {
+            gh release view "$TAG" --json databaseId,isDraft |
+              jq -er 'if .isDraft == true and (.databaseId | type) == "number" then .databaseId
+                      else error("Not a draft; refusing to change release") end'
+          }
+          release_id=$(draft_id)
+          require_draft() {
+            if [[ "$(draft_id)" != "$release_id" ]]; then
+              echo "Draft changed; refusing to change release $TAG" >&2
+              exit 1
+            fi
+          }
+          read_assets() {
+            gh api --paginate --slurp "repos/$GH_REPO/releases/$release_id/assets?per_page=100" | jq -ce '[.[][]]'
+          }
+          asset_state() {
+            local file=$1 sum size
+            sum=$(sha256sum -- "$file") || return
+            size=$(stat -c %s -- "$file") || return
+            jq -er --arg name "${file##*/}" --arg digest "sha256:${sum%% *}" --argjson size "$size" '
+              [.[] | select(.name == $name)] |
+              if length == 0 then "missing"
+              elif length == 1 and .[0].state == "uploaded" and .[0].size == $size and .[0].digest == $digest then "verified"
+              else error("Existing release asset differs or is incomplete: " + $name) end' <<< "$remote_assets"
+          }
+          files=("release/GKD-XA-$TAG.apk" release/SHA256SUMS release/release-manifest.json release/stable.json release/beta.json)
+          remote_assets=$(read_assets)
+          missing=()
+          for file in "${files[@]}"; do
+            state=$(asset_state "$file")
+            if [[ "$state" == missing ]]; then missing+=("$file"); fi
+          done
+          if (( ${#missing[@]} > 0 )); then
+            require_draft
+            # Never delete or replace an asset, even if someone publishes after our draft check.
+            gh release upload "$TAG" "${missing[@]}"
+            remote_assets=$(read_assets)
+          fi
+          for file in "${files[@]}"; do
+            state=$(asset_state "$file")
+            if [[ "$state" != verified ]]; then
+              echo "Verified asset is missing: $file" >&2
+              exit 1
+            fi
+          done
+          require_draft
           if [[ "$TAG" == *beta* ]]; then
             gh release edit "$TAG" --draft=false --prerelease
           else
             gh release edit "$TAG" --draft=false --latest
           fi
+      - name: Read the published release and its manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          encoded_tag=$(jq -nr --arg tag "$TAG" '$tag | @uri')
+          gh api "repos/$GH_REPO/releases/tags/$encoded_tag" > "$RUNNER_TEMP/published-release.json"
+          gh release download "$TAG" --pattern release-manifest.json --dir "$RUNNER_TEMP"
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: main
           path: metadata-main
       - name: Backfill only matching main channel metadata
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          python3 scripts/release_metadata.py backfill --root metadata-main --manifest release/release-manifest.json
-          cd metadata-main
-          if ! git diff --quiet -- version/stable.json version/beta.json; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add version/stable.json version/beta.json
-            git commit -m 'chore(version): bind channel metadata to verified release artifact [skip ci]'
-            git push origin HEAD:main
-          fi
+          commit=$(git rev-parse HEAD)
+          git -C metadata-main config user.name 'github-actions[bot]'
+          git -C metadata-main config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            base=$(git -C metadata-main rev-parse HEAD)
+            python3 scripts/release_metadata.py backfill --root metadata-main --tag "$TAG" --commit "$commit" \
+              --manifest "$RUNNER_TEMP/release-manifest.json" --published-release "$RUNNER_TEMP/published-release.json"
+            if git -C metadata-main diff --quiet -- version/stable.json version/beta.json; then
+              exit 0
+            fi
+            git -C metadata-main add version/stable.json version/beta.json
+            git -C metadata-main commit -m 'chore(version): bind channel metadata to verified release artifact [skip ci]'
+            if git -C metadata-main push origin HEAD:refs/heads/main; then
+              exit 0
+            fi
+            # Never force-push or replay an old metadata diff. Recheck main's current channels.
+            git -C metadata-main fetch --no-tags origin refs/heads/main
+            if [[ "$(git -C metadata-main rev-parse FETCH_HEAD)" == "$base" || "$attempt" == 3 ]]; then
+              exit 1
+            fi
+            git -C metadata-main checkout --detach FETCH_HEAD
+          done

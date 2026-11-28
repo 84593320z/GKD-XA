@@ -1,6 +1,10 @@
 package li.gkd.app.snapshot
 
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files as NioFiles
+import java.nio.file.LinkOption.NOFOLLOW_LINKS
+import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 
 class SnapshotFileLayout(
     val rootDirectory: File,
@@ -29,6 +33,29 @@ class SnapshotFileLayout(
                 legacyPngFile.hasSupportedImageHeader() -> legacyPngFile
                 else -> null
             }
+
+        /** Recover originals staged by older versions before looking at the published image. */
+        internal suspend fun recoverInterruptedScreenshotReplacement(invalidateUpload: suspend () -> Unit) {
+            if (!directory.isDirectory) return
+            val children = directory.listFiles() ?: throw IOException("Unable to list snapshot files")
+            val replacements = children.filter { child ->
+                child.name.startsWith(".$id.webp.replace-") &&
+                    child.name.removePrefix(".$id.webp.replace-").matches(Regex("[0-9a-fA-F-]{36}")) &&
+                    NioFiles.isRegularFile(child.toPath(), NOFOLLOW_LINKS)
+            }
+            if (replacements.isNotEmpty()) {
+                invalidateUpload()
+                if (!webpFile.hasSupportedImageHeader()) {
+                    val original = replacements.filter { it.hasSupportedImageHeader() }.maxByOrNull { it.lastModified() }
+                    if (original != null) NioFiles.move(original.toPath(), webpFile.toPath(), ATOMIC_MOVE)
+                }
+                // Keep any remaining original until we have a readable published WebP.
+                if (webpFile.hasSupportedImageHeader()) replacements.forEach { it.delete() }
+            }
+            val tempName = Regex("\\.$id\\.webp\\.-?\\d+\\.tmp")
+            children.filter { tempName.matches(it.name) &&
+                NioFiles.isRegularFile(it.toPath(), NOFOLLOW_LINKS) }.forEach { it.delete() }
+        }
     }
 
     fun committed(id: Long): Files {

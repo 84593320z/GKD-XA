@@ -1,6 +1,8 @@
 package li.gkd.app.feature.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,6 +56,7 @@ import li.gkd.app.ui.component.autoFocus
 import li.gkd.app.ui.share.launchUi
 import li.gkd.app.ui.share.launchUiAction
 import li.gkd.app.ui.style.GkProvideTextStyle
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.ui.style.TABULAR_NUMBERS_FONT_FEATURE
 import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.app.ui.style.itemVerticalPadding
@@ -186,7 +190,13 @@ private fun AdvancedContent() {
                     onAddressClick = { url -> mainVm.openUrl(url) },
                 )
                 androidx.compose.animation.AnimatedVisibility(visible = showHttpSettingsDialog) {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
+                            .clip(GkShapes.panel)
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+                    ) {
                         TextSwitch(
                             title = "允许局域网调试",
                             subtitle = "仅在本次运行生效。连接可读取快照、修改规则并操作屏幕；凭据 30 分钟后失效，请只在可信网络使用",
@@ -459,7 +469,10 @@ private fun ExternalCallCommandDialog(onDismissRequest: () -> Unit) {
         onDismissRequest = onDismissRequest,
         title = { Text(text = UiStrings.external_call_command_item) },
         text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Text(
                     text = UiStrings.external_call_command(service, displayToken),
                     style = MiuixTheme.textStyles.body2,

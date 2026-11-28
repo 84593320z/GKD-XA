@@ -1,5 +1,6 @@
 package li.gkd.app.service
 
+import android.content.ComponentName
 import android.os.SystemClock
 import android.provider.Settings
 import li.gkd.app.appRuntimeReady
@@ -16,6 +17,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import li.gkd.app.text.UiStrings
 import li.gkd.app.META
+import li.gkd.app.a11y.A11yRuntime
 import li.gkd.app.a11y.systemRecentCn
 import li.gkd.app.a11y.currentTopActivity
 import li.gkd.app.ui.app.showAccessRestrictedSettingsDialog
@@ -67,45 +69,61 @@ private fun modifyA11yRun(
     }
 }
 
-/**
- * 把无障碍总开关与我们的服务写进 secure settings，并等待系统真正把服务拉起来。
- * 调用方必须持有 modifyA11yMutex。
- */
-private suspend fun writeA11yServiceEnabled(): Boolean {
-    if (CrashRecovery.isRecoveryBlocked) return false
-    val names = app.getSecureA11yServices()
-    app.putSecureInt(Settings.Secure.ACCESSIBILITY_ENABLED, 1)
-    if (names.contains(A11yService.a11yCn)) { // 当前无障碍异常, 重启服务
-        names.remove(A11yService.a11yCn)
-        app.putSecureA11yServices(names)
-        delay(A11Y_AWAIT_FIX_TIME.milliseconds)
-    }
-    if (CrashRecovery.isRecoveryBlocked) return false
-    names.add(A11yService.a11yCn)
-    app.putSecureA11yServices(names)
+private val a11yServicesSetting = AccessibilityServicesSetting(
+    read = { app.getSecureString(Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) },
+    write = { app.putSecureString(Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, it) },
+    isOurs = { ComponentName.unflattenFromString(it) == A11yService.a11yCn },
+    component = { A11yService.a11yCn.flattenToShortString() },
+    onUpdate = { enabled -> A11yService.recordSystemSetting(enabled) },
+)
+
+private fun canStartA11y(request: AccessibilityStartIntent.Request): Boolean =
+    request.enabled && A11yService.isStartupCurrent(request) && currentAppUseA11y &&
+        !currentAppBlocked && !CrashRecovery.isRecoveryBlocked
+
+/** Caller holds modifyA11yMutex. Each write checks intent and reads the latest component list. */
+private suspend fun writeA11yServiceEnabled(request: AccessibilityStartIntent.Request): Boolean {
+    val written = a11yServicesSetting.restart(
+        shouldStart = { canStartA11y(request) },
+        update = { enabled ->
+            A11yService.withStartup(request) {
+                canStartA11y(request) &&
+                    (!enabled || app.putSecureInt(Settings.Secure.ACCESSIBILITY_ENABLED, 1)) &&
+                    a11yServicesSetting.setEnabled(enabled)
+            } == true
+        },
+    ) { delay(A11Y_AWAIT_FIX_TIME.milliseconds) }
+    if (!written) return false
     delay(A11Y_AWAIT_START_TIME.milliseconds)
-    // https://github.com/orgs/gkd-kit/discussions/799
-    return A11yService.isReady
+    return canStartA11y(request) && A11yService.isReady
 }
 
 private suspend fun switchA11yService() {
-    if (A11yService.isRunning.value) {
-        // 用户在开关上主动关掉：一段时间内不再自动 arm，否则开机/回到前台会和他对着干
-        a11yUserDisabledAt = SystemClock.elapsedRealtime()
-        A11yService.instance?.disableSelf()
-    } else {
-        a11yUserDisabledAt = 0L
-        if (!PermissionStates.writeSecureSettings.updateAndGet()) {
-            if (!PermissionStates.writeSecureSettings.value) {
+    // Record the tap before waiting for the settings mutex: an in-flight enable must see a close.
+    val request = A11yService.toggleStartup()
+    if (!request.enabled) {
+        A11yService.closeStartup(request)
+        modifyA11yMutex.withLock {
+            if (A11yService.isStartupCurrent(request) && PermissionStates.writeSecureSettings.updateAndGet()) {
+                A11yService.withStartup(request) { a11yServicesSetting.setEnabled(false) }
+            }
+        }
+        return
+    }
+    try {
+        modifyA11yMutex.withLock {
+            if (!canStartA11y(request)) return
+            if (!PermissionStates.writeSecureSettings.updateAndGet() && !PermissionStates.writeSecureSettings.value) {
                 toast(UiStrings.secure_settings_permission_required)
                 return
             }
+            if (!writeA11yServiceEnabled(request) && canStartA11y(request)) {
+                toast(UiStrings.a11y_enable_failed)
+                showAccessRestrictedSettingsDialog()
+            }
         }
-        if (!writeA11yServiceEnabled()) {
-            toast(UiStrings.a11y_enable_failed)
-            showAccessRestrictedSettingsDialog()
-            return
-        }
+    } finally {
+        A11yService.finishStartup(request)
     }
 }
 
@@ -117,11 +135,19 @@ private fun switchAutomationService() {
     }
 }
 
-fun switchAutomatorService(@CallSite loc: String = "") = modifyA11yRun(loc = loc) {
-    if (currentAppUseA11y) {
-        switchA11yService()
-    } else {
-        switchAutomationService()
+fun switchAutomatorService(@CallSite loc: String = "") {
+    appScope.launchUi(Dispatchers.IO, loc = loc) {
+        appRuntimeReady.await()
+        if (CrashRecovery.isRecoveryBlocked) return@launchUi
+        if (currentAppUseA11y) {
+            switchA11yService()
+        } else if (modifyA11yMutex.tryLock()) {
+            try {
+                switchAutomationService()
+            } finally {
+                modifyA11yMutex.unlock()
+            }
+        }
     }
 }
 
@@ -140,27 +166,15 @@ private fun skipBlockApp(): Boolean {
 }
 
 private suspend fun fixA11yService() {
-    if (!A11yService.isReady && PermissionStates.writeSecureSettings.updateAndGet()) {
-        if (skipBlockApp()) return
-        val names = app.getSecureA11yServices()
-        val a11yBroken = names.contains(A11yService.a11yCn)
-        if (a11yBroken) {
-            // 无障碍出现故障, 重启服务
-            names.remove(A11yService.a11yCn)
-            app.putSecureA11yServices(names)
-            // 必须等待一段时间, 否则概率不会触发系统重启无障碍
-            delay(A11Y_AWAIT_FIX_TIME.milliseconds)
-            if (!currentAppUseA11y || CrashRecovery.isRecoveryBlocked) return
-        }
-        names.add(A11yService.a11yCn)
-        app.putSecureA11yServices(names)
-        delay(A11Y_AWAIT_START_TIME.milliseconds)
-        // 判定口径要和函数入口一致：入口已经改成 isReady，这里若还看 isRunning，
-        // 「服务被创建但连不上」就会走完先摘再挂后被当成修复成功、一声不吭。
-        if (currentAppUseA11y && !A11yService.isReady) {
+    if (A11yService.isReady || !PermissionStates.writeSecureSettings.updateAndGet() || skipBlockApp()) return
+    val request = A11yService.beginStartup() ?: return
+    try {
+        if (!writeA11yServiceEnabled(request) && canStartA11y(request)) {
             toast(UiStrings.a11y_restart_failed)
             showAccessRestrictedSettingsDialog()
         }
+    } finally {
+        A11yService.finishStartup(request)
     }
 }
 
@@ -181,11 +195,6 @@ fun fixRestartAutomatorService(@CallSite loc: String = "") = modifyA11yRun(loc =
         }
     }
 }
-
-@Volatile
-private var a11yUserDisabledAt = 0L
-
-private const val A11Y_USER_DISABLED_SUPPRESS_MILLIS = 30 * 60 * 1000L
 
 /** 第 1 次立即执行，之后按这里的间隔重试（对付开机时系统把刚拉起的无障碍又解绑的那几秒）。 */
 private val A11Y_ARM_RETRY_MILLIS = longArrayOf(2_000L, 5_000L, 10_000L)
@@ -216,15 +225,6 @@ private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yO
         LogUtils.d("$loc 前台在禁用无障碍列表里，不自动开启", loc = "armA11yService")
         return ArmA11yOutcome.Stop
     }
-    val disabledAt = a11yUserDisabledAt
-    if (disabledAt != 0L) {
-        val remaining = A11Y_USER_DISABLED_SUPPRESS_MILLIS - (SystemClock.elapsedRealtime() - disabledAt)
-        if (remaining > 0) {
-            LogUtils.d("$loc 用户刚主动关闭无障碍，${remaining}ms 内不自动开启", loc = "armA11yService")
-            return ArmA11yOutcome.Stop
-        }
-        a11yUserDisabledAt = 0L
-    }
     if (!PermissionStates.writeSecureSettings.updateAndGet()) {
         LogUtils.d("$loc 没有 WRITE_SECURE_SETTINGS（root/特权未就绪），不自动开启", loc = "armA11yService")
         return ArmA11yOutcome.Stop
@@ -234,8 +234,14 @@ private suspend fun armA11yOnce(loc: String, attempt: Int, total: Int): ArmA11yO
         if (A11yService.isReady) {
             true
         } else {
-            wrote = true
-            writeA11yServiceEnabled()
+            val request = A11yService.beginStartup() ?: return ArmA11yOutcome.Stop
+            try {
+                if (!canStartA11y(request)) return ArmA11yOutcome.Stop
+                wrote = true
+                writeA11yServiceEnabled(request)
+            } finally {
+                A11yService.finishStartup(request)
+            }
         }
     }
     if (wrote) {
@@ -298,15 +304,20 @@ private fun innerForcedUpdateA11yService(disabled: Boolean) {
         return
     }
     if (currentAppUseA11y) {
-        if (A11yService.isRunning.value) {
+        val service = A11yService.instance
+        if (service?.isAvailable == true) {
+            A11yRuntime.onA11yConnected(service)
             return
         }
-        if (!PermissionStates.writeSecureSettings.stateFlow.value) {
-            return
+        if (A11yService.isRunning.value || !PermissionStates.writeSecureSettings.stateFlow.value) return
+        val request = A11yService.beginStartup() ?: return
+        try {
+            A11yService.withStartup(request) {
+                if (canStartA11y(request)) a11yServicesSetting.setEnabled(true)
+            }
+        } finally {
+            A11yService.finishStartup(request)
         }
-        val names = app.getSecureA11yServices()
-        names.add(A11yService.a11yCn)
-        app.putSecureA11yServices(names)
     } else {
         AutomationService.tryConnect(true)
     }

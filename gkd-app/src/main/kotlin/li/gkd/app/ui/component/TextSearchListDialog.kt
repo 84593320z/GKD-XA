@@ -25,9 +25,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import li.gkd.app.ui.style.GkShapes
 import li.gkd.app.util.TimeUtils.throttle
-import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.basic.Text
@@ -51,19 +55,26 @@ fun TextSearchListDialog(
         if (query.isEmpty()) textList
         else textList.filter { it.first.contains(query, ignoreCase = true) }
     }
-    GkDialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+    GkDialog(onDismissRequest = onDismiss, nativePlacement = true) {
+        GkDialogSurface(
+            shape = GkShapes.dialog,
+            containerColor = DialogDefaults.backgroundColor(),
+            contentColor = MiuixTheme.colorScheme.onSurface,
+            shadowElevation = 0.dp,
         ) {
-            Column {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 title?.let {
-                    Text(
-                        text = it,
-                        style = MiuixTheme.textStyles.subtitle,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = it,
+                            style = MiuixTheme.textStyles.title4,
+                            color = DialogDefaults.titleColor(),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
                 if (searchPlaceholder != null) {
                     TextField(

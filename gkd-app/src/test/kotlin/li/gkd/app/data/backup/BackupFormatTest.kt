@@ -1,6 +1,7 @@
 package li.gkd.app.data.backup
 
 import li.gkd.app.data.RawSubscription
+import li.gkd.app.text.UiStrings
 import li.gkd.app.data.subscription.UsedSubsEntry
 import li.gkd.app.domain.rule.RuleGroupPolicy
 import li.gkd.app.domain.rule.RuleSummaryBuilder
@@ -135,4 +136,138 @@ class BackupFormatTest {
             BackupFormat.decode("""{"subsConfigs":[{"id":1,"type":99,"subsId":7}]}""")
         }
     }
+
+    @Test
+    fun restorePlanKeepsExistingRowsAndBodiesAndImportsOnlyCompleteNewItems() {
+        val existing = SubscriptionConfigSnapshot(
+            subsItems = listOf(SubsItem(id = 7, order = 0)),
+        )
+        val archive = SubscriptionConfigSnapshot(
+            subsItems = listOf(
+                SubsItem(id = 7, order = 0),
+                SubsItem(id = 8, order = 1),
+            ),
+            appConfigs = listOf(SubsAppConfig(true, 7, "existing")),
+        )
+        val archived = listOf(
+            RawSubscription(id = 7, name = "old", version = 1),
+            RawSubscription(id = 8, name = "new", version = 2),
+            RawSubscription(id = 9, name = "body-only", version = 1),
+        )
+
+        val plan = planSubscriptionRestore(
+            database = archive,
+            subscriptions = archived,
+            existing = existing,
+            hasExistingBody = { it == 7L || it == 9L },
+        )
+
+        assertEquals(setOf(7L, 9L), plan.conflictingIds)
+        assertEquals(listOf(8L), plan.subscriptions.map { it.id })
+        assertEquals(listOf(8L), plan.database.subsItems.map { it.id })
+        assertTrue(plan.database.appConfigs.isEmpty())
+        assertEquals(0, plan.skippedOrphanConfigs)
+    }
+
+    @Test
+    fun restorePlanReplacesOnlyPristineDefaultLocalPlaceholder() {
+        val localBody = """{"id":-2,"name":"Local","version":0}"""
+        val plan = planSubscriptionRestore(
+            database = SubscriptionConfigSnapshot(
+                subsItems = listOf(SubsItem(id = -2, ctime = 1, mtime = 2, order = 4)),
+                appConfigs = listOf(SubsAppConfig(true, -2, "app.local")),
+            ),
+            subscriptions = listOf(RawSubscription(id = -2, name = "Restored", version = 1)),
+            existing = SubscriptionConfigSnapshot(
+                subsItems = listOf(SubsItem(id = -2, ctime = 10, mtime = 11, order = 0)),
+            ),
+            hasExistingBody = { it == -2L },
+            readLocalPlaceholder = { localBody },
+            localPlaceholderName = "Local",
+        )
+        assertTrue(plan.conflictingIds.isEmpty())
+        assertEquals(listOf(-2L), plan.subscriptions.map { it.id })
+        assertEquals(listOf(-2L), plan.database.subsItems.map { it.id })
+        assertEquals(listOf(-2L), plan.database.appConfigs.map { it.subsId })
+    }
+
+    @Test
+    fun restorePlanPreservesEditedLocalBodyOrAnyLocalOverride() {
+        val item = SubsItem(id = -2, order = 0)
+        fun plan(body: String, configs: List<SubsAppConfig> = emptyList()) = planSubscriptionRestore(
+            database = SubscriptionConfigSnapshot(subsItems = listOf(item)),
+            subscriptions = listOf(RawSubscription(id = -2, name = "Restored", version = 1)),
+            existing = SubscriptionConfigSnapshot(subsItems = listOf(item), appConfigs = configs),
+            hasExistingBody = { true },
+            readLocalPlaceholder = { body },
+            localPlaceholderName = "Local",
+        )
+        val editedBody = plan("""{"id":-2,"name":"Local","version":1}""")
+        val overridden = plan("""{"id":-2,"name":"Local","version":0}""", listOf(SubsAppConfig(true, -2, "app")))
+        assertTrue(editedBody.subscriptions.isEmpty())
+        assertTrue(overridden.subscriptions.isEmpty())
+        assertEquals(setOf(-2L), editedBody.conflictingIds)
+        assertEquals(setOf(-2L), overridden.conflictingIds)
+    }
+
+    @Test
+    fun localBootstrapWithoutBodyCanBeReplacedWhenNoOverridesExist() {
+        val placeholder = SubsItem(id = -2, order = 0)
+        val plan = planSubscriptionRestore(
+            database = SubscriptionConfigSnapshot(subsItems = listOf(placeholder)),
+            subscriptions = listOf(RawSubscription(id = -2, name = "Restored", version = 1)),
+            existing = SubscriptionConfigSnapshot(subsItems = listOf(placeholder)),
+            hasExistingBody = { false },
+            localPlaceholderName = "Local",
+        )
+        assertEquals(listOf(-2L), plan.subscriptions.map { it.id })
+    }
+
+    @Test
+    fun doesNotInspectLocalBodyWhenArchiveHasNoLocalSubscription() {
+        val archived = SubsItem(id = 21, order = 0)
+        val plan = planSubscriptionRestore(
+            database = SubscriptionConfigSnapshot(subsItems = listOf(archived)),
+            subscriptions = listOf(RawSubscription(id = 21, name = "new", version = 1)),
+            existing = SubscriptionConfigSnapshot(subsItems = listOf(SubsItem(id = -2, order = 0))),
+            hasExistingBody = { id ->
+                check(id == 21L) { "Unrelated local storage must not be inspected" }
+                false
+            },
+        )
+        assertEquals(listOf(archived), plan.database.subsItems)
+    }
+
+    @Test
+    fun incompleteArchivePreservesMetadataAndDefaultsOnlyMissingRows() {
+        val archived = SubsItem(id = 21, order = 0, enable = true, enableUpdate = false)
+        val appConfig = SubsAppConfig(true, 21, "app.local")
+        val snapshot = completeSubscriptionMetadata(
+            database = SubscriptionConfigSnapshot(subsItems = listOf(archived), appConfigs = listOf(appConfig)),
+            subscriptions = listOf(
+                RawSubscription(id = 21, name = "first", version = 1),
+                RawSubscription(id = 22, name = "second", version = 1),
+            ),
+        )
+        assertEquals(listOf(21L, 22L), snapshot.subsItems.map { it.id })
+        assertEquals(archived, snapshot.subsItems.first())
+        assertEquals(listOf(appConfig), snapshot.appConfigs)
+        assertFalse(snapshot.subsItems.last().enable)
+    }
+
+    @Test
+    fun legacyArchiveGetsSafeDisabledMetadata() {
+        val snapshot = completeSubscriptionMetadata(
+            database = null,
+            subscriptions = listOf(
+                RawSubscription(id = 21, name = "first", version = 1),
+                RawSubscription(id = 22, name = "second", version = 1),
+            ),
+        )
+        assertEquals(listOf(21L, 22L), snapshot.subsItems.map { it.id })
+        assertEquals(listOf(0, 1), snapshot.subsItems.map { it.order })
+        assertTrue(snapshot.subsItems.none { it.enable })
+        assertTrue(snapshot.subsItems.all { it.enableUpdate })
+    }
+
 }

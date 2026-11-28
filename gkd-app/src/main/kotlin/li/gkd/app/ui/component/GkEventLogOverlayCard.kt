@@ -84,7 +84,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                                 color = MiuixTheme.colorScheme.secondaryContainer,
                                 shape = GkShapes.compact,
                             )
-                            .padding(horizontal = 2.dp),
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
                     )
                 }
             }
@@ -113,7 +113,7 @@ fun GkEventLogOverlayCard(eventLog: A11yEventLog, modifier: Modifier = Modifier)
                                         color = MiuixTheme.colorScheme.tertiaryContainer,
                                         shape = GkShapes.compact,
                                     )
-                                    .padding(horizontal = 2.dp),
+                                    .padding(horizontal = 6.dp, vertical = 1.dp),
                             )
                         }
                     }

@@ -2,7 +2,9 @@ package li.gkd.app.data.snapshot
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.system.ErrnoException
 import android.system.Os
+import android.system.OsConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
@@ -30,6 +32,8 @@ import li.gkd.db.Db
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.LinkOption.NOFOLLOW_LINKS
 import java.util.UUID
 
 object SnapshotRepository : SnapshotStore(
@@ -41,6 +45,8 @@ data class SnapshotUploadArchive(
     val file: File,
     val screenshotModifiedAt: Long,
 )
+
+private const val MAX_RECENT_SNAPSHOT_IDS = 100
 
 open class SnapshotStore(
     private val snapshotDao: Snapshot.SnapshotDao,
@@ -54,6 +60,72 @@ open class SnapshotStore(
     fun screenshotFile(id: Long): File = fileLayout.committed(id).screenshotFile
 
     fun snapshots(): Flow<List<Snapshot>> = snapshotDao.query()
+
+    /**
+     * Reconcile filesystem/Room publication windows left by process death. Run after Room opens
+     * and before snapshot readers or writers start.
+     */
+    suspend fun recoverInterruptedMutations() = mutationMutex.withLock {
+        withContext(NonCancellable + Dispatchers.IO) {
+            val root = fileLayout.rootDirectory
+            if (Files.notExists(root.toPath(), NOFOLLOW_LINKS)) {
+                snapshotDao.queryIds().forEach { snapshotDao.deleteById(it) }
+                return@withContext
+            }
+            val entries = root.listFiles() ?: throw IOException("Unable to list snapshot storage")
+            val databaseIds = snapshotDao.queryIds().toMutableSet()
+            val deletePattern = Regex("^\\.(\\d+)\\.delete-[0-9a-fA-F-]+$")
+            val tempPattern = Regex("^\\.\\d+\\.tmp$")
+
+            entries.filter { it.isDirectory }.forEach { entry ->
+                when {
+                    tempPattern.matches(entry.name) -> entry.deleteRecursivelyRequired()
+                    else -> {
+                        val match = deletePattern.matchEntire(entry.name) ?: return@forEach
+                        val id = match.groupValues[1].toLongOrNull() ?: return@forEach
+                        val published = fileLayout.committed(id)
+                        val target = published.directory
+                        if (id !in databaseIds) {
+                            entry.deleteRecursivelyRequired()
+                        } else if (Files.notExists(target.toPath(), NOFOLLOW_LINKS)) {
+                            if (!entry.renameTo(target)) {
+                                throw IOException("Unable to restore snapshot directory $id")
+                            }
+                        } else if (published.hasCompleteFiles) {
+                            entry.deleteRecursivelyRequired()
+                        } // Keep the staged copy if the published copy is incomplete or unreadable.
+                    }
+                }
+            }
+
+            databaseIds.toList().forEach { id ->
+                val files = fileLayout.committed(id)
+                try {
+                    files.recoverInterruptedScreenshotReplacement { snapshotDao.deleteGithubAssetId(id) }
+                } catch (error: IOException) {
+                    LogUtils.d("暂时无法恢复快照截图", id, error::class.simpleName)
+                }
+                // An incomplete directory can still contain an irreplaceable screenshot or tree.
+                if (Files.notExists(files.directory.toPath(), NOFOLLOW_LINKS)) {
+                    snapshotDao.deleteById(id)
+                    databaseIds.remove(id)
+                }
+            }
+
+            (root.listFiles() ?: throw IOException("Unable to list snapshot storage"))
+                .filter { it.isDirectory }
+                .forEach { entry ->
+                    val id = entry.name.toLongOrNull() ?: return@forEach
+                    if (id !in databaseIds) entry.deleteRecursivelyRequired()
+                }
+        }
+    }
+
+    private fun File.deleteRecursivelyRequired() {
+        if (exists() && !deleteRecursively()) {
+            throw IOException("Unable to remove snapshot recovery directory $name")
+        }
+    }
 
     suspend fun markUploaded(
         snapshotId: Long,
@@ -69,18 +141,44 @@ open class SnapshotStore(
         }
     }
 
+    suspend fun queryRecentSnapshotIds(maxCount: Int): List<Long> =
+        snapshotDao.queryRecentIds(maxCount.coerceIn(0, MAX_RECENT_SNAPSHOT_IDS))
+
     suspend fun getMinSnapshot(id: Long): JsonObject = mutationMutex.withLock {
+        requireNotNull(getMinSnapshotLocked(id, maxSourceBytes = null))
+    }
+
+    /** Returns null without reading when the source/cache would exceed [maxSourceBytes]. */
+    suspend fun getMinSnapshot(id: Long, maxSourceBytes: Long): JsonObject? = mutationMutex.withLock {
+        require(maxSourceBytes >= 0) { "maxSourceBytes must be nonnegative" }
+        getMinSnapshotLocked(id, maxSourceBytes)
+    }
+
+    private suspend fun getMinSnapshotLocked(id: Long, maxSourceBytes: Long?): JsonObject? {
         val files = fileLayout.committed(id)
         val cachedText = withContext(Dispatchers.IO) {
-            files.minSnapshotFile.takeIf { it.isFile && it.length() > 0 }?.readText()
+            try {
+                files.minSnapshotFile.takeIf {
+                    it.isFile && it.length() > 0 && (maxSourceBytes == null || it.length() <= maxSourceBytes)
+                }?.readText()
+            } catch (_: IOException) {
+                null // A cache read failure must not hide the source snapshot.
+            }
         }
         if (cachedText != null) {
             val cachedSnapshot = withContext(Dispatchers.Default) {
                 runCatching { json.decodeFromString<JsonObject>(cachedText) }.getOrNull()
             }
-            if (cachedSnapshot != null) return@withLock cachedSnapshot
+            if (cachedSnapshot != null) return cachedSnapshot
         }
-        val text = withContext(Dispatchers.IO) { files.snapshotFile.readText() }
+        val text = withContext(Dispatchers.IO) {
+            val source = files.snapshotFile
+            if (maxSourceBytes != null && (!source.isFile || source.length() > maxSourceBytes)) {
+                null
+            } else {
+                source.readText()
+            }
+        } ?: return null
         val snapshotJson = withContext(Dispatchers.Default) {
             // #1185
             json.decodeFromString<JsonObject>(text)
@@ -89,10 +187,15 @@ open class SnapshotStore(
             this["nodes"] = JsonArray(emptyList())
         })
         withContext(Dispatchers.IO) {
-            files.minSnapshotFile.writeText(keepNullJson.encodeToString(minSnapshot))
+            try {
+                files.minSnapshotFile.writeText(keepNullJson.encodeToString(minSnapshot))
+            } catch (_: IOException) {
+                // A full disk or unusable cache path should not hide a successfully read snapshot.
+            }
         }
-        minSnapshot
+        return minSnapshot
     }
+
 
     suspend fun delete(snapshot: Snapshot) {
         mutationMutex.withLock {
@@ -141,17 +244,18 @@ open class SnapshotStore(
                     }
                     currentCoroutineContext().ensureActive()
                     withContext(NonCancellable) {
-                        val previousWebp = stageReplacement(files.webpFile)
-                        try {
-                            Os.rename(tempFile.absolutePath, files.webpFile.absolutePath)
-                            snapshotDao.deleteGithubAssetId(snapshot.id)
-                        } catch (e: Throwable) {
-                            files.webpFile.delete()
-                            restoreReplacement(files.webpFile, previousWebp, e)
-                            throw e
+                        // Clear the remote asset first. A crash can then only leave a re-uploadable image.
+                        snapshotDao.deleteGithubAssetId(snapshot.id)
+                        // Same-directory rename replaces the original without a missing-image window.
+                        Os.rename(tempFile.absolutePath, files.webpFile.absolutePath)
+                        val directorySynced = try {
+                            syncDirectory(files.directory)
+                            true
+                        } catch (error: ErrnoException) {
+                            LogUtils.d("暂时无法同步快照目录", snapshot.id, error.errno)
+                            false
                         }
-                        finishReplacement(previousWebp)
-                        if (files.legacyPngFile.exists() && !files.legacyPngFile.delete()) {
+                        if (directorySynced && files.legacyPngFile.exists() && !files.legacyPngFile.delete()) {
                             LogUtils.d("无法删除旧快照截图", files.legacyPngFile.absolutePath)
                         }
                     }
@@ -299,25 +403,12 @@ open class SnapshotStore(
         }
     }
 
-    private fun stageReplacement(target: File): File? {
-        if (!target.exists()) return null
-        val staged = requireNotNull(target.parentFile)
-            .resolve(".${target.name}.replace-${UUID.randomUUID()}")
-        if (!target.renameTo(staged)) {
-            throw IOException(UiStrings.screenshot_stage_old_failed)
-        }
-        return staged
-    }
-
-    private fun restoreReplacement(target: File, staged: File?, cause: Throwable) {
-        if (staged != null && !staged.renameTo(target)) {
-            cause.addSuppressed(IOException(UiStrings.screenshot_restore_old_failed))
-        }
-    }
-
-    private fun finishReplacement(staged: File?) {
-        if (staged != null && staged.exists() && !staged.delete()) {
-            LogUtils.d("无法清理旧快照截图", staged.absolutePath)
+    private fun syncDirectory(directory: File) {
+        val descriptor = Os.open(directory.absolutePath, OsConstants.O_RDONLY, 0)
+        try {
+            Os.fsync(descriptor)
+        } finally {
+            Os.close(descriptor)
         }
     }
 

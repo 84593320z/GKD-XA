@@ -3,6 +3,7 @@ package li.gkd.gradle
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.ValueSource
@@ -14,7 +15,8 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.security.MessageDigest
+import java.nio.file.Files
+import javax.inject.Inject
 
 private const val GIT_UNAVAILABLE_PREFIX = "# git status unavailable"
 
@@ -56,6 +58,9 @@ abstract class GenerateSourcePathsTask : DefaultTask() {
     @get:OutputDirectory
     abstract val snapshotDirectory: DirectoryProperty
 
+    @get:Inject
+    protected abstract val fileSystemOperations: FileSystemOperations
+
     @TaskAction
     fun generate() {
         val paths = sourcePaths.get()
@@ -85,8 +90,11 @@ abstract class GenerateSourcePathsTask : DefaultTask() {
 
     private fun writeWorkingTreeReport(entries: List<StatusEntry>) {
         val detail = reportDetail.get()
-        if (detail == "off") return
         val report = outputDirectory.file("working-tree.txt").get().asFile
+        if (detail == "off") {
+            Files.deleteIfExists(report.toPath())
+            return
+        }
         if (entries.isEmpty()) {
             report.writeText("# commit=${gitCommitId.get()}\n# clean\n", Charsets.UTF_8)
             return
@@ -103,6 +111,9 @@ abstract class GenerateSourcePathsTask : DefaultTask() {
 
     private fun writeWorkingTreeSnapshot(entries: List<StatusEntry>) {
         val snapshotRoot = snapshotDirectory.get().asFile
+        // Each snapshot describes only this run.
+        fileSystemOperations.delete { delete(snapshotRoot) }
+        Files.createDirectories(snapshotRoot.toPath())
         val repo = repositoryDirectory.get().asFile
         for (entry in entries) {
             val source = File(repo, entry.path)
@@ -118,8 +129,6 @@ abstract class GenerateSourcePathsTask : DefaultTask() {
         }.getOrNull()
         if (diff != null && diff.isNotEmpty()) {
             patchFile.writeBytes(diff)
-        } else if (patchFile.exists()) {
-            patchFile.delete()
         }
     }
 
@@ -209,35 +218,13 @@ abstract class WorkingTreeEntriesValueSource :
 
     override fun obtain(): String = runCatching {
         val repoDir = parameters.repositoryDirectory.get().asFile
-        val raw = runGitCommandBytes(
-            repoDir.absolutePath,
-            listOf("status", "--porcelain=v1", "-z", "--untracked-files=all"),
-        ).toString(Charsets.UTF_8)
-        raw.split('\u0000')
-            .filter(String::isNotEmpty)
-            .filter { it.length >= 4 }
-            .joinToString(separator = "\n", postfix = "\n") { record ->
-                val path = record.substring(3)
-                "${record.substring(0, 2)} $path\t${sha256OfFile(File(repoDir, path))}"
-            }
+        val status = readGitStatus(repoDir.absolutePath)
+        gitStatusEntries(status).joinToString(separator = "\n", postfix = "\n") { (statusCode, path) ->
+            val sha256 = sha256OfFile(File(repoDir, path))?.toHexDigest() ?: "missing"
+            "$statusCode $path\t$sha256"
+        }
     }.getOrElse { error ->
         val reason = error.message?.lineSequence()?.firstOrNull() ?: error.toString()
         "$GIT_UNAVAILABLE_PREFIX: $reason"
-    }
-
-    private fun sha256OfFile(file: File): String {
-        if (!file.isFile) return "missing"
-        val digest = MessageDigest.getInstance("SHA-256")
-        file.inputStream().use { input ->
-            val buffer = ByteArray(64 * 1024)
-            while (true) {
-                val read = input.read(buffer)
-                if (read < 0) break
-                digest.update(buffer, 0, read)
-            }
-        }
-        return digest.digest().joinToString(separator = "") { byte ->
-            "%02x".format(byte.toInt() and 0xff)
-        }
     }
 }

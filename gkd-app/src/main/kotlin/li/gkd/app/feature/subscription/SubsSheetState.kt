@@ -1,20 +1,23 @@
 package li.gkd.app.feature.subscription
 
 import li.gkd.app.ui.component.GkActionButton
-import li.gkd.app.ui.component.GkPageBottomSpaceDefaults
-import li.gkd.app.ui.component.GkPageBottomSpace
 import li.gkd.app.MainViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
@@ -22,7 +25,6 @@ import top.yukonga.miuix.kmp.basic.rememberTooltipState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,9 +44,9 @@ import li.gkd.app.data.RawSubscription
 import li.gkd.app.data.mtimeStr
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.feature.log.ActionLogRoute
+import li.gkd.app.ui.component.GkPreferenceArrow
 import li.gkd.app.ui.component.GkTooltipBox
 import li.gkd.app.ui.style.GkShapes
-import li.gkd.app.ui.style.itemHorizontalPadding
 import li.gkd.db.LOCAL_SUBS_ID
 import li.gkd.db.SubsItem
 import li.gkd.app.ui.share.DeletionTarget
@@ -110,262 +112,225 @@ class SubsSheetState {
                 onDismissFinished = onDismissFinished,
             ) {
                 val showName = subscription?.name ?: UiStrings.subscription_id_description(subsItem.id)
-                val childModifier = remember {
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = itemHorizontalPadding, vertical = 8.dp)
-                }
                 Column(
                     modifier = Modifier
-                        .verticalScroll(
-                            state = scrollState,
-                        )
-                        .fillMaxWidth(),
+                        .align(Alignment.CenterHorizontally)
+                        .widthIn(max = 560.dp)
+                        .fillMaxWidth()
+                        .heightIn(max = 560.dp)
+                        .verticalScroll(state = scrollState)
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(
-                        text = showName,
-                        style = MiuixTheme.textStyles.title2,
-                        modifier = childModifier
-                    )
-                    if (subscription != null) {
-                        val timeStr = formatTimeAgo(subsItem.mtime)
-                        val timeTooltipState = rememberTooltipState()
-                        val timeTooltipScope = rememberCoroutineScope()
-                        Row(
-                            modifier = childModifier.semantics(mergeDescendants = true) {
-                                contentDescription =
-                                    UiStrings.subscription_metadata_description(
-                                        if (subsItem.isLocal) META.appName else subscription.author ?: UiStrings.unknown,
-                                        subscription.version,
-                                        timeStr,
-                                    )
-                            },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = if (subsItem.isLocal) META.appName else subscription.author ?: UiStrings.unknown,
-                                modifier = Modifier.weight(1f, fill = false),
-                                style = MiuixTheme.textStyles.footnote2,
-                                color = when {
-                                    subsItem.isLocal -> MiuixTheme.colorScheme.onSurfaceSecondary
-                                    subscription.author == null -> MiuixTheme.colorScheme.onSurfaceVariantActions
-                                    else -> MiuixTheme.colorScheme.onSurfaceVariantSummary
-                                },
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                text = UiStrings.version_prefixed(subscription.version),
-                                style = MiuixTheme.textStyles.footnote2,
-                                color = MiuixTheme.colorScheme.onTertiaryContainer,
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = showName,
+                            style = MiuixTheme.textStyles.title3,
+                        )
+                        if (subscription != null) {
+                            val timeStr = formatTimeAgo(subsItem.mtime)
+                            val timeTooltipState = rememberTooltipState()
+                            val timeTooltipScope = rememberCoroutineScope()
+                            Row(
                                 modifier = Modifier
-                                    .clip(GkShapes.compact)
-                                    .background(MiuixTheme.colorScheme.tertiaryContainer)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                                maxLines = 1,
-                                softWrap = false,
-                            )
-                            GkTooltipBox(
-                                text = subsItem.mtimeStr,
-                                state = timeTooltipState,
-                                positioning = TooltipAnchorPosition.Above,
+                                    .fillMaxWidth()
+                                    .semantics(mergeDescendants = true) {
+                                        contentDescription =
+                                            UiStrings.subscription_metadata_description(
+                                                if (subsItem.isLocal) META.appName else subscription.author ?: UiStrings.unknown,
+                                                subscription.version,
+                                                timeStr,
+                                            )
+                                    },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 Text(
-                                    text = timeStr,
+                                    text = if (subsItem.isLocal) META.appName else subscription.author ?: UiStrings.unknown,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    style = MiuixTheme.textStyles.footnote2,
+                                    color = when {
+                                        subsItem.isLocal -> MiuixTheme.colorScheme.onSurfaceSecondary
+                                        subscription.author == null -> MiuixTheme.colorScheme.onSurfaceVariantActions
+                                        else -> MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                    },
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = UiStrings.version_prefixed(subscription.version),
+                                    style = MiuixTheme.textStyles.footnote2,
+                                    color = MiuixTheme.colorScheme.onTertiaryContainer,
                                     modifier = Modifier
                                         .clip(GkShapes.compact)
-                                        .clickable {
-                                            timeTooltipScope.launch { timeTooltipState.show() }
-                                        }
-                                        .semantics {
-                                            contentDescription = UiStrings.update_time_description(subsItem.mtimeStr)
-                                        }
-                                        .padding(horizontal = 4.dp, vertical = 2.dp),
-                                    style = MiuixTheme.textStyles.footnote2,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        .background(MiuixTheme.colorScheme.tertiaryContainer)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp),
                                     maxLines = 1,
                                     softWrap = false,
                                 )
-                            }
-                        }
-                        if (subscription.globalGroups.isNotEmpty() || subsItem.isLocal) {
-                            SubsSheetItem(
-                                onClickLabel = UiStrings.global_rules_view_list,
-                                onClick = throttle {
-                                    dismiss()
-                                    mainVm.navigatePage(SubsGlobalGroupListRoute(subsItem.id))
-                                },
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                                GkTooltipBox(
+                                    text = subsItem.mtimeStr,
+                                    state = timeTooltipState,
+                                    positioning = TooltipAnchorPosition.Above,
                                 ) {
                                     Text(
-                                        text = UiStrings.global_rules,
-                                        style = MiuixTheme.textStyles.button,
-                                    )
-                                    Text(
-                                        text = if (subscription.globalGroups.isNotEmpty()) UiStrings.subscription_global_rules_count(subscription.globalGroups.size) else UiStrings.none_available,
-                                        style = MiuixTheme.textStyles.footnote2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.let {
-                                            if (subscription.globalGroups.isEmpty()) {
-                                                it.copy(alpha = 0.5f)
-                                            } else {
-                                                it
+                                        text = timeStr,
+                                        modifier = Modifier
+                                            .clip(GkShapes.compact)
+                                            .clickable {
+                                                timeTooltipScope.launch { timeTooltipState.show() }
                                             }
-                                        },
-                                    )
-                                }
-                                GkIcon(
-                                    imageVector = GkIcons.KeyboardArrowRight,
-                                )
-                            }
-                        }
-                        if (subscription.appGroups.isNotEmpty() || subsItem.isLocal) {
-                            SubsSheetItem(
-                                onClickLabel = UiStrings.app_rules_view_list,
-                                onClick = throttle {
-                                    dismiss()
-                                    mainVm.navigatePage(SubsAppListRoute(subsItem.id))
-                                },
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                                ) {
-                                    Text(
-                                        text = UiStrings.app_rules,
-                                        style = MiuixTheme.textStyles.button,
-                                    )
-                                    Text(
-                                        text = if (subscription.appGroups.isNotEmpty()) UiStrings.subscription_apps_rules_count(subscription.apps.size, subscription.appGroups.size) else UiStrings.none_available,
-                                        style = MiuixTheme.textStyles.footnote2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.let {
-                                            if (subscription.appGroups.isEmpty()) {
-                                                it.copy(alpha = 0.5f)
-                                            } else {
-                                                it
+                                            .semantics {
+                                                contentDescription = UiStrings.update_time_description(subsItem.mtimeStr)
                                             }
-                                        },
-                                    )
-                                }
-                                GkIcon(
-                                    imageVector = GkIcons.KeyboardArrowRight,
-                                )
-                            }
-
-                        }
-                        if (subscription.categories.isNotEmpty() || subsItem.isLocal) {
-                            SubsSheetItem(
-                                onClickLabel = UiStrings.rule_categories_view_list,
-                                onClick = throttle {
-                                    dismiss()
-                                    mainVm.navigatePage(SubsCategoryRoute(subsItem.id))
-                                },
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                                ) {
-                                    Text(
-                                        text = UiStrings.rule_categories,
-                                        style = MiuixTheme.textStyles.button,
-                                    )
-                                    Text(
-                                        text = if (subscription.categories.isNotEmpty()) UiStrings.subscription_categories_count(subscription.categories.size) else UiStrings.none_available,
-                                        style = MiuixTheme.textStyles.footnote2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.let {
-                                            if (subscription.categories.isEmpty()) {
-                                                it.copy(alpha = 0.5f)
-                                            } else {
-                                                it
-                                            }
-                                        },
-                                    )
-                                }
-                                GkIcon(
-                                    imageVector = GkIcons.KeyboardArrowRight,
-                                )
-                            }
-                        }
-                        val updateUrl = subsItem.updateUrl
-                        if (!subsItem.isLocal && updateUrl != null) {
-                            SubsSheetItem(
-                                onClickLabel = UiStrings.subscription_link_edit,
-                                onClick = throttle {
-                                    if (SubscriptionRepository.isBusy) {
-                                        toast(UiStrings.subscription_refresh_wait_compact)
-                                        return@throttle
-                                    }
-                                    scope.launchUi {
-                                        val url = mainVm.subsLinkDialog.request(
-                                            initialValue = updateUrl,
-                                        )
-                                                ?: return@launchUi
-                                        SubscriptionRepository.addOrModifyRemote(url, subsItem).message?.let {
-                                            toast(it)
-                                        }
-                                    }
-                                },
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                                ) {
-                                    Text(
-                                        text = UiStrings.subscription_link,
-                                        style = MiuixTheme.textStyles.button,
-                                    )
-                                    Text(
-                                        text = updateUrl,
+                                            .padding(horizontal = 4.dp, vertical = 2.dp),
                                         style = MiuixTheme.textStyles.footnote2,
                                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        maxLines = 1,
                                         softWrap = false,
-                                        overflow = TextOverflow.MiddleEllipsis,
-                                        modifier = Modifier
-                                            .clearAndSetSemantics {}
-                                            .clickable(onClickLabel = UiStrings.subscription_link_view, onClick = {
-                                                mainVm.openUrl(updateUrl)
-                                            })
                                     )
                                 }
-                                GkIcon(
-                                    imageVector = GkIcons.Edit,
-                                )
+                            }
+                        }
+                    }
+
+                    if (subscription != null) {
+                        val showGlobal = subscription.globalGroups.isNotEmpty() || subsItem.isLocal
+                        val showApp = subscription.appGroups.isNotEmpty() || subsItem.isLocal
+                        val showCategory = subscription.categories.isNotEmpty() || subsItem.isLocal
+                        val updateUrl = subsItem.updateUrl
+                        val showLink = !subsItem.isLocal && updateUrl != null
+
+                        if (showGlobal || showApp || showCategory) {
+                            Card(modifier = Modifier.fillMaxWidth()) {
+                                if (showGlobal) {
+                                    SubsSheetNavRow(
+                                        title = UiStrings.global_rules,
+                                        summary = if (subscription.globalGroups.isNotEmpty()) UiStrings.subscription_global_rules_count(subscription.globalGroups.size) else UiStrings.none_available,
+                                        mutedSummary = subscription.globalGroups.isEmpty(),
+                                        onClickLabel = UiStrings.global_rules_view_list,
+                                        onClick = throttle {
+                                            dismiss()
+                                            mainVm.navigatePage(SubsGlobalGroupListRoute(subsItem.id))
+                                        },
+                                    )
+                                }
+                                if (showApp) {
+                                    SubsSheetNavRow(
+                                        title = UiStrings.app_rules,
+                                        summary = if (subscription.appGroups.isNotEmpty()) UiStrings.subscription_apps_rules_count(subscription.apps.size, subscription.appGroups.size) else UiStrings.none_available,
+                                        mutedSummary = subscription.appGroups.isEmpty(),
+                                        onClickLabel = UiStrings.app_rules_view_list,
+                                        onClick = throttle {
+                                            dismiss()
+                                            mainVm.navigatePage(SubsAppListRoute(subsItem.id))
+                                        },
+                                    )
+                                }
+                                if (showCategory) {
+                                    SubsSheetNavRow(
+                                        title = UiStrings.rule_categories,
+                                        summary = if (subscription.categories.isNotEmpty()) UiStrings.subscription_categories_count(subscription.categories.size) else UiStrings.none_available,
+                                        mutedSummary = subscription.categories.isEmpty(),
+                                        onClickLabel = UiStrings.rule_categories_view_list,
+                                        onClick = throttle {
+                                            dismiss()
+                                            mainVm.navigatePage(SubsCategoryRoute(subsItem.id))
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                        if (showLink) {
+                            Card(modifier = Modifier.fillMaxWidth()) {
+                                BasicComponent(
+                                    insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                                    onClickLabel = UiStrings.subscription_link_edit,
+                                    onClick = throttle {
+                                        if (SubscriptionRepository.isBusy) {
+                                            toast(UiStrings.subscription_refresh_wait_compact)
+                                            return@throttle
+                                        }
+                                        scope.launchUi {
+                                            val url = mainVm.subsLinkDialog.request(
+                                                initialValue = updateUrl,
+                                            ) ?: return@launchUi
+                                            SubscriptionRepository.addOrModifyRemote(url, subsItem).message?.let {
+                                                toast(it)
+                                            }
+                                        }
+                                    },
+                                    endActions = {
+                                        GkIcon(
+                                            imageVector = GkIcons.Edit,
+                                            contentDescription = null,
+                                            tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    },
+                                ) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            text = UiStrings.subscription_link,
+                                            style = MiuixTheme.textStyles.headline1,
+                                            color = MiuixTheme.colorScheme.onSurface,
+                                        )
+                                        Text(
+                                            text = updateUrl,
+                                            style = MiuixTheme.textStyles.body2,
+                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                            softWrap = false,
+                                            overflow = TextOverflow.MiddleEllipsis,
+                                            modifier = Modifier
+                                                .clearAndSetSemantics {}
+                                                .clickable(
+                                                    onClickLabel = UiStrings.subscription_link_view,
+                                                    onClick = { mainVm.openUrl(updateUrl) },
+                                                ),
+                                        )
+                                    }
+                                }
                             }
                         }
                     } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(150.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            GkPageBottomSpace()
-                            if (displayed.loading) {
-                                CircularProgressIndicator()
-                            } else {
-                                Text(
-                                    text = UiStrings.file_load_failed_or_missing,
-                                    style = MiuixTheme.textStyles.button,
-                                    color = MiuixTheme.colorScheme.error,
-                                )
-                                GkActionButton(onClick = throttle {
-                                    scope.launchUi {
-                                        SubscriptionRepository.refresh().message?.let { toast(it) }
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp)
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+                            ) {
+                                if (displayed.loading) {
+                                    CircularProgressIndicator()
+                                } else {
+                                    Text(
+                                        text = UiStrings.file_load_failed_or_missing,
+                                        style = MiuixTheme.textStyles.body2,
+                                        color = MiuixTheme.colorScheme.error,
+                                    )
+                                    GkActionButton(onClick = throttle {
+                                        scope.launchUi {
+                                            SubscriptionRepository.refresh().message?.let { toast(it) }
+                                        }
+                                    }) {
+                                        Text(text = UiStrings.action_reload)
                                     }
-                                }) {
-                                    Text(text = UiStrings.action_reload)
                                 }
                             }
                         }
                     }
 
                     Row(
-                        modifier = childModifier,
-                        horizontalArrangement = Arrangement.End
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (!subsItem.isLocal && subscription?.supportUri != null) {
                             GkIconButton(
@@ -396,7 +361,6 @@ class SubsSheetState {
                             )
                         }
                     }
-                    GkPageBottomSpace(height = GkPageBottomSpaceDefaults.CompactHeight)
                 }
             }
         }
@@ -404,21 +368,32 @@ class SubsSheetState {
 }
 
 @Composable
-private fun SubsSheetItem(
+private fun SubsSheetNavRow(
+    title: String,
+    summary: String,
+    mutedSummary: Boolean,
     onClickLabel: String,
     onClick: () -> Unit,
-    content: @Composable RowScope.() -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = itemHorizontalPadding, vertical = 4.dp)
-            .clip(GkShapes.card)
-            .background(MiuixTheme.colorScheme.surface)
-            .clickable(onClickLabel = onClickLabel, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        content = content,
-    )
+    BasicComponent(
+        insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        onClickLabel = onClickLabel,
+        onClick = onClick,
+        endActions = { GkPreferenceArrow() },
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = MiuixTheme.textStyles.headline1,
+                color = MiuixTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = summary,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary.let {
+                    if (mutedSummary) it.copy(alpha = 0.5f) else it
+                },
+            )
+        }
+    }
 }

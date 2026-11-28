@@ -1,0 +1,10 @@
+// Run against the standalone buildSrc project with -p buildSrc.
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    project.tasks.register('buildSnapshotRegression', JavaExec) {
+        dependsOn project.tasks.named('testClasses')
+        classpath(project.sourceSets.test.runtimeClasspath, project.dependencies.gradleApi().files)
+        mainClass.set('li.gkd.gradle.BuildSnapshotRegression')
+        jvmArgs('--add-opens=java.base/java.lang=ALL-UNNAMED')
+    }
+}

@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -73,9 +75,9 @@ object AppInfoRepository {
         }
     }
 
-    private val willUpdateAppIds = MutableStateFlow(emptySet<String>())
+    private val appRefreshQueue = AppInfoRefreshQueue()
 
-    private fun dispatchAppUpdate(appId: String) = willUpdateAppIds.update { it + appId }
+    private fun dispatchAppUpdate(appId: String) = appRefreshQueue.enqueue(appId)
 
     val packageFlags = PackageManager.MATCH_UNINSTALLED_PACKAGES
 
@@ -121,7 +123,6 @@ object AppInfoRepository {
     private suspend fun updatePartAppInfo(
         appIds: Set<String>,
     ) = updateAppMutex.withStateLock {
-        willUpdateAppIds.update { it - appIds }
         val newAppMap = HashMap(userAppInfoMapFlow.value)
         val newIconMap = HashMap(userAppIconMapFlow.value)
         val oldMapSize = newAppMap.size
@@ -247,17 +248,51 @@ object AppInfoRepository {
             }
         }
         appScope.launchLogged(Dispatchers.IO) {
-            willUpdateAppIds.debounce(3000.milliseconds)
-                .filter { it.isNotEmpty() }
-                .collect { appIds ->
+            appRefreshQueue.collectBatches(::updatePartAppInfo) { error ->
+                LogUtils.d("update app info failed; changes are queued for the next event", error)
+            }
+        }
+    }
+}
+
+/** The pending IDs belong to the queue; a conflated wakeup carries no IDs to acknowledge. */
+internal class AppInfoRefreshQueue(
+    private val debounceMillis: Long = 3_000,
+    private val waitBeforeRetry: suspend (Int) -> Unit = { attempt -> delay(1_000L shl attempt) },
+) {
+    private val pendingIds = MutableStateFlow(emptySet<String>())
+    private val wakeups = Channel<Unit>(Channel.CONFLATED)
+
+    fun enqueue(appId: String) {
+        pendingIds.update { it + appId }
+        wakeups.trySend(Unit)
+    }
+
+    suspend fun collectBatches(
+        process: suspend (Set<String>) -> Unit,
+        onExhausted: (Exception) -> Unit,
+    ) {
+        try {
+            wakeups.receiveAsFlow().debounce(debounceMillis).collect {
+                repeat(4) { attempt ->
+                    if (attempt > 0) waitBeforeRetry(attempt - 1)
+                    val batch = pendingIds.getAndUpdate { emptySet() }
+                    if (batch.isEmpty()) return@collect
                     try {
-                        updatePartAppInfo(appIds)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        LogUtils.d("update app info failed", e)
+                        process(batch)
+                        return@collect
+                    } catch (error: CancellationException) {
+                        pendingIds.update { it + batch }
+                        throw error
+                    } catch (error: Exception) {
+                        pendingIds.update { it + batch }
+                        if (attempt == 3) onExhausted(error)
                     }
                 }
+            }
+        } finally {
+            // Cancellation may have consumed the wakeup before acknowledging IDs.
+            if (pendingIds.value.isNotEmpty()) wakeups.trySend(Unit)
         }
     }
 }

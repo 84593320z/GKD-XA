@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -336,7 +335,7 @@ private fun MiuixFloatingNavScaffold(
     val mainVm = MainViewModel.requireCurrent()
     val surfaceColor = MiuixTheme.colorScheme.surface
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
-    val floatingBarShape = remember { RoundedCornerShape(FloatingToolbarDefaults.CornerRadius) }
+    val floatingBarShape = li.gkd.app.ui.style.GkShapes.floatingBar
     val blurColors = BlurDefaults.blurColors(
         blendColors = listOf(
             BlendColorEntry(color = surfaceContainer.copy(alpha = 0.6f)),

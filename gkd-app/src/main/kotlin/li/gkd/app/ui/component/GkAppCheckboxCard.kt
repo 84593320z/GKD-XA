@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -38,11 +41,16 @@ fun GkAppCheckboxCard(
     onCheckedChange: (() -> Unit),
 ) {
     val toggle = throttle(onCheckedChange)
+    val containerColor by animateColorAsState(
+        targetValue = if (checked) MiuixTheme.colorScheme.primaryContainer
+            else MiuixTheme.colorScheme.surfaceContainer,
+        animationSpec = tween(durationMillis = 300),
+        label = "App checkbox card background",
+    )
     Card(
         modifier = Modifier.fillMaxWidth()
             .padding(horizontal = GkUi.PageHorizontal, vertical = GkUi.SectionGap / 2),
-        colors = CardDefaults.defaultColors(color = if (checked) MiuixTheme.colorScheme.primaryContainer
-            else MiuixTheme.colorScheme.surfaceContainer),
+        colors = CardDefaults.defaultColors(color = containerColor),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()

@@ -63,6 +63,8 @@ import li.gkd.app.ui.PrivilegeServiceRoute
 import li.gkd.app.ui.component.GkFullscreenDialog
 import li.gkd.app.ui.component.GkFormTextField
 import li.gkd.app.ui.component.GkBottomActionBar
+import li.gkd.app.ui.component.GkIcon
+import li.gkd.app.ui.component.GkIcons
 import li.gkd.app.ui.component.PerfAlertDialog
 import li.gkd.app.ui.component.PerfIcon
 import li.gkd.app.ui.component.PerfIconButton
@@ -442,7 +444,13 @@ fun useSettingsPage(): ScaffoldExt {
                     })
 
                 AnimatedVisibility(visible = showToastSettingsDlg) {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
+                            .clip(li.gkd.app.ui.style.GkShapes.panel)
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+                    ) {
                         TextMenu(
                             title = "提示样式",
                             option = store.resolveActionTipStyle(),
@@ -563,6 +571,13 @@ fun useSettingsPage(): ScaffoldExt {
                     checked = store.useCustomNotifText,
                     onClickLabel = "打开修改通知文案弹窗",
                     onClick = { showNotifTextInputDlg = true },
+                    suffixIcon = {
+                        GkIcon(
+                            imageVector = GkIcons.Edit,
+                            modifier = Modifier.padding(end = 4.dp).size(18.dp),
+                            tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        )
+                    },
                     onCheckedChange = { enabled ->
                         AppStore.updateSettings { s -> s.copy(useCustomNotifText = enabled) }
                     })

@@ -20,12 +20,14 @@ import io.ktor.server.request.receiveChannel
 import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.combine
@@ -36,6 +38,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import li.gkd.app.text.UiStrings
 import li.gkd.app.a11y.A11yRuntime
 import li.gkd.app.appScope
@@ -62,7 +65,46 @@ import li.gkd.app.util.launchLogged
 import li.gkd.app.util.mapState
 import li.gkd.app.util.IntentUtils
 import li.gkd.app.util.ToastUtils.toast
+import java.io.ByteArrayOutputStream
 
+
+internal const val MAX_SNAPSHOT_SUMMARY_COUNT = 100
+internal const val MAX_SNAPSHOT_SUMMARY_BYTES = 2 * 1024 * 1024
+internal const val GENERIC_HTTP_ERROR = "设备操作失败"
+
+internal suspend fun boundedSnapshotSummaryJson(
+    ids: List<Long>,
+    maxCount: Int = MAX_SNAPSHOT_SUMMARY_COUNT,
+    maxBytes: Int = MAX_SNAPSHOT_SUMMARY_BYTES,
+    onUnreadable: (Long, Exception) -> Unit = { _, _ -> },
+    load: suspend (Long) -> JsonObject?,
+): ByteArray {
+    require(maxCount >= 0 && maxBytes >= 2)
+    val output = ByteArrayOutputStream(minOf(8192, maxBytes))
+    output.write('['.code)
+    for (index in 0 until minOf(ids.size, maxCount)) {
+        if (output.size() >= maxBytes - 1) break
+        val id = ids[index]
+        val item = try {
+            load(id)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            onUnreadable(id, error)
+            null
+        } ?: continue
+        val encoded = keepNullJson.encodeToString(JsonObject.serializer(), item).encodeToByteArray()
+        val comma = output.size() > 1
+        val remaining = maxBytes - output.size() - 1 - (if (comma) 1 else 0)
+        if (encoded.size > remaining) continue
+        if (comma) output.write(','.code)
+        output.write(encoded)
+    }
+    output.write(']'.code)
+    return output.toByteArray()
+}
+
+internal fun genericDebugRpcError() = RpcError(message = GENERIC_HTTP_ERROR, unknown = true)
 
 class HttpService : LifecycleHookService() {
     val httpServerPortFlow by lazy {
@@ -229,14 +271,13 @@ private fun createServer(port: Int, host: String, session: DebugHttpSession) = e
                 call.respond(snapshot)
             }
             post("/getSnapshots") {
-                val list = SnapshotRepository.snapshots().first().mapNotNull {
-                    try {
-                        SnapshotRepository.getMinSnapshot(it.id)
-                    } catch (_: Throwable) {
-                        null
-                    }
+                val ids = SnapshotRepository.queryRecentSnapshotIds(MAX_SNAPSHOT_SUMMARY_COUNT)
+                val response = boundedSnapshotSummaryJson(ids, onUnreadable = { id, error ->
+                    LogUtils.d("跳过无法读取的快照摘要", id, error::class.simpleName)
+                }) { id ->
+                    SnapshotRepository.getMinSnapshot(id, MAX_SNAPSHOT_SUMMARY_BYTES.toLong())
                 }
-                call.respond(list)
+                call.respondBytes(response, ContentType.Application.Json)
             }
             post("/deleteSnapshot") {
                 val data = keepNullJson.decodeFromString<ReqId>(call.readDebugBody())
@@ -288,11 +329,12 @@ private fun getKtorErrorPlugin() = createApplicationPlugin(name = "KtorErrorPlug
                 call.respond(cause)
             }
 
+            is CancellationException -> throw cause
+
             is Exception -> {
-                // 未知错误
-                LogUtils.d(call.request.uri, cause.message)
-                cause.printStackTrace()
-                call.respond(RpcError(message = cause.message ?: "unknown error", unknown = true))
+                // Unknown exceptions can contain local paths or request data.
+                LogUtils.d(call.request.uri, cause::class.simpleName ?: "unknown")
+                call.respond(genericDebugRpcError())
             }
 
             else -> {

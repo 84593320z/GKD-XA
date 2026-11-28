@@ -103,7 +103,7 @@ fun AboutPage() {
                     ) {
                         Box(
                             modifier = Modifier.size(100.dp).clipToBounds()
-                                .clickable(onClick = throttle { toast("你干嘛~ 哎呦~") }),
+                                .clickable(onClickLabel = "版本信息", onClick = throttle { showInfoDlg = true }),
                             contentAlignment = Alignment.Center,
                         ) {
                             Image(
@@ -138,24 +138,20 @@ fun AboutPage() {
             item(key = "project") {
                 PreferenceGroup(title = "项目") {
                     GkSettingItem(
-                        imageVector = null,
                         title = "开源代码",
                         onClick = { mainVm.openUrl(REPOSITORY_URL) },
                     )
                     if (META.isGkdChannel) {
                         GkSettingItem(
-                            imageVector = null,
                             title = "捐赠支持",
                             onClick = { mainVm.navigateWebPage(ShortUrlSet.URL10) },
                         )
                     }
                     GkSettingItem(
-                        imageVector = null,
                         title = "使用协议",
                         onClick = { mainVm.navigateWebPage(ShortUrlSet.URL12) },
                     )
                     GkSettingItem(
-                        imageVector = null,
                         title = "隐私政策",
                         onClick = { mainVm.navigateWebPage(ShortUrlSet.URL11) },
                     )
@@ -164,7 +160,6 @@ fun AboutPage() {
             item(key = "feedback") {
                 PreferenceGroup(title = "反馈") {
                     GkSettingItem(
-                        imageVector = null,
                         title = "问题反馈",
                         onClick = throttle {
                             mainVm.viewModelScope.launch {

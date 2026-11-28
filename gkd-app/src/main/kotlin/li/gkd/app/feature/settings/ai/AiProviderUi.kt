@@ -1,6 +1,5 @@
 package li.gkd.app.feature.settings.ai
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
@@ -13,10 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.liveRegion
@@ -31,6 +30,7 @@ import li.gkd.app.ui.style.readableTextColor
 import li.gkd.app.util.TimeUtils.throttle
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -130,23 +130,12 @@ internal fun AiProviderSelection(
 /** Decorative marker. Its enclosing row or control supplies selection and accessibility. */
 @Composable
 internal fun AiRadioIndicator(selected: Boolean, enabled: Boolean = true) {
-    val colors = MiuixTheme.colorScheme
-    val color = when {
-        !enabled -> colors.disabledOnSurface
-        selected -> colors.primary
-        else -> colors.onSurface
-    }
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val strokeWidth = 2.dp.toPx()
-        drawCircle(
-            color = color,
-            radius = (size.minDimension - strokeWidth) / 2,
-            style = Stroke(width = strokeWidth),
-        )
-        if (selected) {
-            drawCircle(color = color, radius = size.minDimension / 4)
-        }
-    }
+    RadioButton(
+        selected = selected,
+        onClick = null,
+        enabled = enabled,
+        modifier = Modifier.clearAndSetSemantics {},
+    )
 }
 
 @Composable

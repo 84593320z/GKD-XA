@@ -1,5 +1,6 @@
 package li.gkd.app.a11y
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -118,6 +119,72 @@ class RuleActionTest {
         result.cancelAndJoin()
         complete(true)
         assertEquals(RuleStatus.StatusOk, rule.statusAt(hour))
+    }
+
+    @Test
+    fun actionRechecksMatchingAndTheEffectiveServiceAfterPageValidation() = runBlocking {
+        for (pause in listOf(true, false)) {
+            val rule = resolvedTestRules("[{matches:'*',actionMaximum:1}]").single()
+            val settings = Any()
+            val lease = Any()
+            val generation = MatchGeneration(settings, lease)
+            var enabled = true
+            var effectiveLease: Any? = lease
+            var submitted = false
+            val result = performRuleAction(
+                rule,
+                isCurrent = {
+                    if (pause) enabled = false else effectiveLease = null
+                    true
+                },
+                now = { hour },
+                canSubmit = { generation.canSubmit(settings, enabled, effectiveLease) },
+            ) {
+                submitted = true
+                ActionResult("clickCenter", true)
+            }
+            assertNull(result)
+            assertFalse(submitted)
+            assertEquals(RuleStatus.StatusOk, rule.statusAt(hour))
+        }
+    }
+
+    @Test
+    fun queuedAndDelayedWorkCannotSubmitAfterPauseAndResume() = runBlocking {
+        data class Settings(val enableMatch: Boolean)
+        val rule = resolvedTestRules("[{matches:'*',actionMaximum:1}]").single()
+        val lease = Any()
+        val original = Settings(true)
+        var settings = original
+        val queued = MatchGeneration(settings, lease)
+        val delayed = MatchGeneration(settings, lease)
+        val releaseDelay = CompletableDeferred<Unit>()
+        var submissions = 0
+        suspend fun submit(generation: MatchGeneration) = performRuleAction(
+            rule,
+            isCurrent = { true },
+            now = { hour },
+            canSubmit = { generation.canSubmit(settings, settings.enableMatch, lease) },
+        ) {
+            submissions++
+            ActionResult("clickCenter", true)
+        }
+        val delayedResult = async(start = CoroutineStart.UNDISPATCHED) {
+            releaseDelay.await()
+            submit(delayed)
+        }
+
+        settings = Settings(false)
+        assertNull(submit(queued))
+        settings = settings.copy(enableMatch = true)
+        assertEquals(original, settings)
+        assertNull(submit(queued))
+        releaseDelay.complete(Unit)
+        assertNull(delayedResult.await())
+        assertEquals(0, submissions)
+        assertEquals(RuleStatus.StatusOk, rule.statusAt(hour))
+        assertTrue(requireNotNull(submit(MatchGeneration(settings, lease))).result)
+        assertEquals(1, submissions)
     }
 
     @Test

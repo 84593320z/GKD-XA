@@ -48,6 +48,21 @@ data class SubsItem(
         @Query("UPDATE subs_item SET `order`=:order WHERE id=:id")
         suspend fun updateOrder(id: Long, order: Int): Int
 
+        /** Updates only URL metadata if the row still matches the editor snapshot. */
+        @Query(
+            "UPDATE subs_item SET update_url=:updateUrl, mtime=:mtime " +
+                "WHERE id=:id AND ctime=:expectedCtime AND mtime=:expectedMtime " +
+                "AND (update_url=:expectedUpdateUrl OR (update_url IS NULL AND :expectedUpdateUrl IS NULL))"
+        )
+        suspend fun updateUrlIfUnchanged(
+            id: Long,
+            expectedCtime: Long,
+            expectedMtime: Long,
+            expectedUpdateUrl: String?,
+            updateUrl: String?,
+            mtime: Long,
+        ): Int
+
         @Transaction
         suspend fun batchUpdateOrder(subsItems: List<SubsItem>) {
             subsItems.forEach { subsItem ->

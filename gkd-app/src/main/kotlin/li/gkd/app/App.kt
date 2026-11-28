@@ -43,6 +43,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import li.gkd.app.a11y.initA11yFeat
 import li.gkd.app.data.CrashData
+import li.gkd.app.data.subscription.SubscriptionPersistence
+import li.gkd.app.data.snapshot.SnapshotRepository
 import li.gkd.app.data.subscription.SubscriptionRepository
 import li.gkd.app.data.appinfo.AppInfoRepository
 import li.gkd.app.data.selfAppInfo
@@ -241,6 +243,7 @@ class App : Application() {
         }
 
     private var startupJob: Job? = null
+    private var startupDatabaseInitialized = false
     private val crashHandler = CrashHandlerGate()
 
     override fun onCreate() {
@@ -256,7 +259,12 @@ class App : Application() {
         startupJob = appScope.launch(Dispatchers.IO) {
             try {
                 FolderUtils.initializeStorage()
-                Db.initialize(this@App, FolderUtils.dbFolder.resolve("gkd.db").absolutePath)
+                if (!startupDatabaseInitialized) {
+                    Db.initialize(this@App, FolderUtils.dbFolder.resolve("gkd.db").absolutePath)
+                    startupDatabaseInitialized = true
+                }
+                SubscriptionPersistence.recoverInterruptedMutation()
+                SnapshotRepository.recoverInterruptedMutations()
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {

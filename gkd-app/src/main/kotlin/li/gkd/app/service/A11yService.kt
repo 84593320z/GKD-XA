@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import li.gkd.app.app
 import li.gkd.app.appRuntimeReady
 import li.gkd.app.priv.CrashRecovery
 import li.gkd.app.text.UiStrings
@@ -35,6 +36,7 @@ import li.gkd.app.util.AndroidTarget
 import li.gkd.app.util.AutomatorModeOption
 import li.gkd.app.util.LogUtils
 import li.gkd.app.util.componentName
+import li.gkd.app.util.runMainPost
 import li.gkd.app.util.ToastUtils.toast
 import kotlin.coroutines.resume
 
@@ -81,7 +83,7 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
 
     override fun onInterrupt() {}
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (!connected || destroyed || CrashRecovery.isRecoveryBlocked) return
+        if (!isAvailable || CrashRecovery.isRecoveryBlocked) return
         ruleEngine.onA11yEvent(event)
     }
 
@@ -95,17 +97,52 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
         }
 
     private var tempShutdownFlag = false
+    private var announced = false
+    private var belongedToLatestOnDestroy = false
+    @Volatile
+    private var stopping = false
+    @Volatile
+    private var destroyed = false
+    @Volatile
+    private var connected = false
+    @Volatile
+    private var startRequest: AccessibilityStartIntent.Request? = null
+    internal val isAvailable get() = connected && !stopping && !destroyed &&
+        startRequest?.let(startIntent::permits) == true
 
-    override fun shutdown(temp: Boolean) {
-        keepAliveOverlayJob?.cancel()
-        if (temp) {
-            tempShutdownFlag = true
+    override fun shutdown(temp: Boolean) = runMainPost { stopOnMain(temp) }
+
+    private fun stopOnMain(temp: Boolean, closeRequest: AccessibilityStartIntent.Request? = null) {
+        val stop = synchronized(startIntent) {
+            if (startIntent.created !== this || stopping || destroyed ||
+                (closeRequest != null && !startIntent.isCurrent(closeRequest))
+            ) false else {
+                stopping = true
+                tempShutdownFlag = temp
+                true
+            }
         }
-        disableSelf()
+        if (!stop) return
+        keepAliveOverlayJob?.cancel()
+        try {
+            A11yRuntime.onA11yDisconnected(this, allowRollback = temp)
+        } finally {
+            disableSelf()
+            synchronized(startIntent) {
+                if (startIntent.created === this && !startIntent.requestedEnabled) {
+                    startIntent.observeSystemDisable(readSystemEnabled())
+                }
+            }
+        }
     }
 
-    private var destroyed = false
-    private var connected = false
+    private fun readSystemEnabled(): Boolean? = try {
+        app.getSecureA11yServices().contains(a11yCn)
+    } catch (error: RuntimeException) {
+        LogUtils.d("无法读取无障碍服务开关", error)
+        null
+    }
+
     private var systemConnected = false
     private var runtimeInitialized = false
 
@@ -114,36 +151,29 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     init {
         lifecycleHooks.useLogLifecycle(this)
         lifecycleHooks.onCreated {
-            isRunning.value = true
-            if (currentAppUseA11y) {
-                updateEnableAutomator(true)
-            } else {
+            if (!currentAppUseA11y) {
                 toast(UiStrings.a11y_automation_mode_notice, forced = true)
                 scope.launch {
                     delay(1)
-                    shutdown(true)
+                    if (!currentAppUseA11y) shutdown(true)
                 }
             }
             StatusService.autoStart()
             scope.launch {
                 delay(3000)
-                if (!(destroyed || connected)) {
+                if (!(destroyed || stopping || connected) && startRequest?.let(startIntent::permits) == true) {
                     toast(UiStrings.a11y_start_timeout, forced = true)
                 }
             }
         }
         lifecycleHooks.onDestroyed {
-            scope.cancel()
-            if (instance === this) {
-                instance = null
-            }
-            isRunning.value = false
             releaseKeepAliveOverlayAfterHandoff()
+            if (!announced || !belongedToLatestOnDestroy) return@onDestroyed
             if (tempShutdownFlag) {
                 toast(UiStrings.a11y_partially_disabled)
             } else {
                 toast(UiStrings.a11y_stopped)
-                updateEnableAutomator(false)
+                if (A11yRuntime.service == null) updateEnableAutomator(false)
             }
             A11yState.withTopActivityLock {
                 privilegeContextFlow.value?.run {
@@ -155,7 +185,6 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
                     }
                 }
             }
-            destroyed = true
         }
     }
 
@@ -184,11 +213,15 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
 
     override fun onCreate() {
         super.onCreate()
+        synchronized(startIntent) {
+            startRequest = startIntent.onCreated(this, readSystemEnabled())
+            isRunning.value = true
+        }
         scope.launch {
             appRuntimeReady.await()
-            if (destroyed) return@launch
-            if (CrashRecovery.isRecoveryBlocked) {
-                disableSelf()
+            if (destroyed || stopping) return@launch
+            if (CrashRecovery.isRecoveryBlocked || !startIntent.requestedEnabled) {
+                shutdown(temp = CrashRecovery.isRecoveryBlocked)
                 return@launch
             }
             runtimeInitialized = true
@@ -204,24 +237,42 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     }
 
     private fun connectRuntimeIfReady() {
-        if (!runtimeInitialized || !systemConnected || connected || destroyed) return
-        if (CrashRecovery.isRecoveryBlocked) {
-            disableSelf()
+        if (!runtimeInitialized || !systemConnected || connected || destroyed || stopping) return
+        if (CrashRecovery.isRecoveryBlocked || !startIntent.requestedEnabled) {
+            shutdown(temp = CrashRecovery.isRecoveryBlocked)
             return
         }
-        LogUtils.d("onA11yConnected -> ${this::class.simpleName}")
-        instance = this
-        attachKeepAliveOverlay()
-        connected = true
-        toast(UiStrings.a11y_started)
-        if (currentAppUseA11y) {
-            A11yRuntime.onA11yConnected(this)
+        synchronized(startIntent) {
+            if (!startIntent.canConnect(this, startRequest)) return
+            connected = true
+            instance = this
         }
+        if (!currentAppUseA11y) return
+        if (!A11yRuntime.onA11yConnected(this)) return
+        synchronized(startIntent) {
+            if (!isAvailable) return
+            announced = true
+            updateEnableAutomator(true)
+        }
+        LogUtils.d("onA11yConnected -> ${this::class.simpleName}")
+        attachKeepAliveOverlay()
+        toast(UiStrings.a11y_started)
     }
 
     override fun onDestroy() {
         destroyed = true
         scope.cancel()
+        synchronized(startIntent) {
+            belongedToLatestOnDestroy = startIntent.onDestroyed(this)
+            if (instance === this) instance = null
+            if (belongedToLatestOnDestroy) {
+                if (!startIntent.requestedEnabled) startIntent.observeSystemDisable(readSystemEnabled())
+                isRunning.value = false
+            }
+        }
+        A11yRuntime.onA11yDisconnected(
+            this, startIntent.allowRollback(startRequest, stopping, tempShutdownFlag)
+        )
         if (runtimeInitialized) {
             lifecycleHooks.dispatchDestroyed()
             runtimeInitialized = false
@@ -230,6 +281,32 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
     }
 
     companion object {
+        private val startIntent = AccessibilityStartIntent<A11yService>()
+
+        internal fun toggleStartup(onToggled: (AccessibilityStartIntent.Request) -> Unit = {}): AccessibilityStartIntent.Request =
+            synchronized(startIntent) { startIntent.toggle().also(onToggled) }
+
+        internal fun beginStartup(allowAfterUserStop: () -> Boolean = { false }): AccessibilityStartIntent.Request? =
+            synchronized(startIntent) { startIntent.beginStart(allowAfterUserStop()) }
+
+        internal fun finishStartup(request: AccessibilityStartIntent.Request) =
+            synchronized(startIntent) { startIntent.finish(request) }
+
+        internal fun recordSystemSetting(enabled: Boolean) =
+            synchronized(startIntent) { startIntent.recordSettingWrite(enabled) }
+
+        internal fun isStartupCurrent(request: AccessibilityStartIntent.Request): Boolean =
+            startIntent.isCurrent(request)
+
+        internal fun <T> withStartup(request: AccessibilityStartIntent.Request, block: () -> T): T? =
+            synchronized(startIntent) { if (startIntent.isCurrent(request)) block() else null }
+
+        internal fun closeStartup(request: AccessibilityStartIntent.Request) = runMainPost {
+            val created = withStartup(request) { startIntent.created }
+            created?.stopOnMain(temp = false, closeRequest = request)
+            withStartup(request) { updateEnableAutomator(false) }
+        }
+
         val a11yCn by lazy { SelectToSpeakService::class.componentName }
         val isRunning: StateFlow<Boolean>
             field = MutableStateFlow(false)
@@ -243,6 +320,6 @@ abstract class A11yService : AccessibilityService(), A11yCommonImpl {
          * 自动修复如果只认 isRunning，「创建了但一直连不上」会被判定成运行正常，
          * 于是永远不再重试、用户在开关上也关不掉它。需要「确认可用」的地方一律用这个。
          */
-        val isReady get() = isRunning.value && instance != null
+        val isReady get() = instance?.isAvailable == true
     }
 }

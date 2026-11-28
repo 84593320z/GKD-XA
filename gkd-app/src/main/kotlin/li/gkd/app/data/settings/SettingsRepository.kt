@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import li.gkd.app.store.retryFileWrite
+import li.gkd.app.store.writeTextAtomically
 import li.gkd.app.text.UiStrings
 import li.gkd.app.util.AppListString
 import li.gkd.app.util.LogUtils
@@ -26,13 +28,13 @@ private fun decodeBackupAppList(text: String): Set<String> = text.lineSequence()
     .map(String::trim).filter { it.isNotEmpty() && !it.startsWith("#") }
     .onEach { require(it.isValidAppId()) { "Invalid application id in backup" } }.toSet()
 
-private class PreparedValueRestore(
+internal class PreparedValueRestore(
     val begin: () -> Unit,
     val finish: (committed: Boolean) -> Unit,
     val awaitPersistence: suspend () -> Unit,
 )
 
-private class PersistedValue<T>(
+internal class PersistedValue<T>(
     val filename: String,
     file: File,
     private val decode: (String?) -> T,
@@ -66,25 +68,13 @@ private class PersistedValue<T>(
     init {
         scope.launch(Dispatchers.IO) {
             for (request in writeRequests) {
-                val tempFile = File("${file.absolutePath}.tmp")
                 val result = try {
-                    tempFile.outputStream().use {
-                        it.write(encode(request.value).toByteArray(Charsets.UTF_8))
-                        it.fd.sync()
-                    }
-                    Files.move(
-                        tempFile.toPath(),
-                        file.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE,
-                    )
+                    retryFileWrite { writeTextAtomically(file, encode(request.value)) }
                     WriteResult(request.version, null)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     WriteResult(request.version, e)
-                } finally {
-                    tempFile.delete()
                 }
                 writeResult.value = result
                 result.error?.let { error ->

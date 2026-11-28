@@ -341,16 +341,11 @@ fun GkAlertDialog(
                     }
                     text?.let {
                         GkDialogBody(viewportHeight) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                GkProvideDialogTextStyle(
-                                    style = MiuixTheme.textStyles.body1.copy(textAlign = TextAlign.Center),
-                                    contentColor = resolvedTextContentColor,
-                                    content = it,
-                                )
-                            }
+                            GkProvideDialogTextStyle(
+                                style = MiuixTheme.textStyles.body1,
+                                contentColor = resolvedTextContentColor,
+                                content = it,
+                            )
                         }
                     }
                 }

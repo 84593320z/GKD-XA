@@ -2,6 +2,7 @@ package li.gkd.app.util
 
 import io.ktor.client.call.body
 import io.ktor.client.plugins.onUpload
+import io.ktor.client.request.forms.ChannelProvider
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.header
@@ -15,6 +16,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMessageBuilder
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.delay
+import io.ktor.util.cio.readChannel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
@@ -49,6 +51,13 @@ private data class UploadPoliciesAssetsResponse(
 
 data class GithubCookieException(override val message: String) : Exception(message)
 
+internal fun validateGithubUploadFile(file: File): Long {
+    require(file.isFile) { "Upload file does not exist" }
+    val size = file.length()
+    require(size in 1..Github.MAX_UPLOAD_BYTES) { UiStrings.file_too_large }
+    return size
+}
+
 private suspend fun graphqlFetch(
     cookie: String,
     data: String,
@@ -63,12 +72,15 @@ private suspend fun graphqlFetch(
 }
 
 object Github {
+    const val MAX_UPLOAD_BYTES: Long = 32L * 1024 * 1024
+
     // https://github.com/lisonge/user-attachments
     suspend fun uploadFileToGithub(
         cookie: String,
         file: File,
         listener: ((progress: Float) -> Unit)
     ): GithubPoliciesAsset {
+        val size = validateGithubUploadFile(file)
         // prepare upload asset
         val policiesRawResp = client.post("https://github.com/upload/policies/assets") {
             setCommonHeaders(cookie)
@@ -77,7 +89,7 @@ object Github {
             setBody(MultiPartFormDataContent(formData {
                 append("repository_id", "661952005")
                 append("name", "file.zip")
-                append("size", file.length().toString())
+                append("size", size.toString())
                 append("content_type", "application/x-zip-compressed")
             }))
         }
@@ -86,21 +98,20 @@ object Github {
         }
         val policiesResp = policiesRawResp.body<UploadPoliciesAssetsResponse>()
 
-        // upload to s3
-        val byteArray = file.readBytes()
+        // upload to s3 without materializing the archive in memory
         client.post(policiesResp.upload_url) {
             // upload_url points to external storage, so GitHub credentials must not be sent.
             setBody(MultiPartFormDataContent(formData {
                 policiesResp.form.forEach { (key, value) ->
                     append(key, value)
                 }
-                append("file", byteArray, Headers.build {
+                append("file", ChannelProvider(size) { file.readChannel() }, Headers.build {
                     append(HttpHeaders.ContentType, "application/x-zip-compressed")
                     append(HttpHeaders.ContentDisposition, "filename=\"file.zip\"")
                 })
             }))
             onUpload { bytesSentTotal, contentLength ->
-                listener(bytesSentTotal / (contentLength ?: byteArray.size).toFloat())
+                listener(bytesSentTotal / (contentLength ?: size).toFloat())
             }
         }
 
