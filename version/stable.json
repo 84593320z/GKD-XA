@@ -3,7 +3,7 @@
   "versionName": "1.5.8",
   "changelog": "v1.5.8\n\n- 完善 Miuix 界面、无障碍语义和窄屏/大字号适配\n- 加固备份恢复、规则运行时、快照网络边界与正式发布流程",
   "downloadUrl": "https://github.com/84593320z/GKD-XA/releases/download/v1.5.8/GKD-XA-v1.5.8.apk",
-  "fileSize": 0,
+  "fileSize": 5870674,
   "versionLogs": [
     {
       "name": "1.5.8",
@@ -160,5 +160,6 @@
       "code": 92,
       "desc": "- 全量 MIUIX 界面（顶栏模糊、悬浮底栏、液态玻璃 FAB）\n- 预测式返回开关；动态取色默认关闭\n- 订阅添加/修改/刷新时显示加载进度\n- 触发提示支持流体云 / 灵动岛实时通知，并可自定义存在时间"
     }
-  ]
+  ],
+  "sha256": "e8785874e7d902d4eb08387287f7888da05c026d413bbecf90a809e93d76cdc6"
 }
